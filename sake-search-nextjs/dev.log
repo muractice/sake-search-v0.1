@@ -1,0 +1,231 @@
+
+> sake-search-nextjs@0.1.0 dev
+> next dev --turbopack
+
+ ⚠ Port 3000 is in use by process 66591, using available port 3001 instead.
+   ▲ Next.js 15.4.5 (Turbopack)
+   - Local:        http://localhost:3001
+   - N   Reload env: .env.local
+8.10.105:3001
+
+ ✓ Starting...
+ ✓ Ready in 699ms
+ ○ Compiling / ...
+ ✓ Compiled / in 1394ms
+ GET / 200 in 1572ms
+ ✓ Compiled /favicon.ico in 94ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 352ms
+ ✓ Compiled /api/search in 124ms
+ GET /api/search?q=%E7%8D%BA%E7%A5%AD 200 in 153ms
+ GET /api/search?q=%E4%BC%AF%E6%A5%BD%E6%98%9F 200 in 41ms
+ GET /api/search?q=%E4%BC%AF%E6%A5%BD%E6%98%9F 200 in 30ms
+   Reload env: .env.local
+ GET / 200 in 72ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 獺祭
+Attempting to use Sakenowa API...
+Sakenowa API error: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Sakenowa API failed, falling back to mock data: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Using fallback mock data, found 1 results
+ GET /api/search?q=%E7%8D%BA%E7%A5%AD 200 in 747ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 伯楽星
+Attempting to use Sakenowa API...
+Sakenowa API error: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Sakenowa API failed, falling back to mock data: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Using fallback mock data, found 0 results
+ GET /api/search?q=%E4%BC%AF%E6%A5%BD%E6%98%9F 200 in 111ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 浦霞
+Attempting to use Sakenowa API...
+Sakenowa API error: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Sakenowa API failed, falling back to mock data: TypeError: brands.filter is not a function
+    at searchRealSakeData (lib/sakenowaApi.ts:57:34)
+    at async GET (app/api/search/route.ts:32:18)
+  55 |     // 検索実行
+  56 |     const normalizedQuery = query.toLowerCase().trim();
+> 57 |     const matchingBrands = brands.filter((brand: Brand) => 
+     |                                  ^
+  58 |       brand.name.toLowerCase().includes(normalizedQuery)
+  59 |     ).slice(0, 10); // 最大10件
+  60 |     
+Using fallback mock data, found 0 results
+ GET /api/search?q=%E6%B5%A6%E9%9C%9E 200 in 138ms
+ GET / 200 in 161ms
+ GET /favicon.ico?favicon.45db1c09.ico 200 in 279ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 伯楽星
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 0, breweries: 0, flavorCharts: 0 }
+Found matching brands: 0
+Sakenowa API success, found 0 results
+ GET /api/search?q=%E4%BC%AF%E6%A5%BD%E6%98%9F 200 in 95ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 浦霞
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 0, breweries: 0, flavorCharts: 0 }
+Found matching brands: 0
+Sakenowa API success, found 0 results
+ GET /api/search?q=%E6%B5%A6%E9%9C%9E 200 in 38ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 獺祭
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 0, breweries: 0, flavorCharts: 0 }
+Found matching brands: 0
+Sakenowa API success, found 0 results
+ GET /api/search?q=%E7%8D%BA%E7%A5%AD 200 in 46ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 獺祭
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 3167, breweries: 1733, flavorCharts: 1355 }
+Found matching brands: 1
+Sakenowa API success, found 1 results
+ GET /api/search?q=%E7%8D%BA%E7%A5%AD 200 in 120ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 獺祭
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 3167, breweries: 1733, flavorCharts: 1355 }
+Found matching brands: 1
+Sakenowa API success, found 1 results
+ GET /api/search?q=%E7%8D%BA%E7%A5%AD 200 in 37ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 浦霞
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 3167, breweries: 1733, flavorCharts: 1355 }
+Found matching brands: 1
+Sakenowa API success, found 1 results
+ GET /api/search?q=%E6%B5%A6%E9%9C%9E 200 in 51ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 伯楽星
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 3167, breweries: 1733, flavorCharts: 1355 }
+Found matching brands: 2
+Sakenowa API success, found 1 results
+ GET /api/search?q=%E4%BC%AF%E6%A5%BD%E6%98%9F 200 in 39ms
+=== API Search Debug ===
+Environment variable USE_SAKENOWA_API: true
+USE_REAL_API flag: true
+Search query: 而今
+Attempting to use Sakenowa API...
+API Response types: { brands: 'object', breweries: 'object', flavorCharts: 'object' }
+API Response structures: {
+  brands: [ 'copyright', 'brands' ],
+  breweries: [ 'copyright', 'breweries' ],
+  flavorCharts: [ 'copyright', 'flavorCharts' ]
+}
+Processed data lengths: { brands: 3167, breweries: 1733, flavorCharts: 1355 }
+Found matching brands: 1
+Building results for 1 matching brands
+Processing brand: 而今 ID: 660
+Found brewery: 木屋正酒造 Found flavorChart: true
+Created sake data: 而今 coordinates: { sweetness: 0.9206978787182838, richness: -0.5205091804032722 }
+Final results count: 1
+Sakenowa API success, found 1 results
+ GET /api/search?q=%E8%80%8C%E4%BB%8A 200 in 92ms
