@@ -97,6 +97,14 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 50,
+        bottom: 50,
+        left: 60,
+        right: 60
+      }
+    },
     plugins: {
       legend: {
         display: false,
@@ -296,7 +304,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       drawArrow(centerX, chartArea.bottom, 'down', '#3b82f6');
       
       // 美しいラベル
-      ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.font = 'bold 18px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
@@ -308,15 +316,61 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       
       // 横軸ラベル
       ctx.fillStyle = '#ef4444';
-      ctx.fillText('辛い', chartArea.left - 35, centerY);
+      ctx.fillText('辛い', chartArea.left - 45, centerY);
       ctx.fillStyle = '#ec4899';
-      ctx.fillText('甘い', chartArea.right + 35, centerY);
+      ctx.fillText('甘い', chartArea.right + 45, centerY);
       
       // 縦軸ラベル
       ctx.fillStyle = '#22c55e';
-      ctx.fillText('濃醇', centerX, chartArea.top - 25);
+      ctx.fillText('濃醇', centerX, chartArea.top - 35);
       ctx.fillStyle = '#3b82f6';
-      ctx.fillText('淡麗', centerX, chartArea.bottom + 25);
+      ctx.fillText('淡麗', centerX, chartArea.bottom + 35);
+      
+      // 象限の背景テキストを追加
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      
+      // 第1象限 (右上): 甘口・濃醇
+      const quadrant1X = centerX + (chartArea.right - centerX) * 0.5;
+      const quadrant1Y = chartArea.top + (centerY - chartArea.top) * 0.3;
+      ctx.fillStyle = 'rgba(236, 72, 153, 0.6)';
+      ctx.fillText('甘口・濃醇', quadrant1X, quadrant1Y);
+      ctx.font = 'normal 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(236, 72, 153, 0.5)';
+      ctx.fillText('（デザート系）', quadrant1X, quadrant1Y + 20);
+      
+      // 第2象限 (左上): 辛口・濃醇
+      const quadrant2X = chartArea.left + (centerX - chartArea.left) * 0.5;
+      const quadrant2Y = chartArea.top + (centerY - chartArea.top) * 0.3;
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
+      ctx.fillText('辛口・濃醇', quadrant2X, quadrant2Y);
+      ctx.font = 'normal 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
+      ctx.fillText('（力強い系）', quadrant2X, quadrant2Y + 20);
+      
+      // 第3象限 (左下): 辛口・淡麗
+      const quadrant3X = chartArea.left + (centerX - chartArea.left) * 0.5;
+      const quadrant3Y = centerY + (chartArea.bottom - centerY) * 0.7;
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
+      ctx.fillText('辛口・淡麗', quadrant3X, quadrant3Y);
+      ctx.font = 'normal 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
+      ctx.fillText('（すっきり系）', quadrant3X, quadrant3Y + 20);
+      
+      // 第4象限 (右下): 甘口・淡麗
+      const quadrant4X = centerX + (chartArea.right - centerX) * 0.5;
+      const quadrant4Y = centerY + (chartArea.bottom - centerY) * 0.7;
+      ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.6)';
+      ctx.fillText('甘口・淡麗', quadrant4X, quadrant4Y);
+      ctx.font = 'normal 12px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = 'rgba(99, 102, 241, 0.5)';
+      ctx.fillText('（やわらか系）', quadrant4X, quadrant4Y + 20);
       
       ctx.restore();
     }
