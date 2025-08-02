@@ -396,42 +396,6 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         />
       </div>
       
-      <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-        <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
-          <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
-          味覚マップの見方
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-pink-200/50">
-            <span className="inline-flex items-center font-semibold text-pink-600 mb-1">
-              <span className="w-3 h-3 bg-gradient-to-r from-pink-400 to-pink-600 rounded-full mr-2"></span>
-              右上:
-            </span>
-            <div className="text-gray-700">甘口・濃醇（デザート系）</div>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-red-200/50">
-            <span className="inline-flex items-center font-semibold text-red-600 mb-1">
-              <span className="w-3 h-3 bg-gradient-to-r from-red-400 to-red-600 rounded-full mr-2"></span>
-              左上:
-            </span>
-            <div className="text-gray-700">辛口・濃醇（力強い系）</div>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-green-200/50">
-            <span className="inline-flex items-center font-semibold text-green-600 mb-1">
-              <span className="w-3 h-3 bg-gradient-to-r from-green-400 to-green-600 rounded-full mr-2"></span>
-              左下:
-            </span>
-            <div className="text-gray-700">辛口・淡麗（すっきり系）</div>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-blue-200/50">
-            <span className="inline-flex items-center font-semibold text-blue-600 mb-1">
-              <span className="w-3 h-3 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mr-2"></span>
-              右下:
-            </span>
-            <div className="text-gray-700">甘口・淡麗（やわらか系）</div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
