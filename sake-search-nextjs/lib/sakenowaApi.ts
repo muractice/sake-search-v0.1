@@ -16,11 +16,17 @@ export async function fetchFromSakenowaAPI(endpoint: string) {
 
 // フレーバーチャートを4象限座標に変換
 function convertFlavorToCoordinates(flavorChart: FlavorChart) {
-  // 甘辛度の計算: 芳醇(f2) - ドライ(f5)
-  const sweetness = (flavorChart.f2 - flavorChart.f5) * 3;
+  // さけのわAPIの各パラメータを適切に組み合わせて座標を計算
   
-  // 淡濃度の計算: 重厚(f3) - 軽快(f6)
-  const richness = (flavorChart.f3 - flavorChart.f6) * 3;
+  // 甘辛度の計算: 芳醇度を基準に、ドライ度で調整
+  // 芳醇度が高く、ドライ度が低い = 甘口
+  const sweetnessRaw = flavorChart.f2 * 2 - flavorChart.f5 * 2; // より明確な差を作る
+  const sweetness = (sweetnessRaw - 0) * 3; // 適度な範囲に調整
+  
+  // 淡濃度の計算: 重厚度を基準に、軽快度で調整
+  // 重厚度が高く、軽快度が低い = 濃醇
+  const richnessRaw = flavorChart.f3 * 2 - flavorChart.f6 * 2; // より明確な差を作る
+  const richness = (richnessRaw - 0) * 3; // 適度な範囲に調整
   
   // -3 から 3 の範囲に正規化
   return {
@@ -98,6 +104,12 @@ export async function searchRealSakeData(query: string): Promise<SakeData[]> {
       
       if (brewery && flavorChart) {
         const coordinates = convertFlavorToCoordinates(flavorChart);
+        
+        // フレーバーチャートの生値をログ出力
+        console.log('FlavorChart raw values for', brand.name, ':', {
+          f1: flavorChart.f1, f2: flavorChart.f2, f3: flavorChart.f3,
+          f4: flavorChart.f4, f5: flavorChart.f5, f6: flavorChart.f6
+        });
         
         const sakeData = {
           id: `sake_${brand.id}`,
