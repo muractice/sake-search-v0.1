@@ -84,7 +84,7 @@ export async function searchRealSakeData(query: string): Promise<SakeData[]> {
     // 検索実行
     const normalizedQuery = query.toLowerCase().trim();
     const matchingBrands = brands.filter((brand: Brand) => 
-      brand.name && brand.name.toLowerCase().includes(normalizedQuery)
+      brand.name && typeof brand.name === 'string' && brand.name.toLowerCase().includes(normalizedQuery)
     ).slice(0, 10); // 最大10件
     
     console.log('Found matching brands:', matchingBrands.length);
