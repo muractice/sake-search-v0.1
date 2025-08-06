@@ -30,15 +30,23 @@ interface TasteChartProps {
 export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   const chartRef = useRef<ChartJS<'scatter'>>(null);
 
+  // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
+  if (typeof window !== 'undefined') {
+    (window as any).debugSakeData = sakeData;
+  }
+  
+  // 検証を一時的に無効化 - すべてのデータを表示
+  const validSakeData = sakeData;
+
   const data = {
     datasets: [
       {
         label: '日本酒',
-        data: sakeData.map((sake, index) => ({
+        data: validSakeData.map((sake, index) => ({
           x: sake.sweetness,
           y: sake.richness,
         })),
-        backgroundColor: sakeData.map((_, index) => {
+        backgroundColor: validSakeData.map((_, index) => {
           // 美しいグラデーションカラーパレット
           const colors = [
             'rgba(99, 102, 241, 0.8)',   // インディゴ
@@ -54,7 +62,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
           ];
           return colors[index % colors.length];
         }),
-        borderColor: sakeData.map((_, index) => {
+        borderColor: validSakeData.map((_, index) => {
           const colors = [
             'rgba(99, 102, 241, 1)',
             'rgba(168, 85, 247, 1)',
@@ -72,7 +80,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         borderWidth: 3,
         pointRadius: 14,
         pointHoverRadius: 18,
-        pointHoverBackgroundColor: sakeData.map((_, index) => {
+        pointHoverBackgroundColor: validSakeData.map((_, index) => {
           const colors = [
             'rgba(99, 102, 241, 0.95)',
             'rgba(168, 85, 247, 0.95)',
@@ -112,13 +120,13 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       tooltip: {
         callbacks: {
           label: function(context: any) {
-            const sake = sakeData[context.dataIndex];
-            if (sake) {
+            const sake = validSakeData[context.dataIndex];
+            if (sake && typeof sake.name === 'string') {
               return [
                 sake.name,
                 `蔵元: ${sake.brewery}`,
-                `甘辛: ${sake.sweetness > 0 ? '甘口' : '辛口'} (${sake.sweetness})`,
-                `淡濃: ${sake.richness > 0 ? '濃醇' : '淡麗'} (${sake.richness})`
+                `甘辛: ${sake.sweetness > 0 ? '甘口' : '辛口'} (${sake.sweetness.toFixed(1)})`,
+                `淡濃: ${sake.richness > 0 ? '濃醇' : '淡麗'} (${sake.richness.toFixed(1)})`
               ];
             }
             return '';
@@ -176,16 +184,18 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
     onClick: (event: any, elements: any[]) => {
       if (elements.length > 0) {
         const index = elements[0].index;
-        const sake = sakeData[index];
+        const sake = validSakeData[index];
         
-        // Add visual feedback for click
-        const canvas = event.chart.canvas;
-        canvas.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-          canvas.style.transform = 'scale(1)';
-        }, 150);
-        
-        onSakeClick(sake);
+        if (sake) {
+          // Add visual feedback for click
+          const canvas = event.chart.canvas;
+          canvas.style.transform = 'scale(0.98)';
+          setTimeout(() => {
+            canvas.style.transform = 'scale(1)';
+          }, 150);
+          
+          onSakeClick(sake);
+        }
       }
     },
   };
@@ -379,52 +389,42 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   // 日本酒の点にラベルを追加するプラグイン
   const labelPlugin = {
     id: 'pointLabels',
-    afterDatasetsDraw: (chart: any) => {
+    afterDraw: (chart: any) => {
       const ctx = chart.ctx;
-      const chartArea = chart.chartArea;
       
       ctx.save();
-      ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
+      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       
-      chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
-        const meta = chart.getDatasetMeta(datasetIndex);
-        meta.data.forEach((point: any, index: number) => {
-          if (sakeData[index]) {
-            const x = point.x;
-            const y = point.y;
-            
-            // 背景の白い円を描画（可読性向上）
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.beginPath();
-            ctx.arc(x, y - 25, 12, 0, 2 * Math.PI);
-            ctx.fill();
-            
-            // 枠線を追加
-            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            
-            // 番号を描画
-            ctx.fillStyle = '#333333';
-            ctx.fillText((index + 1).toString(), x, y - 25);
-          }
+      // 各データポイントにラベルを描画
+      const dataset = chart.data.datasets[0];
+      if (dataset && dataset.data) {
+        dataset.data.forEach((dataPoint: any, index: number) => {
+          const x = chart.scales.x.getPixelForValue(dataPoint.x);
+          const y = chart.scales.y.getPixelForValue(dataPoint.y);
+          
+          // 数字を描画
+          ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          
+          // 縁取り（黒）
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 6;
+          ctx.strokeText((index + 1).toString(), x, y);
+          
+          // 文字本体（白）
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText((index + 1).toString(), x, y);
         });
-      });
+      }
       
       ctx.restore();
     }
   };
 
-  useEffect(() => {
-    if (chartRef.current) {
-      chartRef.current.options.plugins = {
-        ...chartRef.current.options.plugins,
-        customAxes: customAxesPlugin,
-      };
-    }
-  }, []);
+  // useEffectを削除し、プラグインは直接pluginsプロパティで登録
 
   return (
     <div className="relative">
@@ -437,14 +437,15 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         />
       </div>
       
-      {sakeData.length > 0 && (
+      
+      {validSakeData.length > 0 && (
         <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
           <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
             <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
             日本酒一覧
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {sakeData.map((sake, index) => {
+            {validSakeData.map((sake, index) => {
               // 対応する色を取得
               const colors = [
                 'rgba(99, 102, 241, 1)',   // インディゴ
