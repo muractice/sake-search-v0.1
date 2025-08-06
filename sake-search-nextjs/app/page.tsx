@@ -4,12 +4,15 @@ import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
+import ComparisonPanel from '@/components/ComparisonPanel';
 import { SakeData } from '@/types/sake';
 
 export default function Home() {
   const [currentSakeData, setCurrentSakeData] = useState<SakeData[]>([]);
   const [selectedSake, setSelectedSake] = useState<SakeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [comparisonList, setComparisonList] = useState<SakeData[]>([]);
+  const [isComparisonMode, setIsComparisonMode] = useState(false);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -39,6 +42,23 @@ export default function Home() {
     setSelectedSake(sake);
   };
 
+  const toggleComparison = (sake: SakeData) => {
+    setComparisonList(prev => {
+      const exists = prev.find(s => s.id === sake.id);
+      if (exists) {
+        return prev.filter(s => s.id !== sake.id);
+      } else if (prev.length < 4) {
+        return [...prev, sake];
+      }
+      return prev;
+    });
+  };
+
+  const clearComparison = () => {
+    setComparisonList([]);
+    setIsComparisonMode(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-lg">
@@ -60,13 +80,21 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SearchSection onSearch={handleSearch} isLoading={isLoading} />
         
+        <ComparisonPanel
+          comparisonList={comparisonList}
+          isComparisonMode={isComparisonMode}
+          onToggleMode={() => setIsComparisonMode(!isComparisonMode)}
+          onRemove={toggleComparison}
+          onClear={clearComparison}
+        />
+        
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 transform transition-all duration-500 hover:scale-[1.01]">
             <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
-              {currentSakeData.length > 0 ? (
+              {(isComparisonMode ? comparisonList : currentSakeData).length > 0 ? (
                 <div className="animate-slide-up">
                   <TasteChart 
-                    sakeData={currentSakeData} 
+                    sakeData={isComparisonMode ? comparisonList : currentSakeData} 
                     onSakeClick={handleChartClick}
                   />
                 </div>
@@ -89,7 +117,12 @@ export default function Home() {
               <div className="transition-all duration-500 ease-in-out">
                 {selectedSake ? (
                   <div className="animate-fade-in">
-                    <SakeDetail sake={selectedSake} />
+                    <SakeDetail 
+                      sake={selectedSake}
+                      onCompare={toggleComparison}
+                      isInComparison={comparisonList.some(s => s.id === selectedSake.id)}
+                      showCompareButton={isComparisonMode}
+                    />
                   </div>
                 ) : (
                   <div className="text-gray-500 text-center py-8 animate-pulse">
