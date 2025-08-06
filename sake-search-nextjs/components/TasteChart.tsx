@@ -376,6 +376,47 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
     }
   };
 
+  // 日本酒の点にラベルを追加するプラグイン
+  const labelPlugin = {
+    id: 'pointLabels',
+    afterDatasetsDraw: (chart: any) => {
+      const ctx = chart.ctx;
+      const chartArea = chart.chartArea;
+      
+      ctx.save();
+      ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      chart.data.datasets.forEach((dataset: any, datasetIndex: number) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        meta.data.forEach((point: any, index: number) => {
+          if (sakeData[index]) {
+            const x = point.x;
+            const y = point.y;
+            
+            // 背景の白い円を描画（可読性向上）
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(x, y - 25, 12, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // 枠線を追加
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 番号を描画
+            ctx.fillStyle = '#333333';
+            ctx.fillText((index + 1).toString(), x, y - 25);
+          }
+        });
+      });
+      
+      ctx.restore();
+    }
+  };
+
   useEffect(() => {
     if (chartRef.current) {
       chartRef.current.options.plugins = {
@@ -392,9 +433,53 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
           ref={chartRef}
           data={data} 
           options={options} 
-          plugins={[customAxesPlugin]}
+          plugins={[customAxesPlugin, labelPlugin]}
         />
       </div>
+      
+      {sakeData.length > 0 && (
+        <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+          <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
+            <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
+            日本酒一覧
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {sakeData.map((sake, index) => {
+              // 対応する色を取得
+              const colors = [
+                'rgba(99, 102, 241, 1)',   // インディゴ
+                'rgba(168, 85, 247, 1)',   // パープル  
+                'rgba(236, 72, 153, 1)',   // ピンク
+                'rgba(239, 68, 68, 1)',    // レッド
+                'rgba(245, 101, 101, 1)',  // ライトレッド
+                'rgba(34, 197, 94, 1)',    // グリーン
+                'rgba(59, 130, 246, 1)',   // ブルー
+                'rgba(14, 165, 233, 1)',   // スカイブルー
+                'rgba(6, 182, 212, 1)',    // シアン
+                'rgba(16, 185, 129, 1)',   // エメラルド
+              ];
+              const color = colors[index % colors.length];
+              
+              return (
+                <div key={sake.id} className="flex items-center bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-purple-200/50">
+                  <div className="flex items-center space-x-3">
+                    <div 
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
+                      style={{ backgroundColor: color }}
+                    >
+                      {index + 1}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-800">{sake.name}</div>
+                      <div className="text-sm text-gray-600">{sake.brewery}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
       
     </div>
   );
