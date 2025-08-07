@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react';
 import {
   Chart as ChartJS,
+  CategoryScale,
   LinearScale,
   PointElement,
   Tooltip,
@@ -10,7 +11,13 @@ import {
 } from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
 
-ChartJS.register(LinearScale, PointElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  Tooltip,
+  Legend
+);
 
 interface AdminSakeData {
   id: number;
