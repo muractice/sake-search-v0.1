@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,7 +32,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
   if (typeof window !== 'undefined') {
-    (window as any).debugSakeData = sakeData;
+    (window as unknown as { debugSakeData: SakeData[] }).debugSakeData = sakeData;
   }
   
   // 検証を一時的に無効化 - すべてのデータを表示
@@ -42,7 +42,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
     datasets: [
       {
         label: '日本酒',
-        data: validSakeData.map((sake, index) => ({
+        data: validSakeData.map((sake) => ({
           x: sake.sweetness,
           y: sake.richness,
         })),
@@ -119,7 +119,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context: any) {
+          label: function(context: { dataIndex: number }) {
             const sake = validSakeData[context.dataIndex];
             if (sake && typeof sake.name === 'string') {
               return [
@@ -181,6 +181,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         },
       },
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onClick: (event: any, elements: any[]) => {
       if (elements.length > 0) {
         const index = elements[0].index;
@@ -203,6 +204,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   // カスタム軸線とグラデーション背景を描画するプラグイン
   const customAxesPlugin = {
     id: 'customAxes',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     beforeDatasetsDraw: (chart: any) => {
       const ctx = chart.ctx;
       const chartArea = chart.chartArea;
@@ -389,6 +391,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   // 日本酒の点にラベルを追加するプラグイン
   const labelPlugin = {
     id: 'pointLabels',
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     afterDraw: (chart: any) => {
       const ctx = chart.ctx;
       
@@ -400,7 +403,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       // 各データポイントにラベルを描画
       const dataset = chart.data.datasets[0];
       if (dataset && dataset.data) {
-        dataset.data.forEach((dataPoint: any, index: number) => {
+        dataset.data.forEach((dataPoint: { x: number; y: number }, index: number) => {
           const x = chart.scales.x.getPixelForValue(dataPoint.x);
           const y = chart.scales.y.getPixelForValue(dataPoint.y);
           
