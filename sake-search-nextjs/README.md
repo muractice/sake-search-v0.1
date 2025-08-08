@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 酒サーチ - 日本酒の味覚を4象限で視覚化
 
-## Getting Started
+日本酒の味わいを「甘辛度」と「淡濃度」の4象限チャートで視覚的に表現するWebアプリケーションです。
 
-First, run the development server:
+## 🌟 主な機能
+
+- 🔍 **日本酒検索**: 名前で日本酒を検索
+- 📊 **4象限チャート**: 味覚を視覚的に表示
+- 🆚 **比較機能**: 最大4つの日本酒を同時比較
+- 📱 **レスポンシブ対応**: モバイル・デスクトップ両対応
+- 🎨 **美しいUI**: グラデーションとアニメーション
+
+## 🛠 技術スタック
+
+- **フレームワーク**: Next.js 15.4.5
+- **UI**: React 19 + TypeScript
+- **スタイリング**: Tailwind CSS
+- **グラフ**: Chart.js
+- **データソース**: さけのわAPI
+
+## 🚀 セットアップ
 
 ```bash
+# 依存関係のインストール
+npm install
+
+# 開発サーバー起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 本番ビルド
+npm run build
+
+# 本番サーバー起動
+npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📝 環境変数
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.local` ファイルを作成し、以下を設定：
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+USE_SAKENOWA_API=true  # 本番APIを使用する場合
+```
 
-## Learn More
+## 📁 プロジェクト構造
 
-To learn more about Next.js, take a look at the following resources:
+```
+sake-search-nextjs/
+├── app/                 # Next.js App Router
+│   ├── page.tsx        # メインページ
+│   └── api/            # API Routes
+├── components/         # Reactコンポーネント
+│   ├── SearchSection.tsx
+│   ├── TasteChart.tsx
+│   ├── SakeDetail.tsx
+│   └── ComparisonPanel.tsx
+├── lib/                # ユーティリティ
+│   ├── sakenowaApi.ts
+│   └── mockData.ts
+└── types/              # TypeScript型定義
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎯 使い方
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. 検索バーに日本酒の名前を入力
+2. チャート上に味覚がプロット
+3. 比較モードで複数の日本酒を同時表示
+4. ポイントをクリックで詳細表示
 
-## Deploy on Vercel
+## 📊 味覚マッピング
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **横軸**: 甘辛度（左：辛い ⇔ 右：甘い）
+- **縦軸**: 淡濃度（下：淡麗 ⇔ 上：濃醇）
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 4象限の特徴
+
+- **左上**: 辛口・濃醇（力強い系）
+- **右上**: 甘口・濃醇（デザート系）
+- **左下**: 辛口・淡麗（すっきり系）
+- **右下**: 甘口・淡麗（やわらか系）
+
+## 🤝 データ提供
+
+[さけのわ](https://sakenowa.com) のAPIを使用しています。
+
+## 📄 ライセンス
+
+MIT License
+
+---
+
+Made with ❤️ by 酒サーチチーム
