@@ -9,6 +9,8 @@ import {
   Title,
   Tooltip,
   Legend,
+  ChartEvent,
+  ActiveElement,
 } from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
 import { SakeData } from '@/types/sake';
@@ -32,7 +34,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
   if (typeof window !== 'undefined') {
-    (window as unknown as { debugSakeData: SakeData[] }).debugSakeData = sakeData;
+    (window as { debugSakeData?: SakeData[] }).debugSakeData = sakeData;
   }
   
   // 検証を一時的に無効化 - すべてのデータを表示
@@ -119,7 +121,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context: { dataIndex: number }) {
+          label: function(context: { dataIndex: number }): string | string[] {
             const sake = validSakeData[context.dataIndex];
             if (sake && typeof sake.name === 'string') {
               return [
@@ -181,15 +183,14 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         },
       },
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onClick: (event: any, elements: any[]) => {
+    onClick: (_event: ChartEvent, elements: ActiveElement[], chart: ChartJS) => {
       if (elements.length > 0) {
         const index = elements[0].index;
         const sake = validSakeData[index];
         
         if (sake) {
           // Add visual feedback for click
-          const canvas = event.chart.canvas;
+          const canvas = chart.canvas;
           canvas.style.transform = 'scale(0.98)';
           setTimeout(() => {
             canvas.style.transform = 'scale(1)';
@@ -204,8 +205,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   // カスタム軸線とグラデーション背景を描画するプラグイン
   const customAxesPlugin = {
     id: 'customAxes',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    beforeDatasetsDraw: (chart: any) => {
+    beforeDatasetsDraw: (chart: ChartJS) => {
       const ctx = chart.ctx;
       const chartArea = chart.chartArea;
       const centerX = (chartArea.left + chartArea.right) / 2;
@@ -391,8 +391,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   // 日本酒の点にラベルを追加するプラグイン
   const labelPlugin = {
     id: 'pointLabels',
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    afterDraw: (chart: any) => {
+    afterDraw: (chart: ChartJS) => {
       const ctx = chart.ctx;
       
       ctx.save();
@@ -401,9 +400,9 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       
       // 各データポイントにラベルを描画
-      const dataset = chart.data.datasets[0];
+      const dataset = chart.data.datasets[0] as { data: { x: number; y: number }[] };
       if (dataset && dataset.data) {
-        dataset.data.forEach((dataPoint: { x: number; y: number }, index: number) => {
+        dataset.data.forEach((dataPoint, index) => {
           const x = chart.scales.x.getPixelForValue(dataPoint.x);
           const y = chart.scales.y.getPixelForValue(dataPoint.y);
           
