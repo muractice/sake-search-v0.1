@@ -12,6 +12,7 @@ import {
   ChartEvent,
   ActiveElement,
 } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Scatter } from 'react-chartjs-2';
 import { SakeData } from '@/types/sake';
 
@@ -21,7 +22,8 @@ ChartJS.register(
   PointElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  ChartDataLabels
 );
 
 interface TasteChartProps {
@@ -143,6 +145,22 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         },
         padding: 15,
         cornerRadius: 8
+      },
+      datalabels: {
+        display: true,
+        color: '#ffffff',
+        font: {
+          weight: 'bold',
+          size: 20,
+          family: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif'
+        },
+        formatter: (_value: any, context: any) => {
+          return context.dataIndex + 1;
+        },
+        anchor: 'center',
+        align: 'center',
+        textStrokeColor: '#000000',
+        textStrokeWidth: 6
       }
     },
     scales: {
@@ -388,45 +406,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
     }
   };
 
-  // 日本酒の点にラベルを追加するプラグイン
-  const labelPlugin = {
-    id: 'pointLabels',
-    afterDraw: (chart: ChartJS) => {
-      const ctx = chart.ctx;
-      
-      ctx.save();
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
-      
-      // 各データポイントにラベルを描画
-      const dataset = chart.data.datasets[0] as { data: { x: number; y: number }[] };
-      if (dataset && dataset.data) {
-        dataset.data.forEach((dataPoint, index) => {
-          const x = chart.scales.x.getPixelForValue(dataPoint.x);
-          const y = chart.scales.y.getPixelForValue(dataPoint.y);
-          
-          // 数字を描画
-          ctx.font = 'bold 20px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          
-          // 縁取り（黒）
-          ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 6;
-          ctx.strokeText((index + 1).toString(), x, y);
-          
-          // 文字本体（白）
-          ctx.fillStyle = '#ffffff';
-          ctx.fillText((index + 1).toString(), x, y);
-        });
-      }
-      
-      ctx.restore();
-    }
-  };
 
-  // useEffectを削除し、プラグインは直接pluginsプロパティで登録
 
   return (
     <div className="relative">
@@ -435,7 +415,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
           ref={chartRef}
           data={data} 
           options={options} 
-          plugins={[customAxesPlugin, labelPlugin]}
+          plugins={[customAxesPlugin]}
         />
       </div>
       
