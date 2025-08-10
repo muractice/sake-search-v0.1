@@ -42,16 +42,29 @@ export default function Home() {
     setSelectedSake(sake);
   };
 
-  const toggleComparison = (sake: SakeData) => {
+  const addToComparison = (sake: SakeData) => {
     setComparisonList(prev => {
-      const exists = prev.find(s => s.id === sake.id);
-      if (exists) {
-        return prev.filter(s => s.id !== sake.id);
-      } else if (prev.length < 4) {
-        return [...prev, sake];
+      if (prev.length >= 4 || prev.find(s => s.id === sake.id)) {
+        return prev;
       }
-      return prev;
+      return [...prev, sake];
     });
+  };
+
+  const removeFromComparison = (sake: SakeData) => {
+    setComparisonList(prev => prev.filter(s => s.id !== sake.id));
+  };
+
+  const isInComparison = (sakeId: string) => {
+    return comparisonList.some(s => s.id === sakeId);
+  };
+
+  const toggleComparison = (sake: SakeData) => {
+    if (isInComparison(sake.id)) {
+      removeFromComparison(sake);
+    } else {
+      addToComparison(sake);
+    }
   };
 
   const clearComparison = () => {
