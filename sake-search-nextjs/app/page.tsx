@@ -4,7 +4,6 @@ import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
-import { SakeData } from '@/types/sake';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
 import { useSelection } from '@/hooks/useSelection';
@@ -41,7 +40,7 @@ export default function Home() {
       if (!searchResult) {
         alert('該当する日本酒が見つかりませんでした');
       }
-    } catch (error) {
+    } catch {
       alert('検索中にエラーが発生しました');
     }
   };

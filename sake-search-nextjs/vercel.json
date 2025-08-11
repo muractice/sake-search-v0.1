@@ -1,13 +1,5 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "framework": "nextjs",
-  "env": {
-    "USE_SAKENOWA_API": "@use_sakenowa_api"
-  },
-  "build": {
-    "env": {
-      "USE_SAKENOWA_API": "@use_sakenowa_api"
-    }
-  }
+  "framework": "nextjs"
 }
