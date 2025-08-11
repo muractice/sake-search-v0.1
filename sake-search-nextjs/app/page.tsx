@@ -7,11 +7,10 @@ import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import { SakeData } from '@/types/sake';
 import { useComparison } from '@/hooks/useComparison';
+import { useSearch } from '@/hooks/useSearch';
 
 export default function Home() {
-  const [currentSakeData, setCurrentSakeData] = useState<SakeData[]>([]);
   const [selectedSake, setSelectedSake] = useState<SakeData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   
   // カスタムフックを使用
   const {
@@ -23,27 +22,22 @@ export default function Home() {
     toggleComparisonMode,
   } = useComparison();
 
-  const handleSearch = async (query: string) => {
-    if (!query.trim()) return;
+  const {
+    currentSakeData,
+    isLoading,
+    search,
+  } = useSearch();
 
-    setIsLoading(true);
+  const handleSearch = async (query: string) => {
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
+      const selectedSake = await search(query);
+      setSelectedSake(selectedSake);
       
-      if (data.success && data.results.length > 0) {
-        setCurrentSakeData(data.results);
-        setSelectedSake(data.results[0]);
-      } else {
-        setCurrentSakeData([]);
-        setSelectedSake(null);
+      if (!selectedSake) {
         alert('該当する日本酒が見つかりませんでした');
       }
     } catch (error) {
-      console.error('Search error:', error);
       alert('検索中にエラーが発生しました');
-    } finally {
-      setIsLoading(false);
     }
   };
 
