@@ -6,13 +6,22 @@ import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import { SakeData } from '@/types/sake';
+import { useComparison } from '@/hooks/useComparison';
 
 export default function Home() {
   const [currentSakeData, setCurrentSakeData] = useState<SakeData[]>([]);
   const [selectedSake, setSelectedSake] = useState<SakeData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [comparisonList, setComparisonList] = useState<SakeData[]>([]);
-  const [isComparisonMode, setIsComparisonMode] = useState(false);
+  
+  // カスタムフックを使用
+  const {
+    comparisonList,
+    isComparisonMode,
+    toggleComparison,
+    isInComparison,
+    clearComparison,
+    toggleComparisonMode,
+  } = useComparison();
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -42,35 +51,6 @@ export default function Home() {
     setSelectedSake(sake);
   };
 
-  const addToComparison = (sake: SakeData) => {
-    setComparisonList(prev => {
-      if (prev.length >= 4 || prev.find(s => s.id === sake.id)) {
-        return prev;
-      }
-      return [...prev, sake];
-    });
-  };
-
-  const removeFromComparison = (sake: SakeData) => {
-    setComparisonList(prev => prev.filter(s => s.id !== sake.id));
-  };
-
-  const isInComparison = (sakeId: string) => {
-    return comparisonList.some(s => s.id === sakeId);
-  };
-
-  const toggleComparison = (sake: SakeData) => {
-    if (isInComparison(sake.id)) {
-      removeFromComparison(sake);
-    } else {
-      addToComparison(sake);
-    }
-  };
-
-  const clearComparison = () => {
-    setComparisonList([]);
-    setIsComparisonMode(false);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -96,7 +76,7 @@ export default function Home() {
         <ComparisonPanel
           comparisonList={comparisonList}
           isComparisonMode={isComparisonMode}
-          onToggleMode={() => setIsComparisonMode(!isComparisonMode)}
+          onToggleMode={toggleComparisonMode}
           onRemove={toggleComparison}
           onClear={clearComparison}
         />
@@ -133,7 +113,7 @@ export default function Home() {
                     <SakeDetail 
                       sake={selectedSake}
                       onCompare={toggleComparison}
-                      isInComparison={comparisonList.some(s => s.id === selectedSake.id)}
+                      isInComparison={isInComparison(selectedSake.id)}
                       showCompareButton={isComparisonMode}
                     />
                   </div>
