@@ -150,15 +150,15 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         display: true,
         color: '#ffffff',
         font: {
-          weight: 'bold',
+          weight: 'bold' as const,
           size: 20,
           family: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif'
         },
-        formatter: (_value: any, context: any) => {
+        formatter: (_value: unknown, context: { dataIndex: number }) => {
           return context.dataIndex + 1;
         },
-        anchor: 'center',
-        align: 'center',
+        anchor: 'center' as const,
+        align: 'center' as const,
         textStrokeColor: '#000000',
         textStrokeWidth: 6
       }
