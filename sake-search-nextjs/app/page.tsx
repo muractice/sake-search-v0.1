@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
@@ -8,9 +7,9 @@ import ComparisonPanel from '@/components/ComparisonPanel';
 import { SakeData } from '@/types/sake';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
+import { useSelection } from '@/hooks/useSelection';
 
 export default function Home() {
-  const [selectedSake, setSelectedSake] = useState<SakeData | null>(null);
   
   // カスタムフックを使用
   const {
@@ -28,12 +27,18 @@ export default function Home() {
     search,
   } = useSearch();
 
+  const {
+    selectedSake,
+    selectSake,
+    handleChartClick,
+  } = useSelection();
+
   const handleSearch = async (query: string) => {
     try {
-      const selectedSake = await search(query);
-      setSelectedSake(selectedSake);
+      const searchResult = await search(query);
+      selectSake(searchResult);
       
-      if (!selectedSake) {
+      if (!searchResult) {
         alert('該当する日本酒が見つかりませんでした');
       }
     } catch (error) {
@@ -41,9 +46,6 @@ export default function Home() {
     }
   };
 
-  const handleChartClick = (sake: SakeData) => {
-    setSelectedSake(sake);
-  };
 
 
   return (
