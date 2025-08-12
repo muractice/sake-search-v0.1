@@ -1,6 +1,7 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
+import { FavoriteButton } from './FavoriteButton';
 
 interface SakeDetailProps {
   sake: SakeData;
@@ -26,8 +27,13 @@ export default function SakeDetail({ sake, onCompare, isInComparison, showCompar
       )}
       
       <div className="border-b border-gray-200 pb-3">
-        <dt className="font-medium text-gray-700">酒名</dt>
-        <dd className="text-lg font-semibold text-gray-900">{sake.name}</dd>
+        <div className="flex items-center justify-between">
+          <div>
+            <dt className="font-medium text-gray-700">酒名</dt>
+            <dd className="text-lg font-semibold text-gray-900">{sake.name}</dd>
+          </div>
+          <FavoriteButton sake={sake} />
+        </div>
       </div>
       
       <div className="border-b border-gray-200 pb-3">

@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "sake-search-nextjs",
+    "type": "nextjs",
+    "port": 3000
+  },
+  "development": {
+    "auto_start_server": true,
+    "server_command": "npm run dev",
+    "server_port": 3000,
+    "server_url": "http://localhost:3000",
+    "run_in_background": true
+  },
+  "commands": {
+    "dev": "npm run dev",
+    "build": "npm run build",
+    "test": "npm test",
+    "lint": "npm run lint"
+  },
+  "preferences": {
+    "always_start_dev_server_in_background": true,
+    "prompt_before_server_start": false
+  }
+}
