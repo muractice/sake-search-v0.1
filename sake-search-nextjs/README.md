@@ -90,3 +90,4 @@ MIT License
 ---
 
 Made with ❤️ by 酒サーチチーム
+# テスト用の小さな変更
