@@ -32,10 +32,11 @@ export const AuthForm = ({ onClose }: AuthFormProps) => {
           onClose?.();
         }, 1000);
       }
-    } catch (error: any) {
-      if (error.message?.includes('Invalid login credentials')) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : '';
+      if (errorMessage.includes('Invalid login credentials')) {
         setMessage('メールアドレスまたはパスワードが正しくありません');
-      } else if (error.message?.includes('User already registered')) {
+      } else if (errorMessage.includes('User already registered')) {
         setMessage('このメールアドレスは既に登録されています');
       } else {
         setMessage(isSignUp ? 'サインアップに失敗しました' : 'ログインに失敗しました');

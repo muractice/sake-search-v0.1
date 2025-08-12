@@ -110,7 +110,8 @@ export const useFavorites = () => {
       // エラー時はUIを元に戻す
       setFavorites(prev => prev.filter(s => s.id !== sake.id));
       
-      if (error.code !== '23505') {
+      const errorCode = (error as { code?: string }).code;
+      if (errorCode !== '23505') {
         // 重複エラー以外はアラート表示
         alert('お気に入りの追加に失敗しました');
       }
