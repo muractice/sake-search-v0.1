@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { SakeData } from '@/types/sake'
 
 // クライアントサイド用のSupabaseクライアント
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -20,21 +21,21 @@ export type Database = {
           id: string
           user_id: string
           sake_id: string
-          sake_data: any // JSON型
+          sake_data: SakeData
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           sake_id: string
-          sake_data: any
+          sake_data: SakeData
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           sake_id?: string
-          sake_data?: any
+          sake_data?: SakeData
           created_at?: string
         }
       }
