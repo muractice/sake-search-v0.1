@@ -1,14 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
+import { UserProfile } from '@/components/UserProfile';
+import { AuthForm } from '@/components/AuthForm';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
 import { useSelection } from '@/hooks/useSelection';
 
 export default function Home() {
+  const [showAuthForm, setShowAuthForm] = useState(false);
   
   // カスタムフックを使用
   const {
@@ -48,7 +53,8 @@ export default function Home() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <FavoritesProvider>
+      <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
@@ -76,8 +82,8 @@ export default function Home() {
           onClear={clearComparison}
         />
         
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 transform transition-all duration-500 hover:scale-[1.01]">
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-3 transform transition-all duration-500 hover:scale-[1.01]">
             <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
               {(isComparisonMode ? comparisonList : currentSakeData).length > 0 ? (
                 <div className="animate-slide-up">
@@ -97,27 +103,33 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="lg:col-span-1 transform transition-all duration-500 hover:scale-[1.01]">
-            <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                詳細情報
-              </h2>
-              <div className="transition-all duration-500 ease-in-out">
-                {selectedSake ? (
-                  <div className="animate-fade-in">
-                    <SakeDetail 
-                      sake={selectedSake}
-                      onCompare={toggleComparison}
-                      isInComparison={isInComparison(selectedSake.id)}
-                      showCompareButton={isComparisonMode}
-                    />
-                  </div>
-                ) : (
-                  <div className="text-gray-500 text-center py-8 animate-pulse">
-                    <div className="text-4xl mb-4">📊</div>
-                    <p>日本酒を検索すると、ここに詳細情報が表示されます</p>
-                  </div>
-                )}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+              <UserProfile onShowAuth={() => setShowAuthForm(true)} />
+            </div>
+            
+            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  詳細情報
+                </h2>
+                <div className="transition-all duration-500 ease-in-out">
+                  {selectedSake ? (
+                    <div className="animate-fade-in">
+                      <SakeDetail 
+                        sake={selectedSake}
+                        onCompare={toggleComparison}
+                        isInComparison={isInComparison(selectedSake.id)}
+                        showCompareButton={isComparisonMode}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 text-center py-8 animate-pulse">
+                      <div className="text-4xl mb-4">📊</div>
+                      <p>日本酒を検索すると、ここに詳細情報が表示されます</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -134,6 +146,21 @@ export default function Home() {
           </p>
         </div>
       </footer>
-    </div>
+
+      {/* 認証モーダル */}
+      {showAuthForm && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAuthForm(false);
+            }
+          }}
+        >
+          <AuthForm onClose={() => setShowAuthForm(false)} />
+        </div>
+      )}
+      </div>
+    </FavoritesProvider>
   );
 }
