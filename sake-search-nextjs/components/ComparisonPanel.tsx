@@ -8,6 +8,7 @@ interface ComparisonPanelProps {
   onToggleMode: () => void;
   onRemove: (sake: SakeData) => void;
   onClear: () => void;
+  onSelectSake?: (sake: SakeData) => void;
 }
 
 export default function ComparisonPanel({
@@ -15,7 +16,8 @@ export default function ComparisonPanel({
   isComparisonMode,
   onToggleMode,
   onRemove,
-  onClear
+  onClear,
+  onSelectSake
 }: ComparisonPanelProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6 animate-slide-down">
@@ -56,14 +58,19 @@ export default function ComparisonPanel({
               {comparisonList.map((sake, index) => (
                 <div
                   key={sake.id}
-                  className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-3 border border-purple-200 animate-fade-in"
+                  className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-3 border border-purple-200 animate-fade-in cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
+                  onClick={() => onSelectSake?.(sake)}
+                  title="クリックして詳細を表示"
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
                       {index + 1}
                     </div>
                     <button
-                      onClick={() => onRemove(sake)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRemove(sake);
+                      }}
                       className="text-red-500 hover:text-red-700 transition-colors"
                     >
                       ✕
