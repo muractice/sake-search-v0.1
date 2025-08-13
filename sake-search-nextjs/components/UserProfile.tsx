@@ -8,9 +8,10 @@ interface UserProfileProps {
   onShowAuth: () => void;
   onAddToComparison?: (sake: SakeData) => void;
   isInComparison?: (sakeId: string) => boolean;
+  onSelectSake?: (sake: SakeData) => void;
 }
 
-export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison }: UserProfileProps) => {
+export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onSelectSake }: UserProfileProps) => {
   const { 
     user, 
     favorites, 
@@ -87,7 +88,10 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison }: U
                           ? 'bg-blue-100 border border-blue-300 hover:bg-blue-200' 
                           : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
                       }`}
-                      onClick={() => onAddToComparison?.(sake)}
+                      onClick={() => {
+                        onAddToComparison?.(sake);
+                        onSelectSake?.(sake);
+                      }}
                       title={isAdded ? '比較リストに追加済み' : 'クリックして比較リストに追加'}
                     >
                       <div className="flex items-center justify-between">
