@@ -105,7 +105,14 @@ export default function Home() {
           
           <div className="lg:col-span-1 space-y-6">
             <div className="transform transition-all duration-500 hover:scale-[1.01]">
-              <UserProfile onShowAuth={() => setShowAuthForm(true)} />
+              <UserProfile 
+                onShowAuth={() => setShowAuthForm(true)} 
+                onAddToComparison={(sake) => {
+                  // お気に入りをクリックしたら比較リストに追加（比較モードは変更しない）
+                  toggleComparison(sake);
+                }}
+                isInComparison={isInComparison}
+              />
             </div>
             
             <div className="transform transition-all duration-500 hover:scale-[1.01]">
