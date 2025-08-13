@@ -85,6 +85,7 @@ export default function Home() {
           onToggleMode={toggleComparisonMode}
           onRemove={toggleComparison}
           onClear={clearComparison}
+          onSelectSake={selectSake}
         />
         
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
