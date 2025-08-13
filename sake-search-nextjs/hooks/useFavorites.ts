@@ -8,7 +8,6 @@ export const useFavorites = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [showFavorites, setShowFavorites] = useState(true);
-  const [comparisonMode, setComparisonMode] = useState(true);
 
 
   // ユーザーセッションの監視
@@ -171,25 +170,7 @@ export const useFavorites = () => {
     }
   };
 
-  // 比較モードを切り替え
-  const toggleComparisonMode = async () => {
-    const newValue = !comparisonMode;
-    setComparisonMode(newValue);
-
-    if (user) {
-      try {
-        await supabase
-          .from('user_preferences')
-          .upsert({
-            user_id: user.id,
-            comparison_mode: newValue,
-            updated_at: new Date().toISOString(),
-          });
-      } catch (error) {
-        console.error('Error updating preferences:', error);
-      }
-    }
-  };
+  // 比較モード管理は useComparison フックに移譲
 
   // メールでログイン
   const signInWithEmail = async (email: string, password: string) => {
@@ -239,14 +220,12 @@ export const useFavorites = () => {
     user,
     isLoading,
     showFavorites,
-    comparisonMode,
     
     // メソッド
     addFavorite,
     removeFavorite,
     isFavorite,
     toggleShowFavorites,
-    toggleComparisonMode,
     signInWithEmail,
     signUpWithEmail,
     signOut,

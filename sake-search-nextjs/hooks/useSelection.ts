@@ -9,10 +9,6 @@ export const useSelection = () => {
     setSelectedSake(sake);
   };
 
-  const clearSelection = () => {
-    setSelectedSake(null);
-  };
-
   const handleChartClick = (sake: SakeData) => {
     setSelectedSake(sake);
   };
@@ -24,7 +20,7 @@ export const useSelection = () => {
     
     // メソッド
     selectSake,
-    clearSelection,
     handleChartClick,
+    // clearSelection を削除（未使用のため）
   };
 };

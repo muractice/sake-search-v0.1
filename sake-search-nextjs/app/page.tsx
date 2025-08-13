@@ -55,8 +55,6 @@ export default function Home() {
     }
   };
 
-
-
   return (
     <FavoritesProvider>
       <div className="min-h-screen bg-gray-50">

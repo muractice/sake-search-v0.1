@@ -34,7 +34,7 @@ export const useComparison = () => {
 
   const clearComparison = () => {
     setComparisonList([]);
-    setIsComparisonMode(false);
+    // 比較モードは維持する（比較リストをクリアしてもモードは保持）
   };
 
   const toggleComparisonMode = () => {
@@ -52,6 +52,6 @@ export const useComparison = () => {
     isInComparison,
     clearComparison,
     toggleComparisonMode,
-    setIsComparisonMode,
+    // setIsComparisonMode を削除（toggleComparisonMode で十分）
   };
 };
