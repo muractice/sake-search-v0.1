@@ -19,6 +19,12 @@ export default function SearchSection({ onSearch, isLoading }: SearchSectionProp
     setQuery(e.target.value);
   };
 
+  const handleSakeNameClick = (sakeName: string) => {
+    setQuery(sakeName);
+  };
+
+  const sakeNames = ['獺祭', '八海山', '伯楽星', '十四代', '而今', '新政', '田酒', '鍋島', '黒龍', '飛露喜'];
+
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300 animate-slide-down">
       <form onSubmit={handleSubmit} className="flex gap-4">
@@ -27,7 +33,7 @@ export default function SearchSection({ onSearch, isLoading }: SearchSectionProp
             type="text"
             value={query}
             onChange={handleInputChange}
-            placeholder="日本酒名を入力してください（例：獺祭、八海山、久保田）"
+            placeholder="日本酒名を入力してください（例：獺祭、八海山、伯楽星）"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg transition-all duration-300 hover:border-blue-400 focus:scale-[1.02]"
             disabled={isLoading}
           />
@@ -59,9 +65,19 @@ export default function SearchSection({ onSearch, isLoading }: SearchSectionProp
       </form>
       
       <div className="mt-4 text-sm text-gray-600 animate-fade-in-delay">
-        <p className="hover:text-blue-600 transition-colors duration-200">
-          💡 試してみる: 獺祭、八海山、久保田、十四代、而今、新政、田酒、鍋島、黒龍、飛露喜
-        </p>
+        <p className="mb-2">💡 試してみる:</p>
+        <div className="flex flex-wrap gap-2">
+          {sakeNames.map((sakeName) => (
+            <button
+              key={sakeName}
+              onClick={() => handleSakeNameClick(sakeName)}
+              className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm hover:bg-blue-100 hover:text-blue-800 transition-all duration-200 cursor-pointer border border-blue-200 hover:border-blue-300 transform hover:scale-105"
+              type="button"
+            >
+              {sakeName}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
