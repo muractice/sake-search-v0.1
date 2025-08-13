@@ -49,11 +49,6 @@ export const useSearch = () => {
     }
   };
 
-  const clearSearch = () => {
-    setCurrentSakeData([]);
-    setIsLoading(false);
-  };
-
   // 公開するAPIのみreturn
   return {
     // 状態
@@ -62,6 +57,6 @@ export const useSearch = () => {
     
     // メソッド（publicのみ）
     search,
-    clearSearch,
+    // clearSearch を削除（未使用のため）
   };
 };

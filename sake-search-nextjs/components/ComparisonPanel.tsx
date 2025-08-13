@@ -8,7 +8,7 @@ interface ComparisonPanelProps {
   onToggleMode: () => void;
   onRemove: (sake: SakeData) => void;
   onClear: () => void;
-  onSelectSake?: (sake: SakeData) => void;
+  onSelectSake: (sake: SakeData) => void;
 }
 
 export default function ComparisonPanel({
@@ -59,7 +59,7 @@ export default function ComparisonPanel({
                 <div
                   key={sake.id}
                   className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-3 border border-purple-200 animate-fade-in cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-                  onClick={() => onSelectSake?.(sake)}
+                  onClick={() => onSelectSake(sake)}
                   title="クリックして詳細を表示"
                 >
                   <div className="flex items-start justify-between mb-2">
