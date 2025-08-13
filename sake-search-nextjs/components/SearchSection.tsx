@@ -21,6 +21,7 @@ export default function SearchSection({ onSearch, isLoading }: SearchSectionProp
 
   const handleSakeNameClick = (sakeName: string) => {
     setQuery(sakeName);
+    onSearch(sakeName);
   };
 
   const sakeNames = ['獺祭', '八海山', '伯楽星', '十四代', '而今', '新政', '田酒', '鍋島', '黒龍', '飛露喜'];
