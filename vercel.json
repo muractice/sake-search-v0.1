@@ -3,10 +3,5 @@
   "framework": "nextjs",
   "buildCommand": "cd sake-search-nextjs && npm run build",
   "outputDirectory": "sake-search-nextjs/.next",
-  "installCommand": "cd sake-search-nextjs && npm ci",
-  "functions": {
-    "sake-search-nextjs/pages/api/**/*.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  "installCommand": "cd sake-search-nextjs && npm ci"
 }
