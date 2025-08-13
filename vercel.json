@@ -1,7 +1,3 @@
 {
-  "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "cd sake-search-nextjs && npm run build",
-  "outputDirectory": "sake-search-nextjs/.next",
-  "installCommand": "cd sake-search-nextjs && npm ci"
+  "framework": "nextjs"
 }
