@@ -10,12 +10,10 @@ interface FavoritesContextType {
   user: User | null;
   isLoading: boolean;
   showFavorites: boolean;
-  comparisonMode: boolean;
   addFavorite: (sake: SakeData) => Promise<void>;
   removeFavorite: (sakeId: string) => Promise<void>;
   isFavorite: (sakeId: string) => boolean;
   toggleShowFavorites: () => Promise<void>;
-  toggleComparisonMode: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;

@@ -3,7 +3,7 @@ import { SakeData } from '@/types/sake';
 
 export const useComparison = () => {
   const [comparisonList, setComparisonList] = useState<SakeData[]>([]);
-  const [isComparisonMode, setIsComparisonMode] = useState(true);
+  // 比較モードは常にON（切り替え機能を削除）
 
   // プライベート関数（外部に公開しない）
   const addToComparison = (sake: SakeData) => {
@@ -34,24 +34,19 @@ export const useComparison = () => {
 
   const clearComparison = () => {
     setComparisonList([]);
-    // 比較モードは維持する（比較リストをクリアしてもモードは保持）
   };
 
-  const toggleComparisonMode = () => {
-    setIsComparisonMode(prev => !prev);
-  };
+  // toggleComparisonMode を削除（常にONのため不要）
 
   // 公開するAPIのみreturn
   return {
     // 状態
     comparisonList,
-    isComparisonMode,
     
     // メソッド（publicのみ）
     toggleComparison,
     isInComparison,
     clearComparison,
-    toggleComparisonMode,
-    // setIsComparisonMode を削除（toggleComparisonMode で十分）
+    // isComparisonMode と toggleComparisonMode を削除（常にONのため不要）
   };
 };

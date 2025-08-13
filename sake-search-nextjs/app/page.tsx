@@ -18,11 +18,9 @@ export default function Home() {
   // カスタムフックを使用
   const {
     comparisonList,
-    isComparisonMode,
     toggleComparison,
     isInComparison,
     clearComparison,
-    toggleComparisonMode,
   } = useComparison();
 
   const {
@@ -79,8 +77,6 @@ export default function Home() {
         
         <ComparisonPanel
           comparisonList={comparisonList}
-          isComparisonMode={isComparisonMode}
-          onToggleMode={toggleComparisonMode}
           onRemove={toggleComparison}
           onClear={clearComparison}
           onSelectSake={selectSake}
@@ -89,10 +85,10 @@ export default function Home() {
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3 transform transition-all duration-500 hover:scale-[1.01]">
             <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
-              {(isComparisonMode ? comparisonList : currentSakeData).length > 0 ? (
+              {comparisonList.length > 0 ? (
                 <div className="animate-slide-up">
                   <TasteChart 
-                    sakeData={isComparisonMode ? comparisonList : currentSakeData} 
+                    sakeData={comparisonList} 
                     onSakeClick={handleChartClick}
                   />
                 </div>
@@ -132,7 +128,7 @@ export default function Home() {
                         sake={selectedSake}
                         onCompare={toggleComparison}
                         isInComparison={isInComparison(selectedSake.id)}
-                        showCompareButton={isComparisonMode}
+                        showCompareButton={true}
                       />
                     </div>
                   ) : (

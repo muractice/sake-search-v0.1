@@ -4,8 +4,6 @@ import { SakeData } from '@/types/sake';
 
 interface ComparisonPanelProps {
   comparisonList: SakeData[];
-  isComparisonMode: boolean;
-  onToggleMode: () => void;
   onRemove: (sake: SakeData) => void;
   onClear: () => void;
   onSelectSake: (sake: SakeData) => void;
@@ -13,8 +11,6 @@ interface ComparisonPanelProps {
 
 export default function ComparisonPanel({
   comparisonList,
-  isComparisonMode,
-  onToggleMode,
   onRemove,
   onClear,
   onSelectSake
@@ -23,19 +19,9 @@ export default function ComparisonPanel({
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6 animate-slide-down">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          比較モード
+          日本酒比較
         </h2>
         <div className="flex gap-3">
-          <button
-            onClick={onToggleMode}
-            className={`px-4 py-2 rounded-lg font-semibold transition-all duration-300 ${
-              isComparisonMode 
-                ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {isComparisonMode ? '比較モード ON' : '比較モード OFF'}
-          </button>
           {comparisonList.length > 0 && (
             <button
               onClick={onClear}
@@ -47,7 +33,7 @@ export default function ComparisonPanel({
         </div>
       </div>
 
-      {isComparisonMode && (
+      <div>
         <div>
           <p className="text-sm text-gray-600 mb-3">
             最大4つまでの日本酒を選択して比較できます（{comparisonList.length}/4）
@@ -88,7 +74,7 @@ export default function ComparisonPanel({
             </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

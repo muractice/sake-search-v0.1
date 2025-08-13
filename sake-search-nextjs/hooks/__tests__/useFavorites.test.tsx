@@ -269,21 +269,6 @@ describe('useFavorites', () => {
       expect(result.current.showFavorites).toBe(!initialShowFavorites);
     });
 
-    it('比較モードを切り替えられる', async () => {
-      const { result } = renderHook(() => useFavorites());
-
-      act(() => {
-        result.current.user = mockUser as any;
-      });
-
-      const initialComparisonMode = result.current.comparisonMode;
-
-      await act(async () => {
-        await result.current.toggleComparisonMode();
-      });
-
-      expect(result.current.comparisonMode).toBe(!initialComparisonMode);
-    });
   });
 
   describe('エラーハンドリング', () => {
