@@ -44,6 +44,11 @@ export default function Home() {
       
       if (!searchResult) {
         alert('該当する日本酒が見つかりませんでした');
+      } else {
+        // 検索結果を自動的に比較リストに追加（既に存在しない場合のみ）
+        if (!isInComparison(searchResult.id)) {
+          toggleComparison(searchResult);
+        }
       }
     } catch {
       alert('検索中にエラーが発生しました');
@@ -112,6 +117,7 @@ export default function Home() {
                   toggleComparison(sake);
                 }}
                 isInComparison={isInComparison}
+                onSelectSake={selectSake}
               />
             </div>
             
