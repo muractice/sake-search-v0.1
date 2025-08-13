@@ -71,7 +71,7 @@ export const useFavorites = () => {
 
       if (data) {
         setShowFavorites(data.show_favorites);
-        setComparisonMode(data.comparison_mode);
+        // comparisonMode は削除済み（常にON）
       }
     } catch (error) {
       console.error('Error loading preferences:', error);

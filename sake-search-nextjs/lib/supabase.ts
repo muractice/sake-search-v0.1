@@ -55,7 +55,6 @@ export type Database = {
           id: string
           user_id: string
           show_favorites: boolean
-          comparison_mode: boolean
           created_at: string
           updated_at: string
         }
@@ -63,7 +62,6 @@ export type Database = {
           id?: string
           user_id: string
           show_favorites?: boolean
-          comparison_mode?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -71,7 +69,6 @@ export type Database = {
           id?: string
           user_id?: string
           show_favorites?: boolean
-          comparison_mode?: boolean
           created_at?: string
           updated_at?: string
         }

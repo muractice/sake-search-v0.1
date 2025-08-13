@@ -34,10 +34,6 @@ describe('useComparison', () => {
       expect(result.current.comparisonList).toHaveLength(0);
     });
 
-    test('比較モードがfalseであること', () => {
-      const { result } = renderHook(() => useComparison());
-      expect(result.current.isComparisonMode).toBe(false);
-    });
   });
 
   describe('toggleComparison', () => {
@@ -152,55 +148,8 @@ describe('useComparison', () => {
       expect(result.current.comparisonList).toHaveLength(0);
     });
 
-    test('比較モードもfalseになること', () => {
-      const { result } = renderHook(() => useComparison());
-
-      act(() => {
-        result.current.setIsComparisonMode(true);
-      });
-      expect(result.current.isComparisonMode).toBe(true);
-
-      act(() => {
-        result.current.clearComparison();
-      });
-
-      expect(result.current.isComparisonMode).toBe(false);
-    });
   });
 
-  describe('toggleComparisonMode', () => {
-    test('比較モードをトグルできること', () => {
-      const { result } = renderHook(() => useComparison());
-
-      expect(result.current.isComparisonMode).toBe(false);
-
-      act(() => {
-        result.current.toggleComparisonMode();
-      });
-      expect(result.current.isComparisonMode).toBe(true);
-
-      act(() => {
-        result.current.toggleComparisonMode();
-      });
-      expect(result.current.isComparisonMode).toBe(false);
-    });
-  });
-
-  describe('setIsComparisonMode', () => {
-    test('比較モードを直接設定できること', () => {
-      const { result } = renderHook(() => useComparison());
-
-      act(() => {
-        result.current.setIsComparisonMode(true);
-      });
-      expect(result.current.isComparisonMode).toBe(true);
-
-      act(() => {
-        result.current.setIsComparisonMode(false);
-      });
-      expect(result.current.isComparisonMode).toBe(false);
-    });
-  });
 
   describe('プライベート関数のテスト', () => {
     test('addToComparisonとremoveFromComparisonは外部から呼び出せないこと', () => {
@@ -216,12 +165,9 @@ describe('useComparison', () => {
       
       // 公開されているプロパティとメソッドの確認
       expect(result.current).toHaveProperty('comparisonList');
-      expect(result.current).toHaveProperty('isComparisonMode');
       expect(result.current).toHaveProperty('toggleComparison');
       expect(result.current).toHaveProperty('isInComparison');
       expect(result.current).toHaveProperty('clearComparison');
-      expect(result.current).toHaveProperty('toggleComparisonMode');
-      expect(result.current).toHaveProperty('setIsComparisonMode');
     });
   });
 });
