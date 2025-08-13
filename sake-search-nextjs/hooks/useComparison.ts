@@ -3,7 +3,7 @@ import { SakeData } from '@/types/sake';
 
 export const useComparison = () => {
   const [comparisonList, setComparisonList] = useState<SakeData[]>([]);
-  const [isComparisonMode, setIsComparisonMode] = useState(false);
+  const [isComparisonMode, setIsComparisonMode] = useState(true);
 
   // プライベート関数（外部に公開しない）
   const addToComparison = (sake: SakeData) => {

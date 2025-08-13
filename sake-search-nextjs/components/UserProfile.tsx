@@ -2,11 +2,15 @@
 
 import { useFavoritesContext } from '@/contexts/FavoritesContext';
 
+import { SakeData } from '@/types/sake';
+
 interface UserProfileProps {
   onShowAuth: () => void;
+  onAddToComparison?: (sake: SakeData) => void;
+  isInComparison?: (sakeId: string) => boolean;
 }
 
-export const UserProfile = ({ onShowAuth }: UserProfileProps) => {
+export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison }: UserProfileProps) => {
   const { 
     user, 
     favorites, 
@@ -73,12 +77,39 @@ export const UserProfile = ({ onShowAuth }: UserProfileProps) => {
             <div className="mt-4 pt-4 border-t">
               <h4 className="text-sm font-medium mb-2">お気に入り一覧</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {favorites.slice(0, 5).map((sake) => (
-                  <div key={sake.id} className="text-xs bg-gray-50 p-2 rounded">
-                    <div className="font-medium">{sake.name}</div>
-                    <div className="text-gray-500">{sake.brewery}</div>
-                  </div>
-                ))}
+                {favorites.slice(0, 5).map((sake) => {
+                  const isAdded = isInComparison?.(sake.id) || false;
+                  return (
+                    <div 
+                      key={sake.id} 
+                      className={`text-xs p-2 rounded transition-all duration-200 cursor-pointer ${
+                        isAdded 
+                          ? 'bg-blue-100 border border-blue-300 hover:bg-blue-200' 
+                          : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
+                      }`}
+                      onClick={() => onAddToComparison?.(sake)}
+                      title={isAdded ? '比較リストに追加済み' : 'クリックして比較リストに追加'}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium">{sake.name}</div>
+                          <div className="text-gray-500">{sake.brewery}</div>
+                        </div>
+                        <div className="ml-2">
+                          {isAdded ? (
+                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
                 {favorites.length > 5 && (
                   <div className="text-xs text-gray-500 text-center">
                     他 {favorites.length - 5} 件
