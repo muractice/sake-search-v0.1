@@ -96,3 +96,4 @@ Made with ❤️ by 酒サーチチーム
 # Node.js 20.xでのデプロイテスト - 07:36:30
 # Root Directory設定後のデプロイテスト - 08:01:08
 # Node.js 20.x + vercel.json修正後のデプロイテスト - 08:11:18
+# vercel.json重複解消後の最終デプロイテスト - 09:03:01
