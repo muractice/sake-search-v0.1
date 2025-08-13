@@ -97,3 +97,4 @@ Made with ❤️ by 酒サーチチーム
 # Root Directory設定後のデプロイテスト - 08:01:08
 # Node.js 20.x + vercel.json修正後のデプロイテスト - 08:11:18
 # vercel.json重複解消後の最終デプロイテスト - 09:03:01
+# Root Directory設定変更後のテスト - 2025年 8月13日 水曜日 09時50分44秒 JST
