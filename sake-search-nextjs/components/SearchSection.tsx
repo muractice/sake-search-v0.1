@@ -5,9 +5,10 @@ import { useState } from 'react';
 interface SearchSectionProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
+  onShowMenuScanner?: () => void;
 }
 
-export default function SearchSection({ onSearch, isLoading }: SearchSectionProps) {
+export default function SearchSection({ onSearch, isLoading, onShowMenuScanner }: SearchSectionProps) {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -45,24 +46,38 @@ export default function SearchSection({ onSearch, isLoading }: SearchSectionProp
           )}
         </div>
         
-        <button
-          type="submit"
-          disabled={isLoading || !query.trim()}
-          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-        >
-          <span className="flex items-center gap-2">
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                検索中...
-              </>
-            ) : (
-              <>
-                🔍 検索
-              </>
-            )}
-          </span>
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            disabled={isLoading || !query.trim()}
+            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-lg transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+          >
+            <span className="flex items-center gap-2">
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  検索中...
+                </>
+              ) : (
+                <>
+                  🔍 検索
+                </>
+              )}
+            </span>
+          </button>
+          
+          {onShowMenuScanner && (
+            <button
+              type="button"
+              onClick={onShowMenuScanner}
+              className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-lg hover:from-green-700 hover:to-emerald-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 text-lg transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+            >
+              <span className="flex items-center gap-2">
+                📷 メニューをスキャン
+              </span>
+            </button>
+          )}
+        </div>
       </form>
       
       <div className="mt-4 text-sm text-gray-600 animate-fade-in-delay">

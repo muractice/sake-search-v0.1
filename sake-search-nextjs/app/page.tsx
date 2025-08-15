@@ -5,6 +5,7 @@ import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
+import MenuScanner from '@/components/MenuScanner';
 import { UserProfile } from '@/components/UserProfile';
 import { AuthForm } from '@/components/AuthForm';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -14,6 +15,7 @@ import { useSelection } from '@/hooks/useSelection';
 
 export default function Home() {
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [showMenuScanner, setShowMenuScanner] = useState(false);
   
   // カスタムフックを使用
   const {
@@ -53,6 +55,90 @@ export default function Home() {
     }
   };
 
+  // メニューから見つかった日本酒を処理
+  const handleSakeFound = async (sakeName: string) => {
+    try {
+      const searchResult = await search(sakeName);
+      
+      if (searchResult) {
+        // 比較リストの件数チェック（最大4件）
+        if (comparisonList.length >= 4 && !isInComparison(searchResult.id)) {
+          return { success: false, message: `比較リストは4件までです。他のアイテムを削除してから追加してください` };
+        }
+        
+        // 検索結果を比較リストに追加（既に存在しない場合のみ）
+        if (!isInComparison(searchResult.id)) {
+          toggleComparison(searchResult);
+          return { success: true, message: `「${sakeName}」を比較に追加しました！` };
+        } else {
+          return { success: false, message: `「${sakeName}」は既に比較リストにあります` };
+        }
+      } else {
+        return { success: false, message: `「${sakeName}」が見つかりませんでした` };
+      }
+    } catch {
+      return { success: false, message: '検索中にエラーが発生しました' };
+    }
+  };
+
+  // 比較リストから日本酒を削除
+  const handleSakeRemove = async (sakeName: string) => {
+    try {
+      const searchResult = await search(sakeName);
+      
+      if (searchResult && isInComparison(searchResult.id)) {
+        toggleComparison(searchResult);
+        return { success: true, message: `「${sakeName}」を比較リストから削除しました` };
+      } else {
+        return { success: false, message: `「${sakeName}」は比較リストにありません` };
+      }
+    } catch {
+      return { success: false, message: '削除中にエラーが発生しました' };
+    }
+  };
+
+  // 複数の日本酒を一括処理
+  const handleMultipleSakeFound = async (sakeNames: string[]) => {
+    const results = {
+      added: [] as string[],
+      alreadyExists: [] as string[],
+      notFound: [] as string[],
+      errors: [] as string[]
+    };
+
+    for (const sakeName of sakeNames) {
+      const result = await handleSakeFound(sakeName);
+      if (result.success && result.message.includes('追加しました')) {
+        results.added.push(sakeName);
+      } else if (result.message.includes('既に比較リストにあります')) {
+        results.alreadyExists.push(sakeName);
+      } else if (result.message.includes('見つかりませんでした')) {
+        results.notFound.push(sakeName);
+      } else {
+        results.errors.push(sakeName);
+      }
+    }
+
+    // 結果のサマリーを表示
+    let message = '';
+    if (results.added.length > 0) {
+      message += `✅ ${results.added.length}件追加: ${results.added.join(', ')}\n`;
+    }
+    if (results.alreadyExists.length > 0) {
+      message += `ℹ️ ${results.alreadyExists.length}件既存: ${results.alreadyExists.join(', ')}\n`;
+    }
+    if (results.notFound.length > 0) {
+      message += `❌ ${results.notFound.length}件見つからず: ${results.notFound.join(', ')}\n`;
+    }
+    if (results.errors.length > 0) {
+      message += `⚠️ ${results.errors.length}件エラー: ${results.errors.join(', ')}`;
+    }
+    
+    if (message) {
+      alert(message);
+    }
+  };
+
   return (
     <FavoritesProvider>
       <div className="min-h-screen bg-gray-50">
@@ -73,7 +159,11 @@ export default function Home() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <SearchSection onSearch={handleSearch} isLoading={isLoading} />
+        <SearchSection 
+          onSearch={handleSearch} 
+          isLoading={isLoading}
+          onShowMenuScanner={() => setShowMenuScanner(true)}
+        />
         
         <ComparisonPanel
           comparisonList={comparisonList}
@@ -167,6 +257,24 @@ export default function Home() {
         >
           <AuthForm onClose={() => setShowAuthForm(false)} />
         </div>
+      )}
+
+      {/* メニュースキャナーモーダル */}
+      {showMenuScanner && (
+        <MenuScanner
+          onSakeFound={async (sakeName) => {
+            const result = await handleSakeFound(sakeName);
+            alert(result.message);
+            return result;
+          }}
+          onRemoveFromComparison={async (sakeName) => {
+            const result = await handleSakeRemove(sakeName);
+            alert(result.message);
+            return result;
+          }}
+          onMultipleSakeFound={handleMultipleSakeFound}
+          onClose={() => setShowMenuScanner(false)}
+        />
       )}
       </div>
     </FavoritesProvider>
