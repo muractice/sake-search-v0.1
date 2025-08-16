@@ -127,8 +127,9 @@ describe('Gemini Vision API Tests', () => {
 
     expect(NextResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: 'Gemini API timeout - please try again',
-        timeout: true
+        error: 'Request timeout - image too complex or server busy',
+        timeout: true,
+        vercel_info: expect.any(Object)
       }),
       { status: 408 }
     );
