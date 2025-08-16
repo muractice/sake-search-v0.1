@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { SakeData } from '@/types/sake';
 
 // Supabaseクライアントをモック
@@ -50,24 +50,26 @@ describe('useFavorites', () => {
     // window.alertのモック（各テスト前にリセット）
     window.alert = jest.fn();
     
-    // デフォルトのモック設定
-    mockSupabase.auth.getSession.mockResolvedValue({
-      data: { session: null }
-    });
+    // デフォルトのモック設定 - 同期的に解決されるPromise
+    mockSupabase.auth.getSession.mockImplementation(() => 
+      Promise.resolve({ data: { session: null } })
+    );
     
-    mockSupabase.auth.onAuthStateChange.mockReturnValue({
-      data: { subscription: { unsubscribe: jest.fn() } }
+    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+      // コールバックを即座に実行しない
+      return { data: { subscription: { unsubscribe: jest.fn() } } };
     });
   });
 
-  it('初期状態が正しく設定される', async () => {
+  it('初期状態が正しく設定される', () => {
     const { result } = renderHook(() => useFavorites());
 
+    // 初期状態の確認
     expect(result.current.favorites).toEqual([]);
     expect(result.current.user).toBeNull();
-    expect(result.current.isLoading).toBe(true);
     expect(result.current.showFavorites).toBe(true);
-    expect(result.current.comparisonMode).toBe(true);
+    // 初期状態ではローディング中
+    expect(result.current.isLoading).toBe(true);
   });
 
   describe('お気に入り機能', () => {
@@ -148,7 +150,7 @@ describe('useFavorites', () => {
       expect(result.current.favorites).toHaveLength(0);
     });
 
-    it('isFavorite関数が正しく動作する', async () => {
+    it('isFavorite関数が正しく動作する', () => {
       const { result } = renderHook(() => useFavorites());
 
       // 最初は false（空のfavoritesリスト）

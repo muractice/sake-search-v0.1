@@ -1,26 +1,17 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { SakeData } from '@/types/sake';
 
 // シンプルなSupabaseモック
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: jest.fn().mockResolvedValue({ data: { session: null } }),
-      onAuthStateChange: jest.fn().mockReturnValue({
-        data: { subscription: { unsubscribe: jest.fn() } }
-      }),
+      getSession: jest.fn(),
+      onAuthStateChange: jest.fn(),
       signInWithPassword: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
     },
-    from: jest.fn().mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      insert: jest.fn().mockResolvedValue({ error: null }),
-      delete: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      order: jest.fn().mockResolvedValue({ data: [], error: null }),
-      single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
-    }),
+    from: jest.fn(),
   }
 }));
 
@@ -42,6 +33,28 @@ describe('useFavorites (Simple Tests)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     window.alert = jest.fn();
+    
+    // デフォルトモック設定
+    mockSupabase.auth.getSession.mockImplementation(() => 
+      Promise.resolve({ data: { session: null } })
+    );
+    
+    mockSupabase.auth.onAuthStateChange.mockImplementation(() => ({
+      data: { subscription: { unsubscribe: jest.fn() } }
+    }));
+    
+    mockSupabase.auth.signInWithPassword.mockImplementation(() => Promise.resolve({ error: null }));
+    mockSupabase.auth.signUp.mockImplementation(() => Promise.resolve({ error: null }));
+    mockSupabase.auth.signOut.mockImplementation(() => Promise.resolve({ error: null }));
+    
+    mockSupabase.from.mockImplementation(() => ({
+      select: jest.fn().mockReturnThis(),
+      insert: jest.fn(() => Promise.resolve({ error: null })),
+      delete: jest.fn().mockReturnThis(),
+      eq: jest.fn().mockReturnThis(),
+      order: jest.fn(() => Promise.resolve({ data: [], error: null })),
+      single: jest.fn(() => Promise.resolve({ data: null, error: { code: 'PGRST116' } })),
+    }));
   });
 
   it('初期状態を確認', () => {
@@ -52,6 +65,9 @@ describe('useFavorites (Simple Tests)', () => {
     expect(typeof result.current.addFavorite).toBe('function');
     expect(typeof result.current.removeFavorite).toBe('function');
     expect(typeof result.current.isFavorite).toBe('function');
+    
+    // 初期状態ではisLoadingはtrueであることを確認
+    expect(result.current.isLoading).toBe(true);
   });
 
   it('isFavorite関数の基本動作', () => {
@@ -85,14 +101,12 @@ describe('useFavorites (Simple Tests)', () => {
     expect(mockSupabase.auth.signOut).toHaveBeenCalled();
   });
 
-  it('お気に入り追加の楽観的更新', async () => {
+  it('お気に入り追加の楽観的更新', () => {
     const { result } = renderHook(() => useFavorites());
 
     // ユーザーがログインしている状態をシミュレート
-    act(() => {
-      // 直接stateを変更するのではなく、内部状態の確認のみ行う
-      expect(result.current.favorites).toEqual([]);
-    });
+    // 直接stateを変更するのではなく、内部状態の確認のみ行う
+    expect(result.current.favorites).toEqual([]);
   });
 
   it('未ログイン時のお気に入り追加', async () => {

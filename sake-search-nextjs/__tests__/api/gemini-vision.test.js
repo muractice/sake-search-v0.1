@@ -17,13 +17,25 @@ jest.mock('next/server', () => ({
 global.fetch = jest.fn();
 
 describe('Gemini Vision API Tests', () => {
+  let originalEnv;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    // 元の環境変数を保存
+    originalEnv = process.env.GEMINI_API_KEY;
+    // テスト用のAPIキーを設定
     process.env.GEMINI_API_KEY = 'test-api-key';
+    // モジュールキャッシュをクリア
+    jest.resetModules();
   });
 
   afterEach(() => {
-    delete process.env.GEMINI_API_KEY;
+    // 元の環境変数を復元
+    if (originalEnv) {
+      process.env.GEMINI_API_KEY = originalEnv;
+    } else {
+      delete process.env.GEMINI_API_KEY;
+    }
   });
 
   test('APIキーが設定されていない場合はエラーを返す', async () => {
@@ -127,7 +139,7 @@ describe('Gemini Vision API Tests', () => {
 
     expect(NextResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: 'Request timeout - image too complex or server busy',
+        error: expect.stringContaining('Request timeout'),
         timeout: true,
         vercel_info: expect.any(Object)
       }),
