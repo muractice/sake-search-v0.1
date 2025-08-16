@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo "🔍 Pre-commit checks running..."
+
+# リント実行
+echo "📝 Running lint..."
+npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ Lint failed. Please fix lint errors before committing."
+  exit 1
+fi
+
+# テスト実行
+echo "🧪 Running tests..."
+npm test
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix tests before committing."
+  exit 1
+fi
+
+# ビルド確認
+echo "🏗️ Running build..."
+npm run build
+if [ $? -ne 0 ]; then
+  echo "❌ Build failed. Please fix build errors before committing."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
