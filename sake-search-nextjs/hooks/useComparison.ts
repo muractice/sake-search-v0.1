@@ -8,7 +8,7 @@ export const useComparison = () => {
   // プライベート関数（外部に公開しない）
   const addToComparison = (sake: SakeData) => {
     setComparisonList(prev => {
-      if (prev.length >= 4 || prev.find(s => s.id === sake.id)) {
+      if (prev.length >= 10 || prev.find(s => s.id === sake.id)) {
         return prev;
       }
       return [...prev, sake];
