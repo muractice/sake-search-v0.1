@@ -34,7 +34,7 @@ describe('Gemini Vision API Tests', () => {
     
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
-        image: 'data:image/jpeg;base64,testimage'
+        image: 'data:image/jpeg;base64,' + 'a'.repeat(200) // 十分な長さのbase64データ
       })
     };
 
@@ -83,7 +83,7 @@ describe('Gemini Vision API Tests', () => {
     
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
-        image: 'data:image/jpeg;base64,testimage'
+        image: 'data:image/jpeg;base64,' + 'a'.repeat(200) // 十分な長さのbase64データ
       })
     };
 
@@ -119,7 +119,7 @@ describe('Gemini Vision API Tests', () => {
     
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
-        image: 'data:image/jpeg;base64,testimage'
+        image: 'data:image/jpeg;base64,' + 'a'.repeat(200)
       })
     };
 
@@ -128,7 +128,7 @@ describe('Gemini Vision API Tests', () => {
     expect(NextResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
         error: 'Gemini API timeout - please try again',
-        fallback: true
+        timeout: true
       }),
       { status: 408 }
     );
@@ -143,7 +143,7 @@ describe('Gemini Vision API Tests', () => {
     
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
-        image: 'data:image/jpeg;base64,testimage'
+        image: 'data:image/jpeg;base64,' + 'a'.repeat(200)
       })
     };
 
@@ -151,8 +151,7 @@ describe('Gemini Vision API Tests', () => {
 
     expect(NextResponse.json).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: 'Network error',
-        fallback: true
+        error: 'Network error'
       }),
       { status: 500 }
     );
@@ -179,7 +178,7 @@ describe('Gemini Vision API Tests', () => {
     
     const mockRequest = {
       json: jest.fn().mockResolvedValue({
-        image: 'data:image/jpeg;base64,testimage'
+        image: 'data:image/jpeg;base64,' + 'a'.repeat(200)
       })
     };
 

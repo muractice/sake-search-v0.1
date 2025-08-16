@@ -4,18 +4,33 @@ export async function POST(request: NextRequest) {
   try {
     const { image } = await request.json();
     
+    if (!image) {
+      return NextResponse.json({ 
+        error: 'No image data provided' 
+      }, { status: 400 });
+    }
+    
+    // 画像のMIMEタイプを検出
+    const mimeTypeMatch = image.match(/^data:image\/([a-z]+);base64,/);
+    const mimeType = mimeTypeMatch ? `image/${mimeTypeMatch[1]}` : 'image/jpeg';
+    
     // 画像データからbase64部分を取得
     const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
+    
+    // base64データの妥当性を簡易チェック
+    if (!base64Data || base64Data.length < 100) {
+      return NextResponse.json({ 
+        error: 'Invalid image data provided' 
+      }, { status: 400 });
+    }
     
     // Gemini API キー（環境変数から取得）
     const apiKey = process.env.GEMINI_API_KEY;
     
     if (!apiKey) {
       return NextResponse.json({ 
-        text: '', 
-        error: 'Gemini API key not configured',
-        fallback: true 
-      });
+        error: 'Gemini API key not configured' 
+      }, { status: 500 });
     }
 
     // Gemini Vision APIを呼び出し（30秒タイムアウト付き）
@@ -36,7 +51,7 @@ export async function POST(request: NextRequest) {
               parts: [
                 {
                   inline_data: {
-                    mime_type: 'image/jpeg',
+                    mime_type: mimeType,
                     data: base64Data,
                   },
                 },

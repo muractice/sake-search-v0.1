@@ -74,7 +74,7 @@ describe('useSelection', () => {
   });
 
   describe('clearSelection機能', () => {
-    test('選択をクリアできること', () => {
+    test('selectSake(null)で選択をクリアできること', () => {
       const { result } = renderHook(() => useSelection());
 
       act(() => {
@@ -83,7 +83,7 @@ describe('useSelection', () => {
       expect(result.current.selectedSake).not.toBe(null);
 
       act(() => {
-        result.current.clearSelection();
+        result.current.selectSake(null);
       });
       expect(result.current.selectedSake).toBe(null);
     });
@@ -94,7 +94,7 @@ describe('useSelection', () => {
       expect(result.current.selectedSake).toBe(null);
 
       act(() => {
-        result.current.clearSelection();
+        result.current.selectSake(null);
       });
       expect(result.current.selectedSake).toBe(null);
     });
@@ -134,12 +134,12 @@ describe('useSelection', () => {
       // 公開されているプロパティとメソッドの確認
       expect(result.current).toHaveProperty('selectedSake');
       expect(result.current).toHaveProperty('selectSake');
-      expect(result.current).toHaveProperty('clearSelection');
+      // clearSelection は削除済み
       expect(result.current).toHaveProperty('handleChartClick');
       
       // 関数の型確認
       expect(typeof result.current.selectSake).toBe('function');
-      expect(typeof result.current.clearSelection).toBe('function');
+      // clearSelection は削除済み
       expect(typeof result.current.handleChartClick).toBe('function');
     });
   });
@@ -163,9 +163,9 @@ describe('useSelection', () => {
       });
       expect(result.current.selectedSake?.name).toBe('日本酒2');
 
-      // clearSelectionで選択解除
+      // selectSake(null)で選択解除
       act(() => {
-        result.current.clearSelection();
+        result.current.selectSake(null);
       });
       expect(result.current.selectedSake).toBe(null);
 
