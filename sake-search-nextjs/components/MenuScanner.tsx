@@ -24,13 +24,56 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
 
+  // 画像最適化（Vercel向け）
+  const optimizeImage = async (imageUrl: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = document.createElement('img');
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(imageUrl);
+          return;
+        }
+
+        // 最大サイズを1200pxに制限
+        const maxSize = 1200;
+        let { width, height } = img;
+
+        if (width > maxSize || height > maxSize) {
+          const ratio = Math.min(maxSize / width, maxSize / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // JPEG 85%品質で出力
+        const result = canvas.toDataURL('image/jpeg', 0.85);
+        console.log(`Image optimized: ${Math.round(result.length * 0.75 / 1024)}KB`);
+        resolve(result);
+      };
+      img.src = imageUrl;
+    });
+  };
+
   // ファイル選択処理
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target?.result as string);
+      reader.onload = async (e) => {
+        const dataUrl = e.target?.result as string;
+        // 大きな画像も自動的に最適化される
+        const optimized = await optimizeImage(dataUrl);
+        setImage(optimized);
       };
       reader.readAsDataURL(file);
     }
@@ -53,15 +96,16 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
   };
 
   // 写真撮影
-  const capturePhoto = () => {
+  const capturePhoto = async () => {
     if (videoRef.current && canvasRef.current) {
       const context = canvasRef.current.getContext('2d');
       if (context) {
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
         context.drawImage(videoRef.current, 0, 0);
-        const dataURL = canvasRef.current.toDataURL('image/jpeg');
-        setImage(dataURL);
+        const dataURL = canvasRef.current.toDataURL('image/jpeg', 0.8);
+        const optimized = await optimizeImage(dataURL);
+        setImage(optimized);
         stopCamera();
       }
     }

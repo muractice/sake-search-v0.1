@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Gemini Vision APIを呼び出し（30秒タイムアウト付き）
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Vercel用に8秒に短縮
     
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
@@ -175,6 +175,7 @@ JSONのみを返し、他の説明文は含めないでください。`
     console.log('=== Final API Response ===');
     console.log('Sake names found:', responseData.sake_names);
     console.log('Confidence:', responseData.confidence);
+    console.log('Image size (bytes):', Math.round(imageData.length * 0.75));
     
     return NextResponse.json(responseData);
 
