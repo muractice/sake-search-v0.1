@@ -197,8 +197,18 @@ export default function Home() {
               <UserProfile 
                 onShowAuth={() => setShowAuthForm(true)} 
                 onAddToComparison={(sake) => {
-                  // お気に入りをクリックしたら比較リストに追加（比較モードは変更しない）
-                  toggleComparison(sake);
+                  // お気に入りをクリックしたら比較リストに追加、件数チェック付き
+                  if (comparisonList.length >= 4 && !isInComparison(sake.id)) {
+                    alert('比較リストは4件までです。他のアイテムを削除してから追加してください。');
+                    return;
+                  }
+                  
+                  if (!isInComparison(sake.id)) {
+                    toggleComparison(sake);
+                    alert(`「${sake.name}」を比較リストに追加しました！`);
+                  } else {
+                    alert(`「${sake.name}」は既に比較リストにあります。`);
+                  }
                 }}
                 isInComparison={isInComparison}
                 onSelectSake={selectSake}
