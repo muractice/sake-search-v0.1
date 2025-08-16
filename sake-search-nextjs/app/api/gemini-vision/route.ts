@@ -57,11 +57,11 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Gemini Vision APIを呼び出し（Vercel制限対応: 5秒タイムアウト）
+    // Gemini Vision APIを呼び出し（Vercel制限対応: 8秒タイムアウト）
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // Vercel用に5秒に短縮
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Vercel Hobby Plan考慮で8秒
     
-    console.log('DEBUG: Starting Gemini API call');
+    console.log('DEBUG: Starting Gemini API call (timeout: 8000ms)');
     const requestStart = Date.now();
     
     const requestBody = {
@@ -220,13 +220,13 @@ JSONのみを返し、他の説明文は含めないでください。`
     
     // タイムアウトエラーの場合
     if (error instanceof Error && error.name === 'AbortError') {
-      console.log('ERROR: Request timeout (5 seconds)');
+      console.log('ERROR: Request timeout (8 seconds)');
       return NextResponse.json({ 
-        error: 'Request timeout - image too complex or server busy',
+        error: 'Request timeout (8s) - image too complex or server busy',
         timeout: true,
         vercel_info: {
           region: process.env.VERCEL_REGION || 'unknown',
-          timeout: '5s'
+          timeout: '8s'
         }
       }, { status: 408 });
     }

@@ -242,6 +242,23 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
 
       const result = await response.json();
       
+      // HTTPステータスコードをチェック
+      if (!response.ok) {
+        console.error(`=== API Error Debug ===`);
+        console.error(`Status: ${response.status} ${response.statusText}`);
+        console.error(`Result:`, result);
+        
+        if (response.status === 408 || result.timeout) {
+          const timeoutError = new Error('画像解析がタイムアウトしました（8秒）。画像が複雑すぎるため、画像サイズを小さくして再試行してください。');
+          console.error('Throwing timeout error:', timeoutError.message);
+          throw timeoutError;
+        } else if (result.error) {
+          throw new Error(result.error);
+        } else {
+          throw new Error(`API error: ${response.status} ${response.statusText}`);
+        }
+      }
+      
       // デバッグ: APIレスポンスの詳細をログ出力
       console.log('=== Frontend: Gemini API Response ===');
       console.log('Result:', result);
@@ -505,9 +522,15 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
         setFoundSakeNames(sakeNames);
       }
     } catch (error) {
-      console.error('OCR処理エラー:', error);
+      console.error('=== OCR処理エラー Debug ===');
+      console.error('Error type:', error?.constructor?.name);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('Full error:', error);
+      
       const errorMessage = error instanceof Error ? error.message : '文字認識に失敗しました';
       setProcessingStatus(`❌ ${errorMessage}`);
+      
+      console.error('About to show alert with message:', errorMessage);
       alert(errorMessage);
     } finally {
       setIsProcessing(false);
@@ -779,13 +802,13 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
                       
                       return (
                         <div key={index} className={`flex justify-between items-center p-2 rounded border ${getStatusColor()}`}>
-                          <span className="font-medium flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 flex items-center gap-2">
                             {name}
                             {status !== 'pending' && (
-                              <span className={`text-sm ${
-                                status === 'added' ? 'text-green-600' : 
-                                status === 'not_found' ? 'text-orange-600' : 
-                                'text-red-600'
+                              <span className={`text-sm font-medium ${
+                                status === 'added' ? 'text-green-700' : 
+                                status === 'not_found' ? 'text-orange-700' : 
+                                'text-red-700'
                               }`}>
                                 {getStatusIcon()}
                               </span>
