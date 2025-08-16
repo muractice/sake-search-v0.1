@@ -66,6 +66,29 @@ GOOGLE_CLOUD_VISION_API_KEY=your_api_key
 
 APIキーが設定されていない場合は自動で下位モードにフォールバックします。
 
+## 🧑‍💻 開発者向け
+
+### 開発ワークフロー
+
+このプロジェクトでは品質保証のための開発ワークフローが整備されています：
+
+```bash
+# 手順確認
+npm run workflow
+
+# 品質チェック（リント + テスト + ビルド）
+npm run check-all
+```
+
+詳細は **[開発ワークフローガイド](docs/development-workflow.md)** を参照してください。
+
+### Git Hooks
+
+コミット前に自動で品質チェックが実行されます：
+- ESLint（リント）
+- Jest（テスト）
+- Next.js（ビルド）
+
 ## 📁 プロジェクト構造
 
 ```
@@ -78,6 +101,8 @@ sake-search-nextjs/
 │   ├── TasteChart.tsx
 │   ├── SakeDetail.tsx
 │   └── ComparisonPanel.tsx
+├── docs/               # 技術文書
+│   └── development-workflow.md  # 開発ワークフロー
 ├── lib/                # ユーティリティ
 │   ├── sakenowaApi.ts
 │   └── mockData.ts
