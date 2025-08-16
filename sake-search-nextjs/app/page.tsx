@@ -26,7 +26,6 @@ export default function Home() {
   } = useComparison();
 
   const {
-    currentSakeData,
     isLoading,
     search,
   } = useSearch();
