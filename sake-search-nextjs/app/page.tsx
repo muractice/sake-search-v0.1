@@ -225,7 +225,21 @@ export default function Home() {
                     <div className="animate-fade-in">
                       <SakeDetail 
                         sake={selectedSake}
-                        onCompare={toggleComparison}
+                        onCompare={(sake) => {
+                          // 詳細情報の比較ボタンも件数チェック付き
+                          if (comparisonList.length >= 4 && !isInComparison(sake.id)) {
+                            alert('比較リストは4件までです。他のアイテムを削除してから追加してください。');
+                            return;
+                          }
+                          
+                          toggleComparison(sake);
+                          
+                          if (!isInComparison(sake.id)) {
+                            alert(`「${sake.name}」を比較リストに追加しました！`);
+                          } else {
+                            alert(`「${sake.name}」を比較リストから削除しました。`);
+                          }
+                        }}
                         isInComparison={isInComparison(selectedSake.id)}
                         showCompareButton={true}
                       />

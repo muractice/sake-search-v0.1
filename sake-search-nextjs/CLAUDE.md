@@ -38,6 +38,11 @@ npm run lint
 
 ## 開発ワークフロー
 
+### 🚨 CRITICAL: mainブランチで直接作業禁止 🚨
+
+**NEVER EDIT FILES DIRECTLY ON MAIN BRANCH**
+**ALWAYS CREATE A FEATURE BRANCH FIRST**
+
 ### 必須ワークフロー（ソースコード修正時）
 
 **IMPORTANT: コード修正時は必ず以下の順序で実行してください**
