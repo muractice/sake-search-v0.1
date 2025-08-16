@@ -906,6 +906,18 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
               )}
             </div>
           )}
+          
+          {/* 画像解析完了後にチャートに戻るボタンを表示 */}
+          {(foundSakeNames.length > 0 || extractedText) && (
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <button
+                onClick={onClose}
+                className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                📊 チャートに戻る
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
