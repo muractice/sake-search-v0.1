@@ -178,11 +178,11 @@ JSONのみを返し、他の説明文は含めないでください。`
     
     return NextResponse.json(responseData);
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini Vision API Error:', error);
     
     // タイムアウトエラーの場合
-    if (error.name === 'AbortError') {
+    if (error instanceof Error && error.name === 'AbortError') {
       return NextResponse.json({ 
         text: '', 
         error: 'Gemini API timeout - please try again',
@@ -192,9 +192,10 @@ JSONのみを返し、他の説明文は含めないでください。`
     }
     
     // その他のエラー
+    const errorMessage = error instanceof Error ? error.message : 'Gemini vision analysis failed';
     return NextResponse.json({ 
       text: '', 
-      error: error.message || 'Gemini vision analysis failed',
+      error: errorMessage,
       fallback: true 
     }, { status: 500 });
   }

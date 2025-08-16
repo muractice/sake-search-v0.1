@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import Tesseract from 'tesseract.js';
 
 interface MenuScannerProps {
@@ -17,7 +18,7 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
   const [extractedText, setExtractedText] = useState<string>('');
   const [foundSakeNames, setFoundSakeNames] = useState<string[]>([]);
   const [sakeStatus, setSakeStatus] = useState<Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>>(new Map());
-  const [useHighPerformanceOCR, setUseHighPerformanceOCR] = useState(true); // デフォルトをAI画像解析に
+  const [useHighPerformanceOCR] = useState(true); // デフォルトをAI画像解析に
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -76,10 +77,11 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
     setIsCameraActive(false);
   };
 
-  // 画像の前処理（シンプルなコントラスト調整）
+  // 画像の前処理（シンプルなコントラスト調整） - 未使用
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const preprocessImage = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -177,11 +179,11 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
         sake_names: result.sake_names || [],
         provider: 'gemini'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Gemini Vision API Error:', error);
       
       // タイムアウトエラーの場合
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         setProcessingStatus('⏱️ Gemini APIタイムアウト。Cloud Visionにフォールバック中...');
       } else {
         setProcessingStatus('Gemini API接続エラー。Cloud Visionにフォールバック中...');
@@ -221,9 +223,10 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
   };
 
   // 画像前処理（OCR向けに最適化）
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const preprocessImageForOCR = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve) => {
-      const img = new Image();
+      const img = document.createElement('img');
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -386,7 +389,7 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
         text = text.replace(/([ぁ-ゞァ-ヾ]) ([ぁ-ゞァ-ヾ])/g, '$1$2'); // ひらがな・カタカナ間のスペース除去
         
         // 明らかに意味のない短い行を除去
-        const lines = text.split('\n').filter(line => {
+        const lines = text.split('\n').filter((line: string) => {
           const cleanLine = line.trim();
           return cleanLine.length > 1 || /[あ-んア-ン一-龯]/.test(cleanLine);
         });
@@ -552,8 +555,15 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
 
           {image && !isCameraActive && (
             <div className="space-y-4">
-              <div className="text-center">
-                <img src={image} alt="Selected" className="max-w-full h-auto rounded-lg mx-auto" />
+              <div className="text-center relative">
+                <Image 
+                  src={image} 
+                  alt="Selected" 
+                  width={800}
+                  height={600}
+                  className="max-w-full h-auto rounded-lg mx-auto"
+                  style={{ width: 'auto', height: 'auto' }}
+                />
               </div>
               
               {/* AI解析設定（デフォルトでON） */}
@@ -647,7 +657,6 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
                   <div className="space-y-2">
                     {foundSakeNames.map((name, index) => {
                       const status = sakeStatus.get(name)?.status || 'pending';
-                      const message = sakeStatus.get(name)?.message;
                       
                       const getStatusColor = () => {
                         switch (status) {
@@ -694,8 +703,8 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
                                           message: undefined
                                         }));
                                       }
-                                    } catch (error) {
-                                      console.error('削除エラー:', error);
+                                    } catch (err) {
+                                      console.error('削除エラー:', err);
                                     }
                                   }
                                 }}
@@ -715,7 +724,7 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
                                               result.message.includes('4件まで') || result.message.includes('削除してから') ? 'limit_exceeded' : 'not_found',
                                       message: result.message
                                     }));
-                                  } catch (error) {
+                                  } catch {
                                     setSakeStatus(prev => new Map(prev).set(name, {
                                       status: 'not_found',
                                       message: 'エラーが発生しました'
