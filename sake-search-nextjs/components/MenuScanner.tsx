@@ -24,7 +24,7 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
 
-  // 画像最適化（Vercel向け）
+  // 適応型画像最適化（Vercel Hobby制限対応）
   const optimizeImage = async (imageUrl: string): Promise<string> => {
     return new Promise((resolve) => {
       const img = document.createElement('img');
@@ -36,28 +36,84 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
           return;
         }
 
-        // 最大サイズを1200pxに制限
-        const maxSize = 1200;
-        let { width, height } = img;
+        const originalWidth = img.width;
+        const originalHeight = img.height;
+        const maxDimension = Math.max(originalWidth, originalHeight);
+        
+        // 適応型判定：1400px以下は高品質、超える場合は品質を下げる
+        const isLargeImage = maxDimension > 1400;
+        
+        let width = originalWidth;
+        let height = originalHeight;
+        let outputFormat: 'png' | 'jpeg' = 'png';
+        let quality = 1.0;
+        let applyEnhancement = true;
 
-        if (width > maxSize || height > maxSize) {
+        if (isLargeImage) {
+          // 大きな画像：大幅に圧縮
+          const maxSize = 800; // さらに小さく制限
           const ratio = Math.min(maxSize / width, maxSize / height);
           width = Math.round(width * ratio);
           height = Math.round(height * ratio);
+          outputFormat = 'jpeg';
+          quality = 0.7; // 品質をさらに下げる
+          applyEnhancement = false; // 処理負荷軽減
+          console.log(`Large image detected (${maxDimension}px), using compressed mode`);
+        } else {
+          // 小さな画像：適度に制限
+          const maxSize = 1200; // 小さな画像でも制限
+          if (width > maxSize || height > maxSize) {
+            const ratio = Math.min(maxSize / width, maxSize / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          console.log(`Small image detected (${maxDimension}px), using high quality mode`);
         }
 
         canvas.width = width;
         canvas.height = height;
         
+        // 高品質スケーリング
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
+        
+        // 白背景
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(img, 0, 0, width, height);
         
-        // JPEG 85%品質で出力
-        const result = canvas.toDataURL('image/jpeg', 0.85);
-        console.log(`Image optimized: ${Math.round(result.length * 0.75 / 1024)}KB`);
+        // 小さな画像のみコントラスト強化（文字認識向け）
+        if (applyEnhancement) {
+          const imageData = ctx.getImageData(0, 0, width, height);
+          const data = imageData.data;
+          
+          for (let i = 0; i < data.length; i += 4) {
+            const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+            const enhanced = brightness > 128 ? Math.min(255, brightness * 1.15) : Math.max(0, brightness * 0.85);
+            
+            data[i] = enhanced;     // R
+            data[i + 1] = enhanced; // G
+            data[i + 2] = enhanced; // B
+          }
+          
+          ctx.putImageData(imageData, 0, 0);
+        }
+        
+        // 適応型出力
+        const result = outputFormat === 'png' 
+          ? canvas.toDataURL('image/png')
+          : canvas.toDataURL('image/jpeg', quality);
+        
+        const sizeKB = Math.round(result.length * 0.75 / 1024);
+        const sizeMB = (sizeKB / 1024).toFixed(2);
+        
+        console.log(`Image optimized: ${sizeKB}KB (${sizeMB}MB) - Mode: ${isLargeImage ? 'compressed' : 'high-quality'}`);
+        
+        // Vercel制限チェック（4.5MB）
+        if (sizeKB > 4500) {
+          console.warn('Image size exceeds 4.5MB limit, may cause issues on Vercel');
+        }
+        
         resolve(result);
       };
       img.src = imageUrl;
@@ -171,9 +227,9 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
     try {
       setProcessingStatus('🚀 Gemini AIで解析中...');
       
-      // 30秒タイムアウトを設定
+      // 15秒タイムアウトを設定（Vercel制限を考慮）
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       
       const response = await fetch('/api/gemini-vision', {
         method: 'POST',
@@ -207,13 +263,14 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
       }
       
       if (result.error && result.fallback) {
-        // APIキーが設定されていない場合はCloud Visionにフォールバック
+        // Gemini APIエラー時はエラーメッセージを表示
         if (result.error === 'Gemini API key not configured') {
-          setProcessingStatus('⚠️ Gemini APIキーが未設定です。GEMINI_SETUP.mdを参照してください。Cloud Visionにフォールバック中...');
+          throw new Error('Gemini APIキーが設定されていません。設定を確認してください。');
+        } else if (result.timeout) {
+          throw new Error('画像解析がタイムアウトしました。画像サイズを小さくして再試行してください。');
         } else {
-          setProcessingStatus('Google Cloud Visionにフォールバック中...');
+          throw new Error(`画像解析に失敗しました: ${result.error}`);
         }
-        return await processWithCloudVision(imageData);
       }
       
       // Geminiの結果を既存の形式に変換
@@ -228,12 +285,10 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
       
       // タイムアウトエラーの場合
       if (error instanceof Error && error.name === 'AbortError') {
-        setProcessingStatus('⏱️ Gemini APIタイムアウト。Cloud Visionにフォールバック中...');
+        throw new Error('画像解析がタイムアウトしました。画像サイズを小さくして再試行してください。');
       } else {
-        setProcessingStatus('Gemini API接続エラー。Cloud Visionにフォールバック中...');
+        throw new Error('Gemini APIとの接続に失敗しました。しばらく待ってから再試行してください。');
       }
-      
-      return await processWithCloudVision(imageData);
     }
   };
 
@@ -377,7 +432,7 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
       let result;
       
       if (useHighPerformanceOCR) {
-        // AIビジョン（Gemini → Google Cloud Vision → Tesseract）の順でフォールバック
+        // Gemini Vision API（エラー時は処理停止）
         result = await processWithGeminiVision(image);
       } else {
         // 標準OCR（Tesseract.js）を使用
@@ -451,7 +506,9 @@ export default function MenuScanner({ onSakeFound, onMultipleSakeFound, onRemove
       }
     } catch (error) {
       console.error('OCR処理エラー:', error);
-      alert('文字認識に失敗しました');
+      const errorMessage = error instanceof Error ? error.message : '文字認識に失敗しました';
+      setProcessingStatus(`❌ ${errorMessage}`);
+      alert(errorMessage);
     } finally {
       setIsProcessing(false);
     }

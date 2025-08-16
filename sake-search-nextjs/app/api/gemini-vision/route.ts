@@ -175,7 +175,6 @@ JSONのみを返し、他の説明文は含めないでください。`
     console.log('=== Final API Response ===');
     console.log('Sake names found:', responseData.sake_names);
     console.log('Confidence:', responseData.confidence);
-    console.log('Image size (bytes):', Math.round(imageData.length * 0.75));
     
     return NextResponse.json(responseData);
 
