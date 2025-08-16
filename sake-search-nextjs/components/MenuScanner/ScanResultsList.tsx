@@ -10,6 +10,8 @@ interface ScanResultsListProps {
   setSakeStatus: React.Dispatch<React.SetStateAction<Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>>>;
 }
 
+import { useState } from 'react';
+
 export default function ScanResultsList({
   foundSakeNames,
   sakeStatus,
@@ -19,6 +21,7 @@ export default function ScanResultsList({
   onRemoveSake,
   setSakeStatus
 }: ScanResultsListProps) {
+  const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
   const handleAddSake = async (name: string) => {
     try {
       const result = await onSakeFound(name);
@@ -53,11 +56,55 @@ export default function ScanResultsList({
     }
   };
 
-  const handleAddAll = () => {
+  const handleAddAll = async () => {
     if (onMultipleSakeFound) {
-      onMultipleSakeFound(foundSakeNames);
+      // 各日本酒を個別に処理して状態を更新
+      const results = await Promise.all(
+        foundSakeNames.map(async (name) => {
+          try {
+            const result = await onSakeFound(name);
+            return { name, result };
+          } catch {
+            return { name, result: { success: false, message: 'エラーが発生しました' } };
+          }
+        })
+      );
+      
+      // 状態を一括更新
+      setSakeStatus(prev => {
+        const newStatus = new Map(prev);
+        results.forEach(({ name, result }) => {
+          newStatus.set(name, {
+            status: result.success ? 'added' : 
+                    result.message.includes('見つかりませんでした') ? 'not_found' :
+                    result.message.includes('既に比較リストにあります') ? 'added' :
+                    result.message.includes('10件まで') || result.message.includes('削除してから') ? 'limit_exceeded' : 'not_found',
+            message: result.message
+          });
+        });
+        return newStatus;
+      });
+      
+      // データが見つかった日本酒のみを比較リストに追加
+      const successfulSakes = results
+        .filter(({ result }) => result.success)
+        .map(({ name }) => name);
+      
+      // データが見つからなかった日本酒がある場合、メッセージを表示
+      const notFoundSakes = results.filter(({ result }) => 
+        !result.success && result.message.includes('見つかりませんでした')
+      );
+      if (notFoundSakes.length > 0) {
+        setShowNotFoundMessage(true);
+        // 3秒後にメッセージを非表示
+        setTimeout(() => setShowNotFoundMessage(false), 3000);
+      }
+      
+      if (successfulSakes.length > 0) {
+        onMultipleSakeFound(successfulSakes);
+      }
     } else {
-      foundSakeNames.forEach(name => onSakeFound(name));
+      foundSakeNames.forEach(name => handleAddSake(name));
     }
   };
 
@@ -76,6 +123,15 @@ export default function ScanResultsList({
           🎯 全て比較に追加
         </button>
       </div>
+      
+      {showNotFoundMessage && (
+        <div className="mb-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+          <p className="text-sm text-orange-800">
+            ⚠️ 一部の日本酒はデータベースに見つかりませんでした。
+            データがある日本酒のみ比較リストに追加されました。
+          </p>
+        </div>
+      )}
       <div className="space-y-2">
         {foundSakeNames.map((name, index) => {
           const status = sakeStatus.get(name)?.status || 'pending';

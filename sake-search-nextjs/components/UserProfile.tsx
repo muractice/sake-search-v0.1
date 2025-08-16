@@ -89,7 +89,9 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
                           : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
                       }`}
                       onClick={() => {
-                        onAddToComparison?.(sake);
+                        if (!isAdded) {
+                          onAddToComparison?.(sake);
+                        }
                         onSelectSake?.(sake);
                       }}
                       title={isAdded ? '比較リストに追加済み' : 'クリックして比較リストに追加'}

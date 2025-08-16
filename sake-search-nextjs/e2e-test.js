@@ -27,7 +27,7 @@ async function runTest(test) {
   return new Promise((resolve) => {
     const options = {
       hostname: 'localhost',
-      port: 3003,
+      port: 3000,
       path: test.path,
       method: 'GET',
     };

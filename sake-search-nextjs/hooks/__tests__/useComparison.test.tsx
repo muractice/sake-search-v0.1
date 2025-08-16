@@ -27,6 +27,12 @@ describe('useComparison', () => {
   const sake3 = createSakeData('3', '日本酒3');
   const sake4 = createSakeData('4', '日本酒4');
   const sake5 = createSakeData('5', '日本酒5');
+  const sake6 = createSakeData('6', '日本酒6');
+  const sake7 = createSakeData('7', '日本酒7');
+  const sake8 = createSakeData('8', '日本酒8');
+  const sake9 = createSakeData('9', '日本酒9');
+  const sake10 = createSakeData('10', '日本酒10');
+  const sake11 = createSakeData('11', '日本酒11');
 
   describe('初期状態', () => {
     test('比較リストが空であること', () => {
@@ -62,20 +68,7 @@ describe('useComparison', () => {
       expect(result.current.comparisonList).toHaveLength(0);
     });
 
-    test('4件まで追加できること', () => {
-      const { result } = renderHook(() => useComparison());
-
-      act(() => {
-        result.current.toggleComparison(sake1);
-        result.current.toggleComparison(sake2);
-        result.current.toggleComparison(sake3);
-        result.current.toggleComparison(sake4);
-      });
-
-      expect(result.current.comparisonList).toHaveLength(4);
-    });
-
-    test('5件目は追加されないこと', () => {
+    test('10件まで追加できること', () => {
       const { result } = renderHook(() => useComparison());
 
       act(() => {
@@ -84,10 +77,35 @@ describe('useComparison', () => {
         result.current.toggleComparison(sake3);
         result.current.toggleComparison(sake4);
         result.current.toggleComparison(sake5);
+        result.current.toggleComparison(sake6);
+        result.current.toggleComparison(sake7);
+        result.current.toggleComparison(sake8);
+        result.current.toggleComparison(sake9);
+        result.current.toggleComparison(sake10);
       });
 
-      expect(result.current.comparisonList).toHaveLength(4);
-      expect(result.current.comparisonList.find(s => s.id === '5')).toBeUndefined();
+      expect(result.current.comparisonList).toHaveLength(10);
+    });
+
+    test('11件目は追加されないこと', () => {
+      const { result } = renderHook(() => useComparison());
+
+      act(() => {
+        result.current.toggleComparison(sake1);
+        result.current.toggleComparison(sake2);
+        result.current.toggleComparison(sake3);
+        result.current.toggleComparison(sake4);
+        result.current.toggleComparison(sake5);
+        result.current.toggleComparison(sake6);
+        result.current.toggleComparison(sake7);
+        result.current.toggleComparison(sake8);
+        result.current.toggleComparison(sake9);
+        result.current.toggleComparison(sake10);
+        result.current.toggleComparison(sake11);
+      });
+
+      expect(result.current.comparisonList).toHaveLength(10);
+      expect(result.current.comparisonList.find(s => s.id === '11')).toBeUndefined();
     });
 
     test('同じ日本酒を重複して追加できないこと', () => {
