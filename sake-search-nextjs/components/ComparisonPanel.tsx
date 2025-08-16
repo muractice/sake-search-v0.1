@@ -36,7 +36,7 @@ export default function ComparisonPanel({
       <div>
         <div>
           <p className="text-sm text-gray-600 mb-3">
-            最大4つまでの日本酒を選択して比較できます（{comparisonList.length}/4）
+            最大10つまでの日本酒を選択して比較できます（{comparisonList.length}/10）
           </p>
           
           {comparisonList.length > 0 ? (

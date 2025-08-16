@@ -60,9 +60,9 @@ export default function Home() {
       const searchResult = await search(sakeName);
       
       if (searchResult) {
-        // 比較リストの件数チェック（最大4件）
-        if (comparisonList.length >= 4 && !isInComparison(searchResult.id)) {
-          return { success: false, message: `比較リストは4件までです。他のアイテムを削除してから追加してください` };
+        // 比較リストの件数チェック（最大10件）
+        if (comparisonList.length >= 10 && !isInComparison(searchResult.id)) {
+          return { success: false, message: `比較リストは10件までです。他のアイテムを削除してから追加してください` };
         }
         
         // 検索結果を比較リストに追加（既に存在しない場合のみ）
@@ -198,8 +198,8 @@ export default function Home() {
                 onShowAuth={() => setShowAuthForm(true)} 
                 onAddToComparison={(sake) => {
                   // お気に入りをクリックしたら比較リストに追加、件数チェック付き
-                  if (comparisonList.length >= 4 && !isInComparison(sake.id)) {
-                    alert('比較リストは4件までです。他のアイテムを削除してから追加してください。');
+                  if (comparisonList.length >= 10 && !isInComparison(sake.id)) {
+                    alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
                     return;
                   }
                   
@@ -227,8 +227,8 @@ export default function Home() {
                         sake={selectedSake}
                         onCompare={(sake) => {
                           // 詳細情報の比較ボタンも件数チェック付き
-                          if (comparisonList.length >= 4 && !isInComparison(sake.id)) {
-                            alert('比較リストは4件までです。他のアイテムを削除してから追加してください。');
+                          if (comparisonList.length >= 10 && !isInComparison(sake.id)) {
+                            alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
                             return;
                           }
                           
