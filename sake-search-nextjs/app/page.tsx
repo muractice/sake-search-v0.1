@@ -4,6 +4,7 @@ import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
 import SimpleTasteChart from '@/components/SimpleTasteChart';
+import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import MenuScanner from '@/components/MenuScanner';
@@ -197,6 +198,9 @@ export default function Home() {
                 )}
               </div>
             </div>
+            
+            {/* レーダーチャートセクション */}
+            <SakeRadarChartSection sakeData={comparisonList} />
             
             {/* 新しいシンプルチャート */}
             <div className="transform transition-all duration-500 hover:scale-[1.01]">
