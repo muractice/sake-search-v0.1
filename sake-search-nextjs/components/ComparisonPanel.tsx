@@ -1,6 +1,8 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
+import { FavoriteButton } from './FavoriteButton';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface ComparisonPanelProps {
   comparisonList: SakeData[];
@@ -15,6 +17,8 @@ export default function ComparisonPanel({
   onClear,
   onSelectSake
 }: ComparisonPanelProps) {
+  const { isFavorite } = useFavorites();
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6 animate-slide-down">
       <div className="flex items-center justify-between mb-4">
@@ -40,30 +44,72 @@ export default function ComparisonPanel({
           </p>
           
           {comparisonList.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {comparisonList.map((sake, index) => (
                 <div
                   key={sake.id}
-                  className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-3 border border-purple-200 animate-fade-in cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105"
-                  onClick={() => onSelectSake(sake)}
-                  title="クリックして詳細を表示"
+                  className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-purple-200 animate-fade-in hover:shadow-md transition-all duration-200"
                 >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
-                      {index + 1}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h3 
+                          className="font-semibold text-base cursor-pointer hover:text-blue-600 transition-colors"
+                          onClick={() => onSelectSake(sake)}
+                          title="クリックして詳細を表示"
+                        >
+                          {sake.name}
+                        </h3>
+                        <p className="text-sm text-gray-600">{sake.brewery}</p>
+                      </div>
                     </div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         onRemove(sake);
                       }}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="text-red-500 hover:text-red-700 transition-colors text-xl"
+                      title="比較リストから削除"
                     >
                       ✕
                     </button>
                   </div>
-                  <h3 className="font-semibold text-sm mb-1">{sake.name}</h3>
-                  <p className="text-xs text-gray-600">{sake.brewery}</p>
+                  
+                  {/* 特徴 */}
+                  <div className="mb-3 p-3 bg-white/70 rounded-lg">
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      {sake.description || '説明がありません'}
+                    </p>
+                  </div>
+                  
+                  {/* 味覚指標 */}
+                  <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-600">甘辛:</span>
+                      <span className="font-medium">
+                        {sake.sweetness > 0 ? `甘口 +${sake.sweetness.toFixed(1)}` : `辛口 ${sake.sweetness.toFixed(1)}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="text-gray-600">淡濃:</span>
+                      <span className="font-medium">
+                        {sake.richness > 0 ? `濃醇 +${sake.richness.toFixed(1)}` : `淡麗 ${sake.richness.toFixed(1)}`}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* お気に入りボタン */}
+                  <div className="flex justify-center">
+                    <FavoriteButton 
+                      sake={sake}
+                      isFavorite={isFavorite(sake.id)}
+                      size="md"
+                      showLabel={true}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

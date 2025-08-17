@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
-import SimpleTasteChart from '@/components/SimpleTasteChart';
+// import SimpleTasteChart from '@/components/SimpleTasteChart'; // 未使用: 2025-01-17 UIシンプル化のため非表示
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
-import SakeDetail from '@/components/SakeDetail';
+// import SakeDetail from '@/components/SakeDetail'; // 未使用: 2025-01-17 詳細情報をComparisonPanelに統合
 import ComparisonPanel from '@/components/ComparisonPanel';
 import MenuScanner from '@/components/MenuScanner';
 import { UserProfile } from '@/components/UserProfile';
@@ -173,8 +173,30 @@ export default function Home() {
           onSelectSake={selectSake}
         />
         
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3 space-y-8">
+        {/* UserProfileをページ上部に移動 */}
+        <div className="mb-8">
+          <UserProfile 
+            onShowAuth={() => setShowAuthForm(true)} 
+            onAddToComparison={(sake) => {
+              // お気に入りをクリックしたら比較リストに追加/削除を切り替え
+              if (isInComparison(sake.id)) {
+                // 既に比較リストにある場合は削除
+                toggleComparison(sake);
+              } else {
+                // 比較リストにない場合は追加（件数チェック付き）
+                if (comparisonList.length >= 10) {
+                  alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
+                  return;
+                }
+                toggleComparison(sake);
+              }
+            }}
+            isInComparison={isInComparison}
+            onSelectSake={selectSake}
+          />
+        </div>
+        
+        <div className="mt-8 space-y-8">
             {/* 既存の4象限チャート */}
             <div className="transform transition-all duration-500 hover:scale-[1.01]">
               <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
@@ -202,8 +224,8 @@ export default function Home() {
             {/* レーダーチャートセクション */}
             <SakeRadarChartSection sakeData={comparisonList} />
             
-            {/* 新しいシンプルチャート */}
-            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+            {/* シンプル味覚チャート - 未使用: 2025-01-17 UIシンプル化のため非表示 */}
+            {/* <div className="transform transition-all duration-500 hover:scale-[1.01]">
               <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
                 <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
                   シンプル味覚チャート（辛甘×淡濃）
@@ -224,71 +246,7 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            </div>
-          </div>
-          
-          <div className="lg:col-span-1 space-y-6">
-            <div className="transform transition-all duration-500 hover:scale-[1.01]">
-              <UserProfile 
-                onShowAuth={() => setShowAuthForm(true)} 
-                onAddToComparison={(sake) => {
-                  // お気に入りをクリックしたら比較リストに追加、件数チェック付き
-                  if (comparisonList.length >= 10 && !isInComparison(sake.id)) {
-                    alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
-                    return;
-                  }
-                  
-                  if (!isInComparison(sake.id)) {
-                    toggleComparison(sake);
-                    alert(`「${sake.name}」を比較リストに追加しました！`);
-                  } else {
-                    alert(`「${sake.name}」は既に比較リストにあります。`);
-                  }
-                }}
-                isInComparison={isInComparison}
-                onSelectSake={selectSake}
-              />
-            </div>
-            
-            <div className="transform transition-all duration-500 hover:scale-[1.01]">
-              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
-                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                  詳細情報
-                </h2>
-                <div className="transition-all duration-500 ease-in-out">
-                  {selectedSake ? (
-                    <div className="animate-fade-in">
-                      <SakeDetail 
-                        sake={selectedSake}
-                        onCompare={(sake) => {
-                          // 詳細情報の比較ボタンも件数チェック付き
-                          if (comparisonList.length >= 10 && !isInComparison(sake.id)) {
-                            alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
-                            return;
-                          }
-                          
-                          toggleComparison(sake);
-                          
-                          if (!isInComparison(sake.id)) {
-                            alert(`「${sake.name}」を比較リストに追加しました！`);
-                          } else {
-                            alert(`「${sake.name}」を比較リストから削除しました。`);
-                          }
-                        }}
-                        isInComparison={isInComparison(selectedSake.id)}
-                        showCompareButton={true}
-                      />
-                    </div>
-                  ) : (
-                    <div className="text-gray-500 text-center py-8 animate-pulse">
-                      <div className="text-4xl mb-4">📊</div>
-                      <p>日本酒を検索すると、ここに詳細情報が表示されます</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+            </div> */}
         </div>
       </main>
 

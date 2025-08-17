@@ -89,12 +89,10 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
                           : 'bg-gray-50 hover:bg-gray-100 hover:shadow-sm'
                       }`}
                       onClick={() => {
-                        if (!isAdded) {
-                          onAddToComparison?.(sake);
-                        }
+                        onAddToComparison?.(sake);
                         onSelectSake?.(sake);
                       }}
-                      title={isAdded ? '比較リストに追加済み' : 'クリックして比較リストに追加'}
+                      title={isAdded ? 'クリックして比較リストから削除' : 'クリックして比較リストに追加'}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
