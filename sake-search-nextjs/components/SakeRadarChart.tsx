@@ -77,6 +77,7 @@ export default function SakeRadarChart({ sake, index }: SakeRadarChartProps) {
     ],
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const options: any = {
     responsive: true,
     maintainAspectRatio: false,
