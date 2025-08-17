@@ -41,8 +41,8 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
         <>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold">ユーザー情報</h3>
-              <p className="text-gray-600 text-sm">{user.email}</p>
+              <h3 className="text-lg font-bold text-gray-900">ユーザー情報</h3>
+              <p className="text-gray-800 text-sm font-medium">{user.email}</p>
             </div>
             <button
               onClick={signOut}
@@ -54,14 +54,14 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
       
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">お気に入り数</span>
-              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm">
+              <span className="text-sm font-semibold text-gray-800">お気に入り数</span>
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-bold">
                 {favorites.length}
               </span>
             </div>
             
             <div className="flex items-center justify-between">
-              <span className="text-sm">お気に入り表示</span>
+              <span className="text-sm font-semibold text-gray-800">お気に入り表示</span>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
@@ -76,7 +76,7 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
           
           {favorites.length > 0 && showFavorites && (
             <div className="mt-4 pt-4 border-t">
-              <h4 className="text-sm font-medium mb-2">お気に入り一覧</h4>
+              <h4 className="text-sm font-bold mb-2 text-gray-900">お気に入り一覧</h4>
               <div className="space-y-2 max-h-40 overflow-y-auto">
                 {favorites.slice(0, 5).map((sake) => {
                   const isAdded = isInComparison?.(sake.id) || false;
@@ -96,8 +96,8 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="font-medium">{sake.name}</div>
-                          <div className="text-gray-500">{sake.brewery}</div>
+                          <div className="font-bold text-gray-900">{sake.name}</div>
+                          <div className="text-gray-700 font-medium">{sake.brewery}</div>
                         </div>
                         <div className="ml-2">
                           {isAdded ? (

@@ -57,13 +57,13 @@ export default function ComparisonPanel({
                       </div>
                       <div>
                         <h3 
-                          className="font-semibold text-base cursor-pointer hover:text-blue-600 transition-colors"
+                          className="font-bold text-base cursor-pointer hover:text-blue-600 transition-colors text-gray-900"
                           onClick={() => onSelectSake(sake)}
                           title="クリックして詳細を表示"
                         >
                           {sake.name}
                         </h3>
-                        <p className="text-sm text-gray-600">{sake.brewery}</p>
+                        <p className="text-sm text-gray-800 font-medium">{sake.brewery}</p>
                       </div>
                     </div>
                     <button
@@ -80,7 +80,7 @@ export default function ComparisonPanel({
                   
                   {/* 特徴 */}
                   <div className="mb-3 p-3 bg-white/70 rounded-lg">
-                    <p className="text-sm text-gray-700 leading-relaxed">
+                    <p className="text-sm text-gray-900 leading-relaxed font-medium">
                       {sake.description || '説明がありません'}
                     </p>
                   </div>
@@ -88,14 +88,14 @@ export default function ComparisonPanel({
                   {/* 味覚指標 */}
                   <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">甘辛:</span>
-                      <span className="font-medium">
+                      <span className="text-gray-800 font-semibold">甘辛:</span>
+                      <span className="font-bold text-gray-900">
                         {sake.sweetness > 0 ? `甘口 +${sake.sweetness.toFixed(1)}` : `辛口 ${sake.sweetness.toFixed(1)}`}
                       </span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="text-gray-600">淡濃:</span>
-                      <span className="font-medium">
+                      <span className="text-gray-800 font-semibold">淡濃:</span>
+                      <span className="font-bold text-gray-900">
                         {sake.richness > 0 ? `濃醇 +${sake.richness.toFixed(1)}` : `淡麗 ${sake.richness.toFixed(1)}`}
                       </span>
                     </div>

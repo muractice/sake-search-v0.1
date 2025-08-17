@@ -10,6 +10,7 @@ import ComparisonPanel from '@/components/ComparisonPanel';
 import MenuScanner from '@/components/MenuScanner';
 import { UserProfile } from '@/components/UserProfile';
 import { AuthForm } from '@/components/AuthForm';
+import CustomDialog from '@/components/CustomDialog';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
@@ -18,6 +19,11 @@ import { useSelection } from '@/hooks/useSelection';
 export default function Home() {
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [showMenuScanner, setShowMenuScanner] = useState(false);
+  const [dialogState, setDialogState] = useState({
+    isOpen: false,
+    title: '酒サーチ',
+    message: ''
+  });
   
   // カスタムフックを使用
   const {
@@ -44,7 +50,11 @@ export default function Home() {
       selectSake(searchResult);
       
       if (!searchResult) {
-        alert('該当する日本酒が見つかりませんでした');
+        setDialogState({
+          isOpen: true,
+          title: '酒サーチ',
+          message: '該当する日本酒が見つかりませんでした'
+        });
       } else {
         // 検索結果を自動的に比較リストに追加（既に存在しない場合のみ）
         if (!isInComparison(searchResult.id)) {
@@ -52,7 +62,11 @@ export default function Home() {
         }
       }
     } catch {
-      alert('検索中にエラーが発生しました');
+      setDialogState({
+        isOpen: true,
+        title: '酒サーチ',
+        message: '検索中にエラーが発生しました'
+      });
     }
   };
 
@@ -98,26 +112,111 @@ export default function Home() {
     }
   };
 
+  // 個別追加（ダイアログなし）
+  const handleIndividualAdd = async (sakeName: string) => {
+    try {
+      const searchResult = await search(sakeName);
+      
+      if (searchResult) {
+        // 比較リストの件数チェック（最大10件）
+        if (comparisonList.length >= 10 && !isInComparison(searchResult.id)) {
+          return { success: false, message: `比較リストは10件までです。他のアイテムを削除してから追加してください` };
+        }
+        
+        // 検索結果を比較リストに追加（既に存在しない場合のみ）
+        if (!isInComparison(searchResult.id)) {
+          toggleComparison(searchResult);
+          return { success: true, message: `「${sakeName}」を比較に追加しました！` };
+        } else {
+          return { success: false, message: `「${sakeName}」は既に比較リストにあります` };
+        }
+      } else {
+        return { success: false, message: `「${sakeName}」が見つかりませんでした` };
+      }
+    } catch {
+      return { success: false, message: '検索中にエラーが発生しました' };
+    }
+  };
+
+  // 個別削除（ダイアログなし）
+  const handleIndividualRemove = async (sakeName: string) => {
+    try {
+      const searchResult = await search(sakeName);
+      
+      if (searchResult && isInComparison(searchResult.id)) {
+        toggleComparison(searchResult);
+        return { success: true, message: `「${sakeName}」を比較リストから削除しました` };
+      } else {
+        return { success: false, message: `「${sakeName}」は比較リストにありません` };
+      }
+    } catch {
+      return { success: false, message: '削除中にエラーが発生しました' };
+    }
+  };
+
   // 複数の日本酒を一括処理
-  const handleMultipleSakeFound = async (sakeNames: string[]) => {
+  const handleMultipleSakeFound = async (sakeNames: string[], updateStatus?: (statusMap: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>) => void) => {
     const results = {
       added: [] as string[],
       alreadyExists: [] as string[],
       notFound: [] as string[],
+      limitExceeded: [] as string[],
       errors: [] as string[]
     };
 
+    let currentCount = comparisonList.length; // 現在の件数を追跡
+    const statusMap = new Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>();
+
     for (const sakeName of sakeNames) {
-      const result = await handleSakeFound(sakeName);
-      if (result.success && result.message.includes('追加しました')) {
-        results.added.push(sakeName);
-      } else if (result.message.includes('既に比較リストにあります')) {
-        results.alreadyExists.push(sakeName);
-      } else if (result.message.includes('見つかりませんでした')) {
-        results.notFound.push(sakeName);
-      } else {
+      try {
+        const searchResult = await search(sakeName);
+        
+        if (searchResult) {
+          // 既に存在するかチェック
+          if (isInComparison(searchResult.id)) {
+            results.alreadyExists.push(sakeName);
+            statusMap.set(sakeName, {
+              status: 'added',
+              message: `「${sakeName}」は既に比較リストにあります`
+            });
+          } else {
+            // 比較リストの件数チェック（動的に追跡）
+            if (currentCount >= 10) {
+              results.limitExceeded.push(sakeName);
+              statusMap.set(sakeName, {
+                status: 'limit_exceeded',
+                message: `比較リストは10件までです`
+              });
+            } else {
+              // 検索結果を比較リストに追加
+              toggleComparison(searchResult);
+              results.added.push(sakeName);
+              currentCount++; // 件数を増加
+              statusMap.set(sakeName, {
+                status: 'added',
+                message: `「${sakeName}」を比較に追加しました！`
+              });
+            }
+          }
+        } else {
+          results.notFound.push(sakeName);
+          statusMap.set(sakeName, {
+            status: 'not_found',
+            message: `「${sakeName}」が見つかりませんでした`
+          });
+        }
+      } catch {
         results.errors.push(sakeName);
+        statusMap.set(sakeName, {
+          status: 'not_found',
+          message: 'エラーが発生しました'
+        });
       }
+    }
+
+    // ステータスをスキャナーに渡す
+    if (updateStatus) {
+      updateStatus(statusMap);
     }
 
     // 結果のサマリーを表示
@@ -128,6 +227,9 @@ export default function Home() {
     if (results.alreadyExists.length > 0) {
       message += `ℹ️ ${results.alreadyExists.length}件既存: ${results.alreadyExists.join(', ')}\n`;
     }
+    if (results.limitExceeded.length > 0) {
+      message += `🚫 ${results.limitExceeded.length}件制限超過（10件まで）: ${results.limitExceeded.join(', ')}\n`;
+    }
     if (results.notFound.length > 0) {
       message += `❌ ${results.notFound.length}件見つからず: ${results.notFound.join(', ')}\n`;
     }
@@ -136,7 +238,11 @@ export default function Home() {
     }
     
     if (message) {
-      alert(message);
+      setDialogState({
+        isOpen: true,
+        title: '酒サーチ',
+        message: message
+      });
     }
   };
 
@@ -185,7 +291,11 @@ export default function Home() {
               } else {
                 // 比較リストにない場合は追加（件数チェック付き）
                 if (comparisonList.length >= 10) {
-                  alert('比較リストは10件までです。他のアイテムを削除してから追加してください。');
+                  setDialogState({
+                    isOpen: true,
+                    title: '酒サーチ',
+                    message: '比較リストは10件までです。他のアイテムを削除してから追加してください。'
+                  });
                   return;
                 }
                 toggleComparison(sake);
@@ -280,18 +390,36 @@ export default function Home() {
         <MenuScanner
           onSakeFound={async (sakeName) => {
             const result = await handleSakeFound(sakeName);
-            alert(result.message);
+            setDialogState({
+              isOpen: true,
+              title: '酒サーチ',
+              message: result.message
+            });
             return result;
           }}
           onRemoveFromComparison={async (sakeName) => {
             const result = await handleSakeRemove(sakeName);
-            alert(result.message);
+            setDialogState({
+              isOpen: true,
+              title: '酒サーチ',
+              message: result.message
+            });
             return result;
           }}
-          onMultipleSakeFound={handleMultipleSakeFound}
+          onMultipleSakeFound={(sakeNames, updateStatus) => handleMultipleSakeFound(sakeNames, updateStatus)}
+          onIndividualAdd={handleIndividualAdd}
+          onIndividualRemove={handleIndividualRemove}
           onClose={() => setShowMenuScanner(false)}
         />
       )}
+
+      {/* カスタムダイアログ */}
+      <CustomDialog
+        isOpen={dialogState.isOpen}
+        title={dialogState.title}
+        message={dialogState.message}
+        onClose={() => setDialogState(prev => ({ ...prev, isOpen: false }))}
+      />
       </div>
     </FavoritesProvider>
   );

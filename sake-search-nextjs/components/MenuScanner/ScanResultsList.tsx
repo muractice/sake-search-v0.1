@@ -4,10 +4,12 @@ interface ScanResultsListProps {
   foundSakeNames: string[];
   sakeStatus: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>;
   onSakeFound: (sakeName: string) => Promise<{success: boolean, message: string}>;
-  onMultipleSakeFound?: (sakeNames: string[]) => void;
+  onMultipleSakeFound?: (sakeNames: string[], updateStatus?: (statusMap: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>) => void) => void;
   onRemoveFromComparison?: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onRemoveSake: (index: number, name: string) => void;
   setSakeStatus: React.Dispatch<React.SetStateAction<Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>>>;
+  onIndividualAdd?: (sakeName: string) => Promise<{success: boolean, message: string}>;
+  onIndividualRemove?: (sakeName: string) => Promise<{success: boolean, message: string}>;
 }
 
 import { useState } from 'react';
@@ -19,31 +21,35 @@ export default function ScanResultsList({
   onMultipleSakeFound,
   onRemoveFromComparison,
   onRemoveSake,
-  setSakeStatus
+  setSakeStatus,
+  onIndividualAdd,
+  onIndividualRemove
 }: ScanResultsListProps) {
   const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
   const handleAddSake = async (name: string) => {
-    try {
-      const result = await onSakeFound(name);
-      setSakeStatus(prev => new Map(prev).set(name, {
-        status: result.success ? 'added' : 
-                result.message.includes('見つかりませんでした') ? 'not_found' :
-                result.message.includes('既に比較リストにあります') ? 'added' :
-                result.message.includes('4件まで') || result.message.includes('削除してから') ? 'limit_exceeded' : 'not_found',
-        message: result.message
-      }));
-    } catch {
-      setSakeStatus(prev => new Map(prev).set(name, {
-        status: 'not_found',
-        message: 'エラーが発生しました'
-      }));
+    if (onIndividualAdd) {
+      try {
+        const result = await onIndividualAdd(name);
+        setSakeStatus(prev => new Map(prev).set(name, {
+          status: result.success ? 'added' : 
+                  result.message.includes('見つかりませんでした') ? 'not_found' :
+                  result.message.includes('既に比較リストにあります') ? 'added' :
+                  result.message.includes('10件まで') || result.message.includes('削除してから') ? 'limit_exceeded' : 'not_found',
+          message: result.message
+        }));
+      } catch {
+        setSakeStatus(prev => new Map(prev).set(name, {
+          status: 'not_found',
+          message: 'エラーが発生しました'
+        }));
+      }
     }
   };
 
   const handleRemoveSake = async (name: string) => {
-    if (onRemoveFromComparison) {
+    if (onIndividualRemove) {
       try {
-        const result = await onRemoveFromComparison(name);
+        const result = await onIndividualRemove(name);
         if (result.success) {
           setSakeStatus(prev => new Map(prev).set(name, {
             status: 'pending',
@@ -58,52 +64,13 @@ export default function ScanResultsList({
 
   const handleAddAll = async () => {
     if (onMultipleSakeFound) {
-      // 各日本酒を個別に処理して状態を更新
-      const results = await Promise.all(
-        foundSakeNames.map(async (name) => {
-          try {
-            const result = await onSakeFound(name);
-            return { name, result };
-          } catch {
-            return { name, result: { success: false, message: 'エラーが発生しました' } };
-          }
-        })
-      );
-      
-      // 状態を一括更新
-      setSakeStatus(prev => {
-        const newStatus = new Map(prev);
-        results.forEach(({ name, result }) => {
-          newStatus.set(name, {
-            status: result.success ? 'added' : 
-                    result.message.includes('見つかりませんでした') ? 'not_found' :
-                    result.message.includes('既に比較リストにあります') ? 'added' :
-                    result.message.includes('10件まで') || result.message.includes('削除してから') ? 'limit_exceeded' : 'not_found',
-            message: result.message
-          });
-        });
-        return newStatus;
+      // 一括登録の場合、onMultipleSakeFoundのみを呼び出して個別のアラートを避ける
+      onMultipleSakeFound(foundSakeNames, (statusMap) => {
+        // ステータスを一括更新
+        setSakeStatus(statusMap);
       });
-      
-      // データが見つかった日本酒のみを比較リストに追加
-      const successfulSakes = results
-        .filter(({ result }) => result.success)
-        .map(({ name }) => name);
-      
-      // データが見つからなかった日本酒がある場合、メッセージを表示
-      const notFoundSakes = results.filter(({ result }) => 
-        !result.success && result.message.includes('見つかりませんでした')
-      );
-      if (notFoundSakes.length > 0) {
-        setShowNotFoundMessage(true);
-        // 3秒後にメッセージを非表示
-        setTimeout(() => setShowNotFoundMessage(false), 3000);
-      }
-      
-      if (successfulSakes.length > 0) {
-        onMultipleSakeFound(successfulSakes);
-      }
     } else {
+      // フォールバック：onMultipleSakeFoundが提供されていない場合のみ個別処理
       foundSakeNames.forEach(name => handleAddSake(name));
     }
   };
@@ -140,7 +107,7 @@ export default function ScanResultsList({
             switch (status) {
               case 'added': return 'bg-green-50 border-green-300';
               case 'not_found': return 'bg-orange-50 border-orange-300';
-              case 'limit_exceeded': return 'bg-white';
+              case 'limit_exceeded': return 'bg-red-50 border-red-300';
               default: return 'bg-white';
             }
           };
@@ -149,7 +116,7 @@ export default function ScanResultsList({
             switch (status) {
               case 'added': return '✓ 追加済み';
               case 'not_found': return '❌ データなし';
-              case 'limit_exceeded': return '';
+              case 'limit_exceeded': return '🚫 制限超過';
               default: return '';
             }
           };
