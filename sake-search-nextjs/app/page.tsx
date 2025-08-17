@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import SearchSection from '@/components/SearchSection';
 import TasteChart from '@/components/TasteChart';
+import SimpleTasteChart from '@/components/SimpleTasteChart';
 import SakeDetail from '@/components/SakeDetail';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import MenuScanner from '@/components/MenuScanner';
@@ -172,23 +173,53 @@ export default function Home() {
         />
         
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
-          <div className="lg:col-span-3 transform transition-all duration-500 hover:scale-[1.01]">
-            <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
-              {comparisonList.length > 0 ? (
-                <div className="animate-slide-up">
-                  <TasteChart 
-                    sakeData={comparisonList} 
-                    onSakeClick={handleChartClick}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-96 text-gray-400 animate-pulse">
-                  <div className="text-center">
-                    <div className="text-6xl mb-4">🍶</div>
-                    <p className="text-lg">日本酒を検索してチャートを表示</p>
+          <div className="lg:col-span-3 space-y-8">
+            {/* 既存の4象限チャート */}
+            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
+                  4象限味覚チャート
+                </h2>
+                {comparisonList.length > 0 ? (
+                  <div className="animate-slide-up">
+                    <TasteChart 
+                      sakeData={comparisonList} 
+                      onSakeClick={handleChartClick}
+                    />
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-gray-400 animate-pulse">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">🍶</div>
+                      <p className="text-lg">日本酒を検索してチャートを表示</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* 新しいシンプルチャート */}
+            <div className="transform transition-all duration-500 hover:scale-[1.01]">
+              <div className="bg-white rounded-xl shadow-lg hover:shadow-2xl p-6 transition-all duration-300">
+                <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-4">
+                  シンプル味覚チャート（辛甘×淡濃）
+                </h2>
+                {comparisonList.length > 0 ? (
+                  <div className="animate-slide-up">
+                    <SimpleTasteChart 
+                      sakeData={comparisonList} 
+                      onSakeClick={handleChartClick}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-96 text-gray-400 animate-pulse">
+                    <div className="text-center">
+                      <div className="text-6xl mb-4">📊</div>
+                      <p className="text-lg">日本酒を検索してチャートを表示</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           
