@@ -1,3 +1,11 @@
 {
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "functions": {
+    "app/api/gemini-vision/route.ts": {
+      "maxDuration": 15
+    },
+    "app/api/ocr/route.ts": {
+      "maxDuration": 15
+    }
+  }
 }

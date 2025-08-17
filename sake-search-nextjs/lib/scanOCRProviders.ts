@@ -18,7 +18,7 @@ export async function processWithGeminiVision(
     setProcessingStatus('🚀 Gemini AIで解析中...');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // Vercel Pro Plan考慮で15秒
     
     const response = await fetch('/api/gemini-vision', {
       method: 'POST',
@@ -37,7 +37,7 @@ export async function processWithGeminiVision(
       console.error(`Result:`, result);
       
       if (response.status === 408 || result.timeout) {
-        const timeoutError = new Error('画像解析がタイムアウトしました（8秒）。画像が複雑すぎるため、画像サイズを小さくして再試行してください。');
+        const timeoutError = new Error('画像解析がタイムアウトしました（15秒）。画像が複雑すぎるため、画像サイズを小さくして再試行してください。');
         console.error('Throwing timeout error:', timeoutError.message);
         throw timeoutError;
       } else if (result.error) {
