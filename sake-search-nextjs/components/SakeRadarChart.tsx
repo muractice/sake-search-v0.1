@@ -82,7 +82,23 @@ export default function SakeRadarChart({ sake, index }: SakeRadarChartProps) {
     maintainAspectRatio: false,
     plugins: {
       datalabels: {
-        display: false, // データラベルを完全に無効化
+        display: true, // データラベルを表示
+        color: '#1f2937',
+        font: {
+          size: 10,
+          weight: 'bold' as const,
+        },
+        formatter: function(value: number) {
+          return Math.round(value) + '%'; // 整数％表示
+        },
+        anchor: 'end' as const,
+        align: 'end' as const,
+        offset: 2,
+        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderRadius: 3,
+        borderWidth: 1,
+        padding: 2,
       },
       legend: {
         display: false,
@@ -125,9 +141,22 @@ export default function SakeRadarChart({ sake, index }: SakeRadarChartProps) {
         suggestedMin: 0,
         suggestedMax: 100,
         ticks: {
-          stepSize: 20,
-          display: false, // 完全に数値を非表示
+          stepSize: 25,
+          display: true, // 数値を表示
           showLabelBackdrop: false,
+          font: {
+            size: 9,
+            weight: 'normal' as const,
+          },
+          color: 'rgba(107, 114, 128, 0.5)',
+          callback: function(value: string | number) {
+            // 整数のみ表示（0, 25, 50, 75, 100）
+            const numValue = typeof value === 'string' ? parseFloat(value) : value;
+            if (numValue % 25 === 0) {
+              return numValue === 0 ? '0' : numValue.toString();
+            }
+            return '';
+          },
         },
         beginAtZero: true,
       },
