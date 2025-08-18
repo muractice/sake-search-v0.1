@@ -25,11 +25,12 @@ export function useRecommendations(options?: RecommendOptions) {
     ...options
   };
 
-  useEffect(() => {
-    if (preference && user) {
-      loadRecommendations();
-    }
-  }, [preference, user, favorites]);
+  // 自動読み込みを無効化（手動起動のみ）
+  // useEffect(() => {
+  //   if (preference && user) {
+  //     loadRecommendations();
+  //   }
+  // }, [preference, user, favorites]);
 
   const loadRecommendations = async () => {
     if (!preference || !user) return;
@@ -121,7 +122,7 @@ export function useRecommendations(options?: RecommendOptions) {
     error,
     refresh: refreshRecommendations,
     getByMood: getRecommendationsByMood,
-    hasRecommendations: recommendations.length > 0,
+    hasRecommendations: !!preference && !!user && favorites.length >= 3,
   };
 }
 

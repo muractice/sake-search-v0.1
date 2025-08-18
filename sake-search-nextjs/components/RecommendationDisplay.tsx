@@ -40,6 +40,12 @@ export const RecommendationDisplay = ({
 }: RecommendationDisplayProps) => {
   const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendations();
   const [selectedMood, setSelectedMood] = useState<RecommendOptions['mood']>('usual');
+  const [isActivated, setIsActivated] = useState(false);
+
+  const handleActivate = () => {
+    setIsActivated(true);
+    refresh();
+  };
 
   const handleMoodChange = async (mood: RecommendOptions['mood']) => {
     setSelectedMood(mood);
@@ -139,17 +145,34 @@ export const RecommendationDisplay = ({
     );
   }
 
-  if (!hasRecommendations) {
+  // おすすめ機能が未起動の場合
+  if (!isActivated) {
     return (
       <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
         <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
         <div className="text-center">
-          <p className="text-gray-600 mb-4">
-            レコメンドを生成するには、好み分析が必要です
-          </p>
-          <p className="text-sm text-gray-500">
-            お気に入りに3件以上登録してから再度お試しください
-          </p>
+          {!hasRecommendations ? (
+            <>
+              <p className="text-gray-600 mb-4">
+                レコメンドを生成するには、好み分析が必要です
+              </p>
+              <p className="text-sm text-gray-500">
+                お気に入りに3件以上登録してから再度お試しください
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-600 mb-4">
+                好み分析に基づいて、あなたにピッタリの日本酒をおすすめします
+              </p>
+              <button
+                onClick={handleActivate}
+                className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 font-medium"
+              >
+                🎯 おすすめを表示
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
