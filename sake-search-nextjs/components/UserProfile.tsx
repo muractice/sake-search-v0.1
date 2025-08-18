@@ -77,8 +77,8 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
           {favorites.length > 0 && showFavorites && (
             <div className="mt-4 pt-4 border-t">
               <h4 className="text-sm font-bold mb-2 text-gray-900">お気に入り一覧</h4>
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {favorites.slice(0, 5).map((sake) => {
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {favorites.slice(0, 20).map((sake) => {
                   const isAdded = isInComparison?.(sake.id) || false;
                   return (
                     <div 
@@ -114,9 +114,9 @@ export const UserProfile = ({ onShowAuth, onAddToComparison, isInComparison, onS
                     </div>
                   );
                 })}
-                {favorites.length > 5 && (
+                {favorites.length > 20 && (
                   <div className="text-xs text-gray-500 text-center">
-                    他 {favorites.length - 5} 件
+                    他 {favorites.length - 20} 件
                   </div>
                 )}
               </div>

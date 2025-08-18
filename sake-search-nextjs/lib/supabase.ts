@@ -73,6 +73,97 @@ export type Database = {
           updated_at?: string
         }
       }
+      user_taste_preferences: {
+        Row: {
+          id: string
+          user_id: string
+          sweetness_preference: number
+          richness_preference: number
+          f1_preference: number
+          f2_preference: number
+          f3_preference: number
+          f4_preference: number
+          f5_preference: number
+          f6_preference: number
+          taste_type: string
+          diversity_score: number
+          adventure_score: number
+          total_favorites: number
+          calculated_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          sweetness_preference?: number
+          richness_preference?: number
+          f1_preference?: number
+          f2_preference?: number
+          f3_preference?: number
+          f4_preference?: number
+          f5_preference?: number
+          f6_preference?: number
+          taste_type?: string
+          diversity_score?: number
+          adventure_score?: number
+          total_favorites?: number
+          calculated_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sweetness_preference?: number
+          richness_preference?: number
+          f1_preference?: number
+          f2_preference?: number
+          f3_preference?: number
+          f4_preference?: number
+          f5_preference?: number
+          f6_preference?: number
+          taste_type?: string
+          diversity_score?: number
+          adventure_score?: number
+          total_favorites?: number
+          calculated_at?: string
+          updated_at?: string
+        }
+      }
+      recommendation_cache: {
+        Row: {
+          id: string
+          user_id: string
+          sake_id: string
+          similarity_score: number
+          predicted_rating: number
+          recommendation_type: string
+          recommendation_reason: string
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          sake_id: string
+          similarity_score: number
+          predicted_rating: number
+          recommendation_type: string
+          recommendation_reason?: string
+          created_at?: string
+          expires_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sake_id?: string
+          similarity_score?: number
+          predicted_rating?: number
+          recommendation_type?: string
+          recommendation_reason?: string
+          created_at?: string
+          expires_at?: string
+        }
+      }
     }
   }
 }

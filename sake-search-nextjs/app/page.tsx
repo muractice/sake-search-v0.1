@@ -11,6 +11,8 @@ import MenuScanner from '@/components/MenuScanner';
 import { UserProfile } from '@/components/UserProfile';
 import { AuthForm } from '@/components/AuthForm';
 import CustomDialog from '@/components/CustomDialog';
+import { PreferenceMap } from '@/components/PreferenceMap';
+import { RecommendationDisplay } from '@/components/RecommendationDisplay';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
@@ -279,8 +281,8 @@ export default function Home() {
           onSelectSake={selectSake}
         />
         
-        {/* UserProfileをページ上部に移動 */}
-        <div className="mb-8">
+        {/* UserProfile、好み分析、レコメンドをページ上部に配置 */}
+        <div className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <UserProfile 
             onShowAuth={() => setShowAuthForm(true)} 
             onAddToComparison={(sake) => {
@@ -303,6 +305,28 @@ export default function Home() {
             }}
             isInComparison={isInComparison}
             onSelectSake={selectSake}
+          />
+          
+          <PreferenceMap />
+          
+          <RecommendationDisplay
+            onSelectSake={selectSake}
+            onAddToComparison={(sake) => {
+              if (isInComparison(sake.id)) {
+                toggleComparison(sake);
+              } else {
+                if (comparisonList.length >= 10) {
+                  setDialogState({
+                    isOpen: true,
+                    title: '酒サーチ',
+                    message: '比較リストは10件までです。他のアイテムを削除してから追加してください。'
+                  });
+                  return;
+                }
+                toggleComparison(sake);
+              }
+            }}
+            isInComparison={isInComparison}
           />
         </div>
         
