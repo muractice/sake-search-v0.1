@@ -6,7 +6,6 @@ import { SakeData } from '@/types/sake';
 interface FavoriteButtonProps {
   sake: SakeData;
   className?: string;
-  isFavorite?: boolean;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
 }
@@ -14,7 +13,6 @@ interface FavoriteButtonProps {
 export const FavoriteButton = ({ 
   sake, 
   className = '', 
-  isFavorite: propIsFavorite,
   size = 'md',
   showLabel = false
 }: FavoriteButtonProps) => {
@@ -24,7 +22,8 @@ export const FavoriteButton = ({
     return null;
   }
 
-  const isFav = propIsFavorite !== undefined ? propIsFavorite : isFavorite(sake.id);
+  // 常にContextから最新の状態を取得
+  const isFav = isFavorite(sake.id);
 
   const handleToggle = () => {
     if (isFav) {

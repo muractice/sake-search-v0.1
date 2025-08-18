@@ -2,7 +2,6 @@
 
 import { SakeData } from '@/types/sake';
 import { FavoriteButton } from './FavoriteButton';
-import { useFavorites } from '@/hooks/useFavorites';
 
 interface ComparisonPanelProps {
   comparisonList: SakeData[];
@@ -17,7 +16,6 @@ export default function ComparisonPanel({
   onClear,
   onSelectSake
 }: ComparisonPanelProps) {
-  const { isFavorite } = useFavorites();
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 mb-6 animate-slide-down">
@@ -105,7 +103,6 @@ export default function ComparisonPanel({
                   <div className="flex justify-center">
                     <FavoriteButton 
                       sake={sake}
-                      isFavorite={isFavorite(sake.id)}
                       size="md"
                       showLabel={true}
                     />
