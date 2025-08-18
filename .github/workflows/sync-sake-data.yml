@@ -1,0 +1,179 @@
+name: Sync Sake Data with History
+
+on:
+  # 定期実行: 毎日 AM 2:00 JST (前日 17:00 UTC)
+  schedule:
+    - cron: '0 17 * * *'
+  
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (変更を適用しない)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  sync:
+    name: Sync Sake Data from Sakenowa API
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    defaults:
+      run:
+        working-directory: ./sake-search-nextjs
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ./sake-search-nextjs/package-lock.json
+      
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ./sake-search-nextjs/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      
+      - name: Install dependencies
+        run: |
+          npm ci --production
+          npm install @supabase/supabase-js
+      
+      - name: Run database migrations
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "📝 データベースマイグレーションをチェック中..."
+          # マイグレーションの実行（必要に応じて）
+          # npx supabase db push --db-url "$SUPABASE_URL"
+      
+      - name: Run sync script
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          NODE_ENV: production
+        run: |
+          echo "🍶 Starting sake data sync..."
+          echo "DRY_RUN mode: $DRY_RUN"
+          node scripts/sync-sake-data-with-history.js
+      
+      - name: Generate change report
+        if: always()
+        run: |
+          # 最新のレポートファイルを見つける
+          LATEST_REPORT=$(ls -t logs/sync-report-*.json 2>/dev/null | head -1)
+          if [ -f "$LATEST_REPORT" ]; then
+            echo "📊 Sync Report Summary:"
+            cat "$LATEST_REPORT" | jq '{
+              generation_id,
+              sync_date,
+              duration_ms,
+              changes_summary,
+              dry_run
+            }'
+          else
+            echo "⚠️ No report file found"
+          fi
+      
+      - name: Upload sync reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sync-reports-${{ github.run_id }}
+          path: |
+            sake-search-nextjs/logs/*.json
+          retention-days: 90
+          if-no-files-found: warn
+      
+      - name: Check for errors
+        if: failure()
+        run: |
+          echo "❌ Sync failed. Checking error logs..."
+          ERROR_REPORT=$(ls -t logs/error-report-*.json 2>/dev/null | head -1)
+          if [ -f "$ERROR_REPORT" ]; then
+            echo "Error details:"
+            cat "$ERROR_REPORT" | jq '.error'
+          fi
+      
+      - name: Notify on Slack (Success with major changes)
+        if: success()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          # Slackへの通知（重要な変更がある場合のみ）
+          if [ -n "$SLACK_WEBHOOK" ]; then
+            LATEST_REPORT=$(ls -t logs/sync-report-*.json 2>/dev/null | head -1)
+            if [ -f "$LATEST_REPORT" ]; then
+              CHANGES=$(cat "$LATEST_REPORT" | jq -r '.changes_summary')
+              INSERTS=$(echo "$CHANGES" | jq -r '.inserts')
+              UPDATES=$(echo "$CHANGES" | jq -r '.updates')
+              DELETES=$(echo "$CHANGES" | jq -r '.deletes')
+              
+              # 変更が10件以上ある場合のみ通知
+              TOTAL=$((INSERTS + UPDATES + DELETES))
+              if [ "$TOTAL" -ge 10 ]; then
+                curl -X POST "$SLACK_WEBHOOK" \
+                  -H 'Content-Type: application/json' \
+                  -d "{
+                    \"text\": \"🍶 Sake Data Sync completed with major changes\",
+                    \"blocks\": [{
+                      \"type\": \"section\",
+                      \"text\": {
+                        \"type\": \"mrkdwn\",
+                        \"text\": \"*Sync Results*\\n• New: $INSERTS\\n• Updated: $UPDATES\\n• Deleted: $DELETES\"
+                      }
+                    }]
+                  }"
+              fi
+            fi
+          fi
+      
+      - name: Notify on Slack (Failure)
+        if: failure()
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK" ]; then
+            curl -X POST "$SLACK_WEBHOOK" \
+              -H 'Content-Type: application/json' \
+              -d '{
+                "text": "🚨 Sake Data Sync Failed",
+                "blocks": [{
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Sync Failed*\nRun ID: ${{ github.run_id }}\nCheck the logs for details."
+                  }
+                }]
+              }'
+          fi
+
+  # 定期的なクリーンアップジョブ（週次）
+  cleanup:
+    name: Cleanup old sync data
+    runs-on: ubuntu-latest
+    if: github.event.schedule == '0 17 * * 0'  # 日曜日のみ実行
+    
+    steps:
+      - name: Cleanup old generations
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "🧹 Cleaning up old sync data (keeping last 30 days)..."
+          # 30日以上前の履歴を削除するSQLを実行
+          # これは別途スクリプトで実装

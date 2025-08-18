@@ -10,7 +10,11 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "check-all": "npm run lint && npm run test && npm run build",
-    "workflow": "echo '🔄 Full development workflow:' && echo '1. Create branch: git checkout -b feature/your-change' && echo '2. Make changes' && echo '3. Run: npm run check-all' && echo '4. Test locally: npm run dev' && echo '5. Commit and merge'"
+    "workflow": "echo '🔄 Full development workflow:' && echo '1. Create branch: git checkout -b feature/your-change' && echo '2. Make changes' && echo '3. Run: npm run check-all' && echo '4. Test locally: npm run dev' && echo '5. Commit and merge'",
+    "db:setup": "node scripts/setup-database.js",
+    "sync:test": "node scripts/test-sync-dry-run.js",
+    "sync:dry-run": "DRY_RUN=true node scripts/sync-sake-data-with-history.js",
+    "sync:run": "node scripts/sync-sake-data-with-history.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
