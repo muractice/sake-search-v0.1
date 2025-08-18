@@ -36,22 +36,25 @@ export function usePreferenceAnalysis() {
     } else if (user && favorites.length === 0) {
       setPreference(null);
     }
-  }, [user]);
+  }, [user, favorites.length]); // favoritesの長さも監視
 
   // 既存データのロード専用（24時間縛りなし）
   const loadExistingPreferences = async () => {
     if (!user) return;
 
+    console.log('Loading existing preferences for user:', user.id);
     setLoading(true);
     setError(null);
 
     try {
       // 既存の分析結果をチェック
-      const { data: existingPreference } = await supabase
+      const { data: existingPreference, error: fetchError } = await supabase
         .from('user_taste_preferences')
         .select('*')
         .eq('user_id', user.id)
         .single();
+
+      console.log('Fetch result:', { existingPreference, fetchError });
 
       // 既存データがあれば表示（24時間縛りなし）
       if (existingPreference) {
@@ -76,8 +79,10 @@ export function usePreferenceAnalysis() {
           updatedAt: new Date(existingPreference.updated_at),
         };
         setPreference({ ...userPref });
+        console.log('Preference loaded successfully:', userPref);
       } else {
         // 既存データがない場合はnullを設定
+        console.log('No existing preference data found');
         setPreference(null);
       }
     } catch (err) {
@@ -304,6 +309,14 @@ export function usePreferenceAnalysis() {
   //   const hoursDiff = (now.getTime() - analyzed.getTime()) / (1000 * 60 * 60);
   //   return hoursDiff < 24;
   // };
+
+  // デバッグ用ログ
+  console.log('usePreferenceAnalysis Debug:', {
+    preference: !!preference,
+    favoritesLength: favorites.length,
+    hasEnoughData: favorites.length >= 3,
+    user: !!user
+  });
 
   return {
     preference,

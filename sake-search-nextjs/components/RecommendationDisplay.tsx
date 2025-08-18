@@ -41,6 +41,15 @@ export const RecommendationDisplay = ({
   const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendations();
   const [selectedMood, setSelectedMood] = useState<RecommendOptions['mood']>('usual');
   const [isActivated, setIsActivated] = useState(false);
+  
+  // デバッグ用ログ
+  console.log('RecommendationDisplay Debug:', {
+    hasRecommendations,
+    isActivated,
+    recommendationsLength: recommendations.length,
+    loading,
+    error
+  });
 
   const handleActivate = () => {
     setIsActivated(true);
