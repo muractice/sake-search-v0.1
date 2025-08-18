@@ -15,15 +15,6 @@ export function useRecommendations(options?: RecommendOptions) {
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // デバッグ用ログ
-  console.log('useRecommendations Debug:', {
-    preference: !!preference,
-    user: !!user,
-    hasEnoughData,
-    favoritesLength: favorites.length,
-    calculated: !!preference && !!user && hasEnoughData
-  });
 
   const defaultOptions: RecommendOptions = {
     count: 20,
