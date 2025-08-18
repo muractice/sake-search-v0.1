@@ -1,0 +1,21 @@
+{
+  "generation_id": "DRY_RUN",
+  "sync_date": "2025-08-18T22:21:20.531Z",
+  "duration_ms": 387,
+  "statistics": {
+    "startTime": "2025-08-18T22:21:20.145Z",
+    "processed": 0,
+    "inserted": 0,
+    "updated": 0,
+    "deleted": 0,
+    "unchanged": 1355,
+    "errors": []
+  },
+  "changes_summary": {
+    "inserts": 0,
+    "updates": 0,
+    "deletes": 0,
+    "unchanged": 1355
+  },
+  "dry_run": true
+}

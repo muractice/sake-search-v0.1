@@ -1,4 +1,5 @@
 import { Brand, Brewery, FlavorChart, SakeData } from '@/types/sake';
+import { convertFlavorToCoordinates, createFlavorDescription } from '@/domain/sakeCoordinates';
 
 const SAKENOWA_API_BASE = 'https://muro.sakenowa.com/sakenowa-data/api';
 
@@ -14,40 +15,6 @@ export async function fetchFromSakenowaAPI(endpoint: string) {
   return response.json();
 }
 
-// フレーバーチャートを4象限座標に変換
-function convertFlavorToCoordinates(flavorChart: FlavorChart) {
-  // さけのわAPIの各パラメータを適切に組み合わせて座標を計算
-  
-  // 甘辛度の計算: 芳醇度を基準に、ドライ度で調整
-  // 芳醇度が高く、ドライ度が低い = 甘口
-  const sweetnessRaw = flavorChart.f2 * 2 - flavorChart.f5 * 2; // より明確な差を作る
-  const sweetness = (sweetnessRaw - 0) * 3; // 適度な範囲に調整
-  
-  // 淡濃度の計算: 重厚度を基準に、軽快度で調整
-  // 重厚度が高く、軽快度が低い = 濃醇
-  const richnessRaw = flavorChart.f3 * 2 - flavorChart.f6 * 2; // より明確な差を作る
-  const richness = (richnessRaw - 0) * 3; // 適度な範囲に調整
-  
-  // -3 から 3 の範囲に正規化
-  return {
-    sweetness: Math.max(-3, Math.min(3, sweetness)),
-    richness: Math.max(-3, Math.min(3, richness))
-  };
-}
-
-// フレーバーチャートから説明文を生成
-function createDescription(flavorChart: FlavorChart): string {
-  const attributes: string[] = [];
-  
-  if (flavorChart.f1 > 0.6) attributes.push('華やかな香り');
-  if (flavorChart.f2 > 0.6) attributes.push('芳醇な味わい');
-  if (flavorChart.f3 > 0.6) attributes.push('重厚な飲み口');
-  if (flavorChart.f4 > 0.6) attributes.push('穏やかな風味');
-  if (flavorChart.f5 > 0.6) attributes.push('ドライな後味');
-  if (flavorChart.f6 > 0.6) attributes.push('軽快な口当たり');
-  
-  return attributes.length > 0 ? attributes.join('、') : '特徴的な味わい';
-}
 
 export async function searchRealSakeData(query: string): Promise<SakeData[]> {
   try {
@@ -119,7 +86,7 @@ export async function searchRealSakeData(query: string): Promise<SakeData[]> {
           breweryId: brand.breweryId,
           sweetness: coordinates.sweetness,
           richness: coordinates.richness,
-          description: createDescription(flavorChart),
+          description: createFlavorDescription(flavorChart),
           flavorChart
         };
         

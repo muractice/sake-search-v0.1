@@ -1,0 +1,21 @@
+{
+  "generation_id": 5,
+  "sync_date": "2025-08-18T22:21:31.965Z",
+  "duration_ms": 1164,
+  "statistics": {
+    "startTime": "2025-08-18T22:21:30.801Z",
+    "processed": 0,
+    "inserted": 0,
+    "updated": 0,
+    "deleted": 0,
+    "unchanged": 1355,
+    "errors": []
+  },
+  "changes_summary": {
+    "inserts": 0,
+    "updates": 0,
+    "deletes": 0,
+    "unchanged": 1355
+  },
+  "dry_run": false
+}

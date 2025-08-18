@@ -17,9 +17,15 @@ import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import dotenv from 'dotenv';
+import { convertFlavorToCoordinates } from '../domain/sakeCoordinates.ts';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
+
+// .env.localファイルを読み込み
+dotenv.config({ path: join(__dirname, '..', '.env.local') });
 
 // 環境変数のチェック
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
@@ -177,7 +183,7 @@ class SakeDataSyncWithHistory {
       
       if (brewery && flavorChart) {
         // 座標を計算
-        const coordinates = this.convertFlavorToCoordinates(flavorChart);
+        const coordinates = convertFlavorToCoordinates(flavorChart);
         
         combinedData.push({
           id: `sake_${brand.id}`,
@@ -210,29 +216,38 @@ class SakeDataSyncWithHistory {
     return combinedData;
   }
 
-  convertFlavorToCoordinates(flavorChart) {
-    // 甘辛度: 芳醇度を基準に、ドライ度で調整
-    const sweetnessRaw = flavorChart.f2 * 2 - flavorChart.f5 * 2;
-    const sweetness = Math.max(-3, Math.min(3, sweetnessRaw * 3));
-    
-    // 淡濃度: 重厚度を基準に、軽快度で調整
-    const richnessRaw = flavorChart.f3 * 2 - flavorChart.f6 * 2;
-    const richness = Math.max(-3, Math.min(3, richnessRaw * 3));
-    
-    return { sweetness, richness };
-  }
 
   async getCurrentMasterData() {
-    const { data, error } = await this.supabase
-      .from('sake_master')
-      .select('*')
-      .eq('is_active', true);
+    // Supabaseの1000件制限を回避するため、ページネーションで全件取得
+    let allData = [];
+    let start = 0;
+    const batchSize = 1000;
     
-    if (error && error.code !== 'PGRST116') { // テーブルが存在しない場合は無視
-      throw error;
+    while (true) {
+      const { data, error } = await this.supabase
+        .from('sake_master')
+        .select('*')
+        .eq('is_active', true)
+        .range(start, start + batchSize - 1);
+      
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        break;
+      }
+      
+      allData = allData.concat(data);
+      
+      if (data.length < batchSize) {
+        break; // 最後のバッチ
+      }
+      
+      start += batchSize;
     }
     
-    return data || [];
+    return allData;
   }
 
   async detectChanges(apiData, currentData) {
@@ -354,16 +369,18 @@ class SakeDataSyncWithHistory {
   async insertWithHistory(record, generationId) {
     const hash = this.calculateHash(record);
     
-    // マスターテーブルに挿入
+    // マスターテーブルに挿入/更新
     const { error: masterError } = await this.supabase
       .from('sake_master')
-      .insert({
+      .upsert({
         ...record,
         generation_id: generationId,
         data_hash: hash,
         is_active: true,
         created_at: new Date(),
         updated_at: new Date()
+      }, {
+        onConflict: 'id'
       });
     
     if (masterError) throw masterError;

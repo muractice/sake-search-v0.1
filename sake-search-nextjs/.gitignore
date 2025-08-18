@@ -40,3 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 tips/
+
+# バッチ処理ログ
+logs/
+sync-report-*.json
+error-report-*.json

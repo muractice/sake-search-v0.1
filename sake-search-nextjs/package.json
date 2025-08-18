@@ -1,6 +1,7 @@
 {
   "name": "sake-search-nextjs",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -12,9 +13,9 @@
     "check-all": "npm run lint && npm run test && npm run build",
     "workflow": "echo '🔄 Full development workflow:' && echo '1. Create branch: git checkout -b feature/your-change' && echo '2. Make changes' && echo '3. Run: npm run check-all' && echo '4. Test locally: npm run dev' && echo '5. Commit and merge'",
     "db:setup": "node scripts/setup-database.js",
-    "sync:test": "node scripts/test-sync-dry-run.js",
-    "sync:dry-run": "DRY_RUN=true node scripts/sync-sake-data-with-history.js",
-    "sync:run": "node scripts/sync-sake-data-with-history.js"
+    "sync:test": "tsx scripts/test-sync-dry-run.js",
+    "sync:dry-run": "DRY_RUN=true tsx scripts/sync-sake-data-with-history.js",
+    "sync:run": "tsx scripts/sync-sake-data-with-history.js"
   },
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
@@ -22,6 +23,7 @@
     "chart.js": "^4.5.0",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-datalabels": "^2.2.0",
+    "dotenv": "^17.2.1",
     "next": "15.4.5",
     "react": "19.1.0",
     "react-chartjs-2": "^5.3.0",
@@ -42,6 +44,7 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.4",
     "typescript": "^5"
   }
 }

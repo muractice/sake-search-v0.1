@@ -11,12 +11,29 @@
 
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { convertFlavorToCoordinates } from '../domain/sakeCoordinates.ts';
+
+// .env.localファイルを読み込み
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path: join(__dirname, '..', '.env.local') });
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
   console.error('❌ 環境変数 SUPABASE_URL と SUPABASE_SERVICE_KEY が必要です');
-  console.error('設定方法:');
-  console.error('export SUPABASE_URL="your-project-url"');
-  console.error('export SUPABASE_SERVICE_KEY="your-service-key"');
+  console.error('');
+  console.error('💡 解決方法:');
+  console.error('1. Supabase Dashboard → Settings → API');
+  console.error('2. service_role キーをコピー');
+  console.error('3. .env.local ファイルに以下を追加:');
+  console.error('   SUPABASE_URL=https://your-project.supabase.co');
+  console.error('   SUPABASE_SERVICE_KEY=your-service-key');
+  console.error('');
+  console.error('現在の設定:');
+  console.error(`SUPABASE_URL: ${process.env.SUPABASE_URL ? '✅ 設定済み' : '❌ 未設定'}`);
+  console.error(`SUPABASE_SERVICE_KEY: ${process.env.SUPABASE_SERVICE_KEY ? '✅ 設定済み' : '❌ 未設定'}`);
   process.exit(1);
 }
 
@@ -65,10 +82,9 @@ class SyncTestRunner {
     
     try {
       // 基本的な接続テスト
-      const { data, error } = await this.supabase
+      const { data, error, count } = await this.supabase
         .from('sake_master')
-        .select('count(*)')
-        .limit(1);
+        .select('*', { count: 'exact', head: true });
       
       if (error && error.code === 'PGRST116') {
         console.log('⚠️ sake_masterテーブルが存在しません（初回実行時は正常）');
@@ -76,16 +92,13 @@ class SyncTestRunner {
         throw error;
       } else {
         console.log(`✅ データベース接続成功`);
-        if (data && data.length > 0) {
-          console.log(`   現在のレコード数: ${data[0].count || 0}件`);
-        }
+        console.log(`   現在のレコード数: ${count || 0}件`);
       }
       
       // 世代管理テーブルの確認
-      const { data: genData, error: genError } = await this.supabase
+      const { data: genData, error: genError, count: genCount } = await this.supabase
         .from('sync_generations')
-        .select('count(*)')
-        .limit(1);
+        .select('*', { count: 'exact', head: true });
       
       if (genError && genError.code === 'PGRST116') {
         console.log('⚠️ sync_generationsテーブルが存在しません');
@@ -164,7 +177,7 @@ class SyncTestRunner {
       const flavorChart = flavorChartsMap.get(brand.id);
       
       if (brewery && flavorChart) {
-        const coordinates = this.convertFlavorToCoordinates(flavorChart);
+        const coordinates = convertFlavorToCoordinates(flavorChart);
         
         combinedData.push({
           id: `sake_${brand.id}`,
@@ -187,15 +200,6 @@ class SyncTestRunner {
     return combinedData;
   }
 
-  convertFlavorToCoordinates(flavorChart) {
-    const sweetnessRaw = flavorChart.f2 * 2 - flavorChart.f5 * 2;
-    const sweetness = Math.max(-3, Math.min(3, sweetnessRaw * 3));
-    
-    const richnessRaw = flavorChart.f3 * 2 - flavorChart.f6 * 2;
-    const richness = Math.max(-3, Math.min(3, richnessRaw * 3));
-    
-    return { sweetness, richness };
-  }
 
   async testHashCalculation(apiData) {
     console.log('\n3️⃣ ハッシュ計算テスト...');
