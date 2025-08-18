@@ -13,11 +13,23 @@ export const useFavorites = () => {
   // ユーザーセッションの監視
   useEffect(() => {
     // 現在のセッションを取得
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadFavorites(session.user.id);
-        loadPreferences(session.user.id);
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.error('Session error:', error);
+        // セッションエラーの場合、リフレッシュを試みる
+        supabase.auth.refreshSession().then(({ data: { session: refreshedSession } }) => {
+          setUser(refreshedSession?.user ?? null);
+          if (refreshedSession?.user) {
+            loadFavorites(refreshedSession.user.id);
+            loadPreferences(refreshedSession.user.id);
+          }
+        });
+      } else {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          loadFavorites(session.user.id);
+          loadPreferences(session.user.id);
+        }
       }
       setIsLoading(false);
     });
@@ -25,7 +37,13 @@ export const useFavorites = () => {
     // セッション変更の監視
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
+      }
+      
       setUser(session?.user ?? null);
       if (session?.user) {
         loadFavorites(session.user.id);

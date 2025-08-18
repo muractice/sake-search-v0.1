@@ -9,7 +9,7 @@ import { RecommendOptions } from '@/types/preference';
 import { SakeData } from '@/types/sake';
 
 export function useRecommendations(options?: RecommendOptions) {
-  const { preference } = usePreferenceAnalysis();
+  const { preference, hasEnoughData } = usePreferenceAnalysis();
   const { user, favorites } = useFavoritesContext();
   
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
@@ -122,7 +122,7 @@ export function useRecommendations(options?: RecommendOptions) {
     error,
     refresh: refreshRecommendations,
     getByMood: getRecommendationsByMood,
-    hasRecommendations: !!preference && !!user && favorites.length >= 3,
+    hasRecommendations: !!preference && !!user && hasEnoughData,
   };
 }
 

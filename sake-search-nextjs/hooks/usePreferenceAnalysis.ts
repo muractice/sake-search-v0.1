@@ -231,6 +231,13 @@ export function usePreferenceAnalysis() {
       
       console.log('Save data:', saveData);
       
+      // 認証状態を確認
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No active session');
+        throw new Error('認証セッションが無効です。再度ログインしてください。');
+      }
+
       // upsert方式：既存データがあれば更新、なければ挿入
       console.log('Upserting preference data (insert or update)...');
       const { data, error: saveError } = await supabase
