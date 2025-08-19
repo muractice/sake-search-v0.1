@@ -28,10 +28,10 @@ export class SakeDataService {
     try {
       // Supabaseから日本酒データを取得
       const { data: sakes, error } = await supabase
-        .from('sakes')
+        .from('sake_master')
         .select(`
           *,
-          flavor_charts (*)
+          flavor_chart (*)
         `)
         .order('created_at', { ascending: false });
 
@@ -47,14 +47,14 @@ export class SakeDataService {
         sweetness: sake.sweetness || 0,
         richness: sake.richness || 0,
         description: sake.description || '',
-        flavorChart: sake.flavor_charts ? {
+        flavorChart: sake.flavor_chart ? {
           brandId: sake.brand_id,
-          f1: sake.flavor_charts.f1 || 0.5,
-          f2: sake.flavor_charts.f2 || 0.5,
-          f3: sake.flavor_charts.f3 || 0.5,
-          f4: sake.flavor_charts.f4 || 0.5,
-          f5: sake.flavor_charts.f5 || 0.5,
-          f6: sake.flavor_charts.f6 || 0.5,
+          f1: sake.flavor_chart.f1 || 0.5,
+          f2: sake.flavor_chart.f2 || 0.5,
+          f3: sake.flavor_chart.f3 || 0.5,
+          f4: sake.flavor_chart.f4 || 0.5,
+          f5: sake.flavor_chart.f5 || 0.5,
+          f6: sake.flavor_chart.f6 || 0.5,
         } : undefined
       }));
 
@@ -80,7 +80,7 @@ export class SakeDataService {
     try {
       // ユーザーのお気に入りを取得
       const { data: favorites } = await supabase
-        .from('favorites')
+        .from('user_favorites')
         .select('sake_id')
         .eq('user_id', userId);
 
@@ -101,15 +101,49 @@ export class SakeDataService {
    */
   async getTrendingSakes(limit: number = 10): Promise<SakeData[]> {
     try {
+      // お気に入り数でソートして取得
+      const { data: favoriteStats, error: statsError } = await supabase
+        .from('user_favorites')
+        .select('sake_id')
+        .limit(limit * 2);
+
+      if (statsError) throw statsError;
+
+      // お気に入り数をカウント
+      const sakeCounts = new Map<string, number>();
+      (favoriteStats || []).forEach(fav => {
+        const count = sakeCounts.get(fav.sake_id) || 0;
+        sakeCounts.set(fav.sake_id, count + 1);
+      });
+
+      // 上位のsake_idを取得
+      const topSakeIds = Array.from(sakeCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([id]) => id);
+
+      if (topSakeIds.length === 0) {
+        // お気に入りデータがない場合は全件から取得
+        const { data, error } = await supabase
+          .from('sake_master')
+          .select(`
+            *,
+            flavor_chart (*)
+          `)
+          .limit(limit);
+
+        if (error) throw error;
+        return (data || []).map(sake => this.formatSakeData(sake));
+      }
+
+      // 該当する日本酒データを取得
       const { data, error } = await supabase
-        .from('sakes')
+        .from('sake_master')
         .select(`
           *,
-          flavor_charts (*),
-          favorites!inner (count)
+          flavor_chart (*)
         `)
-        .order('favorites.count', { ascending: false })
-        .limit(limit);
+        .in('id', topSakeIds);
 
       if (error) throw error;
 
@@ -130,10 +164,10 @@ export class SakeDataService {
     keywords?: string[];
   }): Promise<SakeData[]> {
     let query = supabase
-      .from('sakes')
+      .from('sake_master')
       .select(`
         *,
-        flavor_charts (*)
+        flavor_chart (*)
       `);
 
     // 甘辛度でフィルタ
@@ -227,14 +261,14 @@ export class SakeDataService {
       sweetness: sake.sweetness || 0,
       richness: sake.richness || 0,
       description: sake.description || '',
-      flavorChart: sake.flavor_charts ? {
+      flavorChart: sake.flavor_chart ? {
         brandId: sake.brand_id,
-        f1: sake.flavor_charts.f1 || 0.5,
-        f2: sake.flavor_charts.f2 || 0.5,
-        f3: sake.flavor_charts.f3 || 0.5,
-        f4: sake.flavor_charts.f4 || 0.5,
-        f5: sake.flavor_charts.f5 || 0.5,
-        f6: sake.flavor_charts.f6 || 0.5,
+        f1: sake.flavor_chart.f1 || 0.5,
+        f2: sake.flavor_chart.f2 || 0.5,
+        f3: sake.flavor_chart.f3 || 0.5,
+        f4: sake.flavor_chart.f4 || 0.5,
+        f5: sake.flavor_chart.f5 || 0.5,
+        f6: sake.flavor_chart.f6 || 0.5,
       } : undefined
     };
   }

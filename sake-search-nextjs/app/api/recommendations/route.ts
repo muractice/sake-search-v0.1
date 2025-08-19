@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
 
     // ユーザーのお気に入りを取得
     const { data: favorites } = await supabase
-      .from('favorites')
-      .select('*, sakes(*)')
+      .from('user_favorites')
+      .select('*')
       .eq('user_id', user.id);
 
     if (!favorites || favorites.length < 3) {
