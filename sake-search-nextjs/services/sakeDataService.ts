@@ -29,34 +29,49 @@ export class SakeDataService {
       // Supabaseから日本酒データを取得
       const { data: sakes, error } = await supabase
         .from('sake_master')
-        .select(`
-          *,
-          flavor_chart (*)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        // エラー時はフォールバックデータを返す
+        const fallbackData = this.getFallbackData();
+        this.cache.set(cacheKey, fallbackData);
+        this.lastFetch = new Date();
+        return fallbackData;
+      }
+
+      // データが存在しない場合はフォールバックデータを返す
+      if (!sakes || sakes.length === 0) {
+        console.log('No sakes data found, using fallback data');
+        const fallbackData = this.getFallbackData();
+        this.cache.set(cacheKey, fallbackData);
+        this.lastFetch = new Date();
+        return fallbackData;
+      }
 
       // データを整形
-      const formattedSakes: SakeData[] = (sakes || []).map(sake => ({
+      const formattedSakes: SakeData[] = sakes.map(sake => ({
         id: sake.id,
-        brandId: sake.brand_id,
-        name: sake.name,
-        brewery: sake.brewery,
-        breweryId: sake.brewery_id,
+        brandId: sake.brand_id || 1,
+        name: sake.name || '不明な日本酒',
+        brewery: sake.brewery || '不明な蔵元',
+        breweryId: sake.brewery_id || 1,
         sweetness: sake.sweetness || 0,
         richness: sake.richness || 0,
         description: sake.description || '',
-        flavorChart: sake.flavor_chart ? {
-          brandId: sake.brand_id,
-          f1: sake.flavor_chart.f1 || 0.5,
-          f2: sake.flavor_chart.f2 || 0.5,
-          f3: sake.flavor_chart.f3 || 0.5,
-          f4: sake.flavor_chart.f4 || 0.5,
-          f5: sake.flavor_chart.f5 || 0.5,
-          f6: sake.flavor_chart.f6 || 0.5,
-        } : undefined
+        flavorChart: {
+          brandId: sake.brand_id || 1,
+          f1: sake.f1 || 0.5,
+          f2: sake.f2 || 0.5,
+          f3: sake.f3 || 0.5,
+          f4: sake.f4 || 0.5,
+          f5: sake.f5 || 0.5,
+          f6: sake.f6 || 0.5,
+        }
       }));
+
+      console.log('Formatted sakes:', formattedSakes.length, 'items');
 
       // キャッシュに保存
       this.cache.set(cacheKey, formattedSakes);
@@ -66,8 +81,11 @@ export class SakeDataService {
     } catch (error) {
       console.error('Error fetching sakes:', error);
       
-      // エラー時は仮データを返す（開発用）
-      return this.getFallbackData();
+      // エラー時はフォールバックデータを返す
+      const fallbackData = this.getFallbackData();
+      this.cache.set(cacheKey, fallbackData);
+      this.lastFetch = new Date();
+      return fallbackData;
     }
   }
 
@@ -80,7 +98,7 @@ export class SakeDataService {
     try {
       // ユーザーのお気に入りを取得
       const { data: favorites } = await supabase
-        .from('user_favorites')
+        .from('favorites')
         .select('sake_id')
         .eq('user_id', userId);
 
@@ -103,7 +121,7 @@ export class SakeDataService {
     try {
       // お気に入り数でソートして取得
       const { data: favoriteStats, error: statsError } = await supabase
-        .from('user_favorites')
+        .from('favorites')
         .select('sake_id')
         .limit(limit * 2);
 
@@ -126,10 +144,7 @@ export class SakeDataService {
         // お気に入りデータがない場合は全件から取得
         const { data, error } = await supabase
           .from('sake_master')
-          .select(`
-            *,
-            flavor_chart (*)
-          `)
+          .select('*')
           .limit(limit);
 
         if (error) throw error;
@@ -139,10 +154,7 @@ export class SakeDataService {
       // 該当する日本酒データを取得
       const { data, error } = await supabase
         .from('sake_master')
-        .select(`
-          *,
-          flavor_chart (*)
-        `)
+        .select('*')
         .in('id', topSakeIds);
 
       if (error) throw error;
@@ -165,10 +177,7 @@ export class SakeDataService {
   }): Promise<SakeData[]> {
     let query = supabase
       .from('sake_master')
-      .select(`
-        *,
-        flavor_chart (*)
-      `);
+      .select('*');
 
     // 甘辛度でフィルタ
     if (criteria.sweetness) {
@@ -261,15 +270,15 @@ export class SakeDataService {
       sweetness: sake.sweetness || 0,
       richness: sake.richness || 0,
       description: sake.description || '',
-      flavorChart: sake.flavor_chart ? {
+      flavorChart: {
         brandId: sake.brand_id,
-        f1: sake.flavor_chart.f1 || 0.5,
-        f2: sake.flavor_chart.f2 || 0.5,
-        f3: sake.flavor_chart.f3 || 0.5,
-        f4: sake.flavor_chart.f4 || 0.5,
-        f5: sake.flavor_chart.f5 || 0.5,
-        f6: sake.flavor_chart.f6 || 0.5,
-      } : undefined
+        f1: sake.f1 || 0.5,
+        f2: sake.f2 || 0.5,
+        f3: sake.f3 || 0.5,
+        f4: sake.f4 || 0.5,
+        f5: sake.f5 || 0.5,
+        f6: sake.f6 || 0.5,
+      }
     };
   }
 

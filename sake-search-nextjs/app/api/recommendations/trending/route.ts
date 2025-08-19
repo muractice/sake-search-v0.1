@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { SakeDataService } from '@/services/sakeDataService';
+import { TestSakeDataService } from '@/services/testSakeDataService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const category = searchParams.get('category');
     
-    const sakeDataService = SakeDataService.getInstance();
+    const sakeDataService = TestSakeDataService.getInstance();
     
     let result;
     if (category) {

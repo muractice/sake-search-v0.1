@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { RecommendationEngine } from '@/services/recommendationEngine';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
-import { SakeDataService } from '@/services/sakeDataService';
+import { TestSakeDataService } from '@/services/testSakeDataService';
 import { SakeData } from '@/types/sake';
 
 export async function GET(request: NextRequest) {
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
       if (cachedData && cachedData.length > 0) {
         // キャッシュから日本酒データを復元
-        const sakeDataService = SakeDataService.getInstance();
+        const sakeDataService = TestSakeDataService.getInstance();
         const allSakes = await sakeDataService.getAllSakes();
         const sakeMap = new Map(allSakes.map(s => [s.id, s]));
         
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
 
     // ユーザーのお気に入りを取得
     const { data: favorites } = await supabase
-      .from('user_favorites')
+      .from('favorites')
       .select('*')
       .eq('user_id', user.id);
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
 
     // 好み分析を実行
     const analyzer = new PreferenceAnalyzer();
-    const sakeDataService = SakeDataService.getInstance();
+    const sakeDataService = TestSakeDataService.getInstance();
     const allSakes = await sakeDataService.getAllSakes();
     const sakeMap = new Map(allSakes.map(s => [s.id, s]));
     
