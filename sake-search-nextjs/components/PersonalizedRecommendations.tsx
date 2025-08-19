@@ -18,7 +18,7 @@ export const PersonalizedRecommendations = ({
   isInComparison
 }: PersonalizedRecommendationsProps) => {
   const { hasEnoughData } = usePreferenceAnalysis();
-  const { user } = useFavoritesContext();
+  const { user, favorites } = useFavoritesContext();
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,21 +27,22 @@ export const PersonalizedRecommendations = ({
   useEffect(() => {
     const fetchRecommendations = async () => {
       if (hasEnoughData && user) {
-        await loadRecommendations();
+        await loadRecommendations(true); // お気に入りが変わったらキャッシュをスキップ
       }
     };
     fetchRecommendations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasEnoughData, user, selectedMood]);
+  }, [hasEnoughData, user, selectedMood, favorites.length]); // favorites.lengthを依存配列に追加
 
-  const loadRecommendations = async () => {
+  const loadRecommendations = async (skipCache = false) => {
     if (!user) return;
 
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/recommendations?mood=${selectedMood}&count=20`);
+      const cacheParam = skipCache ? '&cache=false' : '';
+      const response = await fetch(`/api/recommendations?mood=${selectedMood}&count=20${cacheParam}`);
       if (!response.ok) throw new Error('Failed to load recommendations');
       
       const data = await response.json();
@@ -62,8 +63,8 @@ export const PersonalizedRecommendations = ({
       // キャッシュをクリア
       await fetch('/api/recommendations', { method: 'DELETE' });
       
-      // 新規取得
-      await loadRecommendations();
+      // 新規取得（キャッシュをスキップ）
+      await loadRecommendations(true);
     } catch (err) {
       console.error('Error refreshing recommendations:', err);
       setError('レコメンドの更新に失敗しました');
@@ -105,7 +106,7 @@ export const PersonalizedRecommendations = ({
         <div className="text-center py-8">
           <p className="text-red-600 mb-4">{error}</p>
           <button
-            onClick={loadRecommendations}
+            onClick={() => loadRecommendations()}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
           >
             再試行

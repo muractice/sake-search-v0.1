@@ -54,20 +54,20 @@ export class SakeDataService {
       const formattedSakes: SakeData[] = sakes.map(sake => ({
         id: sake.id,
         brandId: sake.brand_id || 1,
-        name: sake.name || '不明な日本酒',
-        brewery: sake.brewery || '不明な蔵元',
+        name: sake.brand_name || '不明な日本酒',
+        brewery: sake.brewery_name || '不明な蔵元',
         breweryId: sake.brewery_id || 1,
         sweetness: sake.sweetness || 0,
         richness: sake.richness || 0,
         description: sake.description || '',
         flavorChart: {
           brandId: sake.brand_id || 1,
-          f1: sake.f1 || 0.5,
-          f2: sake.f2 || 0.5,
-          f3: sake.f3 || 0.5,
-          f4: sake.f4 || 0.5,
-          f5: sake.f5 || 0.5,
-          f6: sake.f6 || 0.5,
+          f1: sake.f1_floral || 0.5,
+          f2: sake.f2_mellow || 0.5,
+          f3: sake.f3_heavy || 0.5,
+          f4: sake.f4_mild || 0.5,
+          f5: sake.f5_dry || 0.5,
+          f6: sake.f6_light || 0.5,
         }
       }));
 
@@ -195,13 +195,13 @@ export class SakeDataService {
 
     // 蔵元でフィルタ
     if (criteria.brewery) {
-      query = query.ilike('brewery', `%${criteria.brewery}%`);
+      query = query.ilike('brewery_name', `%${criteria.brewery}%`);
     }
 
     // キーワード検索
     if (criteria.keywords && criteria.keywords.length > 0) {
       const searchPattern = criteria.keywords.join('|');
-      query = query.or(`name.ilike.%${searchPattern}%,description.ilike.%${searchPattern}%`);
+      query = query.or(`brand_name.ilike.%${searchPattern}%,description.ilike.%${searchPattern}%`);
     }
 
     const { data, error } = await query;
@@ -264,20 +264,20 @@ export class SakeDataService {
     return {
       id: sake.id,
       brandId: sake.brand_id,
-      name: sake.name,
-      brewery: sake.brewery,
+      name: sake.brand_name,
+      brewery: sake.brewery_name,
       breweryId: sake.brewery_id,
       sweetness: sake.sweetness || 0,
       richness: sake.richness || 0,
       description: sake.description || '',
       flavorChart: {
         brandId: sake.brand_id,
-        f1: sake.f1 || 0.5,
-        f2: sake.f2 || 0.5,
-        f3: sake.f3 || 0.5,
-        f4: sake.f4 || 0.5,
-        f5: sake.f5 || 0.5,
-        f6: sake.f6 || 0.5,
+        f1: sake.f1_floral || 0.5,
+        f2: sake.f2_mellow || 0.5,
+        f3: sake.f3_heavy || 0.5,
+        f4: sake.f4_mild || 0.5,
+        f5: sake.f5_dry || 0.5,
+        f6: sake.f6_light || 0.5,
       }
     };
   }

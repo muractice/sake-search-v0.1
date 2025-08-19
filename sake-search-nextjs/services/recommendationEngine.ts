@@ -1,12 +1,12 @@
 import { SakeData } from '@/types/sake';
 import { PreferenceVector, UserPreference, Recommendation, RecommendOptions } from '@/types/preference';
-import { TestSakeDataService } from './testSakeDataService';
+import { SakeDataService } from './sakeDataService';
 
 export class RecommendationEngine {
-  private sakeDataService: TestSakeDataService;
+  private sakeDataService: SakeDataService;
 
   constructor() {
-    this.sakeDataService = TestSakeDataService.getInstance();
+    this.sakeDataService = SakeDataService.getInstance();
   }
 
   /**

@@ -3,6 +3,22 @@ import { supabase } from '@/lib/supabase';
 import { SakeData } from '@/types/sake';
 import { User } from '@supabase/supabase-js';
 
+// レコメンドキャッシュをクリアする関数
+async function clearRecommendationCache(userId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('recommendation_cache')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (error) {
+      console.error('Error clearing recommendation cache:', error);
+    }
+  } catch (err) {
+    console.error('Error clearing recommendation cache:', err);
+  }
+}
+
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<SakeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,6 +137,9 @@ export const useFavorites = () => {
         });
 
       if (error) throw error;
+      
+      // レコメンドキャッシュをクリア
+      await clearRecommendationCache(user.id);
     } catch (error) {
       console.error('Error adding favorite:', error);
       
@@ -154,6 +173,9 @@ export const useFavorites = () => {
         .eq('sake_id', sakeId);
 
       if (error) throw error;
+      
+      // レコメンドキャッシュをクリア
+      await clearRecommendationCache(user.id);
     } catch (error) {
       console.error('Error removing favorite:', error);
       

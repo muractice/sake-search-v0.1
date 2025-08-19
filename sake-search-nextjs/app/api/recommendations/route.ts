@@ -3,7 +3,7 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { RecommendationEngine } from '@/services/recommendationEngine';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
-import { TestSakeDataService } from '@/services/testSakeDataService';
+import { SakeDataService } from '@/services/sakeDataService';
 import { SakeData } from '@/types/sake';
 
 export async function GET(request: NextRequest) {
@@ -25,19 +25,20 @@ export async function GET(request: NextRequest) {
     const count = parseInt(searchParams.get('count') || '20');
     const includeCache = searchParams.get('cache') !== 'false';
 
-    // キャッシュチェック
+    // キャッシュチェック（moodごとに分ける）
     if (includeCache) {
       const { data: cachedData } = await supabase
         .from('recommendation_cache')
         .select('*')
         .eq('user_id', user.id)
+        .eq('mood', mood)  // moodでフィルタリング
         .gt('expires_at', new Date().toISOString())
         .order('similarity_score', { ascending: false })
         .limit(count);
 
       if (cachedData && cachedData.length > 0) {
         // キャッシュから日本酒データを復元
-        const sakeDataService = TestSakeDataService.getInstance();
+        const sakeDataService = SakeDataService.getInstance();
         const allSakes = await sakeDataService.getAllSakes();
         const sakeMap = new Map(allSakes.map(s => [s.id, s]));
         
@@ -78,7 +79,7 @@ export async function GET(request: NextRequest) {
 
     // 好み分析を実行
     const analyzer = new PreferenceAnalyzer();
-    const sakeDataService = TestSakeDataService.getInstance();
+    const sakeDataService = SakeDataService.getInstance();
     const allSakes = await sakeDataService.getAllSakes();
     const sakeMap = new Map(allSakes.map(s => [s.id, s]));
     
@@ -136,6 +137,7 @@ export async function GET(request: NextRequest) {
         predicted_rating: rec.predictedRating,
         recommendation_type: rec.type,
         recommendation_reason: rec.reason,
+        mood: mood,  // moodを保存
         expires_at: expiresAt.toISOString(),
       }));
 
