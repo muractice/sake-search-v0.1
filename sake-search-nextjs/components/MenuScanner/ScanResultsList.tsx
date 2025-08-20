@@ -5,7 +5,6 @@ interface ScanResultsListProps {
   sakeStatus: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>;
   onSakeFound: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onMultipleSakeFound?: (sakeNames: string[], updateStatus?: (statusMap: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>) => void) => void;
-  onRemoveFromComparison?: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onRemoveSake: (index: number, name: string) => void;
   setSakeStatus: React.Dispatch<React.SetStateAction<Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>>>;
   onIndividualAdd?: (sakeName: string) => Promise<{success: boolean, message: string}>;
@@ -19,13 +18,11 @@ export default function ScanResultsList({
   sakeStatus,
   onSakeFound,
   onMultipleSakeFound,
-  onRemoveFromComparison,
   onRemoveSake,
   setSakeStatus,
   onIndividualAdd,
   onIndividualRemove
 }: ScanResultsListProps) {
-  const [showNotFoundMessage, setShowNotFoundMessage] = useState(false);
   const handleAddSake = async (name: string) => {
     if (onIndividualAdd) {
       try {

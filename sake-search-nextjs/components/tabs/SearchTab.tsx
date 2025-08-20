@@ -11,7 +11,6 @@ interface SearchTabProps {
   isLoading: boolean;
   comparisonList: SakeData[];
   onToggleComparison: (sake: SakeData) => void;
-  isInComparison: (sakeId: string) => boolean;
   onClearComparison: () => void;
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
@@ -22,7 +21,6 @@ export const SearchTab = ({
   isLoading,
   comparisonList,
   onToggleComparison,
-  isInComparison,
   onClearComparison,
   onSelectSake,
   onChartClick,

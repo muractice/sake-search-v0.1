@@ -18,6 +18,7 @@ global.fetch = jest.fn();
 
 describe('Gemini Vision API Tests', () => {
   let originalEnv;
+  let originalConsole;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -25,6 +26,10 @@ describe('Gemini Vision API Tests', () => {
     originalEnv = process.env.GEMINI_API_KEY;
     // テスト用のAPIキーを設定
     process.env.GEMINI_API_KEY = 'test-api-key';
+    // コンソールログを抑制
+    originalConsole = console.log;
+    console.log = jest.fn();
+    console.error = jest.fn();
     // モジュールキャッシュをクリア
     jest.resetModules();
   });
@@ -35,6 +40,10 @@ describe('Gemini Vision API Tests', () => {
       process.env.GEMINI_API_KEY = originalEnv;
     } else {
       delete process.env.GEMINI_API_KEY;
+    }
+    // コンソールを復元
+    if (originalConsole) {
+      console.log = originalConsole;
     }
   });
 
@@ -53,7 +62,15 @@ describe('Gemini Vision API Tests', () => {
     await POST(mockRequest);
 
     expect(NextResponse.json).toHaveBeenCalledWith(
-      { error: 'Gemini API key not configured' },
+      { 
+        error: 'Gemini API key not configured',
+        debug: {
+          env: 'test',
+          vercel: undefined,
+          vercelEnv: undefined,
+          suggestion: 'Please set GEMINI_API_KEY in Vercel Dashboard > Settings > Environment Variables'
+        }
+      },
       { status: 500 }
     );
   });

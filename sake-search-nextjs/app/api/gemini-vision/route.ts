@@ -1,10 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// テスト環境でのログを制御
+const debugLog = (...args: any[]) => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.log(...args);
+  }
+};
+
+const debugError = (...args: any[]) => {
+  if (process.env.NODE_ENV !== 'test') {
+    console.error(...args);
+  }
+};
+
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== Vercel Debug: Request Start ===');
-    console.log('Environment:', process.env.NODE_ENV);
-    console.log('Vercel Region:', process.env.VERCEL_REGION);
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('=== Vercel Debug: Request Start ===');
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('Vercel Region:', process.env.VERCEL_REGION);
+    }
     
     const { image } = await request.json();
     
@@ -18,7 +33,7 @@ export async function POST(request: NextRequest) {
     // 画像のMIMEタイプを検出
     const mimeTypeMatch = image.match(/^data:image\/([a-z]+);base64,/);
     const mimeType = mimeTypeMatch ? `image/${mimeTypeMatch[1]}` : 'image/jpeg';
-    console.log('DEBUG: Detected MIME type:', mimeType);
+    if (process.env.NODE_ENV !== 'test') console.log('DEBUG: Detected MIME type:', mimeType);
     
     // 画像データからbase64部分を取得
     const base64Data = image.replace(/^data:image\/[a-z]+;base64,/, '');
@@ -179,10 +194,21 @@ JSONのみを返し、他の説明文は含めないでください。`
 
     const geminiResult = await geminiResponse.json();
     console.log('DEBUG: Gemini API response received');
+    console.log('DEBUG: Full Gemini response structure:', JSON.stringify(geminiResult, null, 2));
     
     // レスポンスからテキストを抽出
     let extractedText = '';
     let parsedResult = null;
+    
+    // Geminiレスポンスの詳細な構造をチェック
+    console.log('DEBUG: Response structure check:');
+    console.log('- candidates exists:', !!geminiResult.candidates);
+    console.log('- candidates length:', geminiResult.candidates?.length || 0);
+    console.log('- first candidate:', geminiResult.candidates?.[0]);
+    console.log('- content exists:', !!geminiResult.candidates?.[0]?.content);
+    console.log('- parts exists:', !!geminiResult.candidates?.[0]?.content?.parts);
+    console.log('- parts length:', geminiResult.candidates?.[0]?.content?.parts?.length || 0);
+    console.log('- text exists:', !!geminiResult.candidates?.[0]?.content?.parts?.[0]?.text);
     
     if (geminiResult.candidates?.[0]?.content?.parts?.[0]?.text) {
       extractedText = geminiResult.candidates[0].content.parts[0].text;
@@ -213,10 +239,27 @@ JSONのみを返し、他の説明文は含めないでください。`
       }
     } else {
       console.error('ERROR: No text found in Gemini response');
+      console.error('ERROR: This might be due to safety filters or content policy violations');
+      
+      // Safety filtersをチェック
+      if (geminiResult.candidates?.[0]?.finishReason) {
+        console.error('ERROR: Finish reason:', geminiResult.candidates[0].finishReason);
+      }
+      
+      // Safety ratingsをチェック
+      if (geminiResult.candidates?.[0]?.safetyRatings) {
+        console.error('ERROR: Safety ratings:', geminiResult.candidates[0].safetyRatings);
+      }
+      
       parsedResult = {
         sake_names: [],
         confidence: 0,
-        notes: 'Gemini APIからのテキスト抽出に失敗しました'
+        notes: 'Gemini APIからのテキスト抽出に失敗しました。画像の内容がフィルタリングされた可能性があります。',
+        debug_info: {
+          finishReason: geminiResult.candidates?.[0]?.finishReason,
+          safetyRatings: geminiResult.candidates?.[0]?.safetyRatings,
+          hasResponse: !!geminiResult.candidates?.[0]
+        }
       };
     }
 
@@ -224,11 +267,14 @@ JSONのみを返し、他の説明文は含めないでください。`
       sake_names: parsedResult?.sake_names || [],
       confidence: parsedResult?.confidence || 0,
       provider: 'gemini-1.5-flash',
+      text: extractedText || '',
+      notes: parsedResult?.notes,
       vercel_debug: {
         imageSize: imageSizeMB,
         requestTime: requestEnd - requestStart,
         region: process.env.VERCEL_REGION || 'unknown'
-      }
+      },
+      debug_info: parsedResult?.debug_info
     };
     
     console.log('DEBUG: Final response:', JSON.stringify(responseData, null, 2));

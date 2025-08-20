@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import MenuScanner from '@/components/MenuScanner';
 import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
@@ -40,6 +40,7 @@ export const RestaurantTab = ({
   const [photoResults, setPhotoResults] = useState<string[]>([]);
   const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>('');
+  const [noSakeDetected, setNoSakeDetected] = useState(false);
   const [menuSakeData, setMenuSakeData] = useState<SakeData[]>([]);
   const [notFoundItems, setNotFoundItems] = useState<string[]>([]);
   const [isLoadingMenuData, setIsLoadingMenuData] = useState(false);
@@ -49,6 +50,9 @@ export const RestaurantTab = ({
   // OCR処理用のフック
   const { processImage } = useScanOCR();
   
+  // onSearchをuseCallbackでメモ化
+  const memoizedOnSearch = useCallback(onSearch, [onSearch]);
+
   // メニューアイテムが変更されたら日本酒データを取得
   useEffect(() => {
     const fetchMenuSakeData = async () => {
@@ -58,7 +62,7 @@ export const RestaurantTab = ({
       
       for (const sakeName of menuItems) {
         try {
-          const sakeData = await onSearch(sakeName);
+          const sakeData = await memoizedOnSearch(sakeName);
           if (sakeData) {
             sakeDataList.push(sakeData);
           } else {
@@ -82,7 +86,7 @@ export const RestaurantTab = ({
       setNotFoundItems([]);
       setIsLoadingMenuData(false);
     }
-  }, [menuItems]); // onSearchを依存配列から削除
+  }, [menuItems, memoizedOnSearch]);
 
   // メニューから見つかった日本酒を処理
   const handleSakeFound = async (sakeName: string) => {
@@ -315,6 +319,7 @@ export const RestaurantTab = ({
                           setPhotoResults(result.foundSakeNames);
                           onMenuItemsChange([...menuItems, ...result.foundSakeNames]);
                           setProcessingStatus(`${result.foundSakeNames.length}件の日本酒を検出しました`);
+                          setNoSakeDetected(false);
                           
                           // 成功時は少し待ってからUIを閉じる（結果は残す）
                           setTimeout(() => {
@@ -324,6 +329,7 @@ export const RestaurantTab = ({
                           }, 2000);
                         } else {
                           // 日本酒が見つからなかった場合
+                          setNoSakeDetected(true);
                           setProcessingStatus('日本酒が検出されませんでした');
                           setTimeout(() => {
                             setIsProcessingPhoto(false);
@@ -371,6 +377,7 @@ export const RestaurantTab = ({
                           setPhotoResults(result.foundSakeNames);
                           onMenuItemsChange([...menuItems, ...result.foundSakeNames]);
                           setProcessingStatus(`${result.foundSakeNames.length}件の日本酒を検出しました`);
+                          setNoSakeDetected(false);
                           
                           // 成功時は少し待ってからUIを閉じる（結果は残す）
                           setTimeout(() => {
@@ -380,6 +387,7 @@ export const RestaurantTab = ({
                           }, 2000);
                         } else {
                           // 日本酒が見つからなかった場合
+                          setNoSakeDetected(true);
                           setProcessingStatus('日本酒が検出されませんでした');
                           setTimeout(() => {
                             setIsProcessingPhoto(false);
@@ -476,10 +484,35 @@ export const RestaurantTab = ({
               ))}
             </div>
             <button
-              onClick={() => setPhotoResults([])}
+              onClick={() => {
+                setPhotoResults([]);
+                setNoSakeDetected(false);
+              }}
               className="mt-2 text-sm text-green-600 hover:text-green-800"
             >
               結果をクリア
+            </button>
+          </div>
+        )}
+        
+        {/* 日本酒が検出されなかった場合の表示 */}
+        {noSakeDetected && photoResults.length === 0 && (
+          <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+            <h3 className="text-sm font-semibold text-orange-800 mb-2">⚠️ 日本酒が検出されませんでした</h3>
+            <p className="text-sm text-orange-700 mb-3">
+              以下をお試しください：
+            </p>
+            <ul className="text-sm text-orange-700 space-y-1 mb-3">
+              <li>• 文字がはっきり見える角度で撮影</li>
+              <li>• 照明を明るくして撮影</li>
+              <li>• 日本酒の銘柄名が写っているか確認</li>
+              <li>• 手動でテキスト入力を試す</li>
+            </ul>
+            <button
+              onClick={() => setNoSakeDetected(false)}
+              className="text-sm text-orange-600 hover:text-orange-800"
+            >
+              このメッセージを閉じる
             </button>
           </div>
         )}
