@@ -83,9 +83,8 @@ export function useScanOCR() {
       const errorMessage = error instanceof Error ? error.message : '文字認識に失敗しました';
       setProcessingStatus(`❌ ${errorMessage}`);
       
-      console.error('About to show alert with message:', errorMessage);
-      alert(errorMessage);
-      return null;
+      // アラートを削除し、エラー情報を返すのみ
+      return { error: true, message: errorMessage, foundSakeNames: [], extractedText: '' };
     } finally {
       setIsProcessing(false);
     }

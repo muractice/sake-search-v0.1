@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
 
 interface SearchResult {
@@ -16,7 +16,7 @@ export const useSearch = () => {
     return await response.json();
   };
 
-  const processSearchResults = (data: SearchResult) => {
+  const processSearchResults = useCallback((data: SearchResult) => {
     if (data.success && data.results.length > 0) {
       setCurrentSakeData(data.results);
       return data.results[0]; // 最初の結果を選択用として返す
@@ -24,10 +24,10 @@ export const useSearch = () => {
       setCurrentSakeData([]);
       return null;
     }
-  };
+  }, []); // setCurrentSakeDataは安定しているので空の依存配列
 
-  // パブリックAPI
-  const search = async (query: string): Promise<SakeData | null> => {
+  // パブリックAPI - useCallbackで安定化
+  const search = useCallback(async (query: string): Promise<SakeData | null> => {
     if (!query.trim()) return null;
 
     setIsLoading(true);
@@ -47,12 +47,12 @@ export const useSearch = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setCurrentSakeData([]);
     setIsLoading(false);
-  };
+  }, []); // set関数は安定しているので空の依存配列
 
   // 公開するAPIのみreturn
   return {

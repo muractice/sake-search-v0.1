@@ -39,8 +39,6 @@ export const RestaurantTab = ({
   const [showTextInput, setShowTextInput] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [photoResults, setPhotoResults] = useState<string[]>([]);
-  const [isProcessingPhoto, setIsProcessingPhoto] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState<string>('');
   const [noSakeDetected, setNoSakeDetected] = useState(false);
   const [menuSakeData, setMenuSakeData] = useState<SakeData[]>([]);
   const [notFoundItems, setNotFoundItems] = useState<string[]>([]);
@@ -49,28 +47,118 @@ export const RestaurantTab = ({
   const galleryInputRef = useRef<HTMLInputElement>(null);
   
   // OCR処理用のフック
-  const { processImage } = useScanOCR();
+  const { processImage, isProcessing: isOCRProcessing, processingStatus: ocrProcessingStatus } = useScanOCR();
   
-  // onSearchをuseCallbackでメモ化
-  const memoizedOnSearch = useCallback(onSearch, [onSearch]);
+  // デバッグ用: 状態変更を監視
+  useEffect(() => {
+    console.log('[RestaurantTab] State Debug:', {
+      isOCRProcessing,
+      isLoadingMenuData,
+      menuItemsLength: menuItems.length,
+      menuSakeDataLength: menuSakeData.length,
+      showPhotoUpload,
+      photoResultsLength: photoResults.length,
+      noSakeDetected,
+      timestamp: new Date().toISOString()
+    });
+  }, [isOCRProcessing, isLoadingMenuData, menuItems.length, menuSakeData.length, showPhotoUpload, photoResults.length, noSakeDetected]);
+  
+  // onSearchを直接使用（useCallbackは不要）
+
+  // 画像処理を行う共通関数
+  const handleImageProcessing = useCallback(async (file: File) => {
+    if (!file) return;
+    
+    // 既に処理中の場合は何もしない
+    if (isOCRProcessing) {
+      console.log('既に画像処理中です');
+      return;
+    }
+    
+    // 即座にUIを閉じて、処理中状態に依存しない
+    setShowPhotoUpload(false);
+    setNoSakeDetected(false);
+    setPhotoResults([]);
+    
+    try {
+      // FileReaderで画像をBase64に変換
+      const base64Image = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          resolve(event.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      // 画像を最適化
+      const optimizedImage = await optimizeImageForScan(base64Image);
+      
+      // OCR処理を実行
+      const result = await processImage(optimizedImage);
+      
+      // エラーチェック
+      if (result && 'error' in result && result.error) {
+        console.error('OCR処理エラー:', result.message);
+        setNoSakeDetected(true);
+        return;
+      }
+      
+      if (result && result.foundSakeNames && result.foundSakeNames.length > 0) {
+        setPhotoResults(result.foundSakeNames);
+        // 状態更新を分離し、競合を回避
+        const currentItems = [...menuItems];
+        const newItems = result.foundSakeNames.filter(name => !currentItems.includes(name));
+        if (newItems.length > 0) {
+          onMenuItemsChange([...currentItems, ...newItems]);
+        }
+        setNoSakeDetected(false);
+      } else {
+        // 日本酒が見つからなかった場合
+        setNoSakeDetected(true);
+      }
+    } catch (error) {
+      console.error('画像処理エラー:', error);
+      setNoSakeDetected(true);
+    }
+  }, [isOCRProcessing, processImage, menuItems, onMenuItemsChange]);
 
   // メニューアイテムが変更されたら日本酒データを取得
   useEffect(() => {
+    // OCR処理中は重い処理を避ける
+    if (isOCRProcessing) {
+      console.log('OCR処理中のため、データ取得をスキップ');
+      return;
+    }
+    
     const fetchMenuSakeData = async () => {
+      if (menuItems.length === 0) {
+        setMenuSakeData([]);
+        setNotFoundItems([]);
+        setIsLoadingMenuData(false);
+        return;
+      }
+      
       setIsLoadingMenuData(true);
       const sakeDataList: SakeData[] = [];
       const notFoundList: string[] = [];
       
-      for (const sakeName of menuItems) {
+      // 短時間で処理を完了させるため、並列処理に変更
+      const promises = menuItems.map(async (sakeName) => {
         try {
-          const sakeData = await memoizedOnSearch(sakeName);
-          if (sakeData) {
-            sakeDataList.push(sakeData);
-          } else {
-            notFoundList.push(sakeName);
-          }
+          const sakeData = await onSearch(sakeName);
+          return { sakeName, sakeData };
         } catch (error) {
           console.log(`日本酒「${sakeName}」のデータ取得に失敗:`, error);
+          return { sakeName, sakeData: null };
+        }
+      });
+      
+      const results = await Promise.all(promises);
+      
+      for (const { sakeName, sakeData } of results) {
+        if (sakeData) {
+          sakeDataList.push(sakeData);
+        } else {
           notFoundList.push(sakeName);
         }
       }
@@ -80,14 +168,10 @@ export const RestaurantTab = ({
       setIsLoadingMenuData(false);
     };
     
-    if (menuItems.length > 0) {
-      fetchMenuSakeData();
-    } else {
-      setMenuSakeData([]);
-      setNotFoundItems([]);
-      setIsLoadingMenuData(false);
-    }
-  }, [menuItems, memoizedOnSearch]);
+    // debounce効果を付与して、連続更新を回避
+    const timer = setTimeout(fetchMenuSakeData, 300);
+    return () => clearTimeout(timer);
+  }, [menuItems, onSearch, isOCRProcessing]);
 
   // メニューから見つかった日本酒を処理
   const handleSakeFound = async (sakeName: string) => {
@@ -300,60 +384,10 @@ export const RestaurantTab = ({
                 accept="image/*"
                 capture="environment"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setIsProcessingPhoto(true);
-                    setProcessingStatus('画像を読み込み中...');
-                    try {
-                      // 画像をBase64に変換
-                      const reader = new FileReader();
-                      reader.onloadend = async () => {
-                        const base64Image = reader.result as string;
-                        
-                        setProcessingStatus('画像を最適化中...');
-                        
-                        // 画像を最適化
-                        const optimizedImage = await optimizeImageForScan(base64Image);
-                        
-                        setProcessingStatus('AIで日本酒を検出中...');
-                        
-                        // OCR処理を実行
-                        const result = await processImage(optimizedImage);
-                        
-                        if (result && result.foundSakeNames && result.foundSakeNames.length > 0) {
-                          setPhotoResults(result.foundSakeNames);
-                          onMenuItemsChange([...menuItems, ...result.foundSakeNames]);
-                          setProcessingStatus(`${result.foundSakeNames.length}件の日本酒を検出しました`);
-                          setNoSakeDetected(false);
-                          
-                          // 成功時は少し待ってからUIを閉じる（結果は残す）
-                          setTimeout(() => {
-                            setIsProcessingPhoto(false);
-                            setShowPhotoUpload(false);
-                            setProcessingStatus('');
-                          }, 2000);
-                        } else {
-                          // 日本酒が見つからなかった場合
-                          setNoSakeDetected(true);
-                          setProcessingStatus('日本酒が検出されませんでした');
-                          setTimeout(() => {
-                            setIsProcessingPhoto(false);
-                            setShowPhotoUpload(false);
-                            setProcessingStatus('');
-                          }, 2000);
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    } catch (error) {
-                      console.error('画像処理エラー:', error);
-                      setProcessingStatus('エラーが発生しました');
-                      setTimeout(() => {
-                        setIsProcessingPhoto(false);
-                        setShowPhotoUpload(false);
-                        setProcessingStatus('');
-                      }, 2000);
-                    }
+                    handleImageProcessing(file);
                   }
                 }}
               />
@@ -363,60 +397,10 @@ export const RestaurantTab = ({
                 type="file"
                 accept="image/*,image/png,image/jpeg,image/jpg"
                 className="hidden"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    setIsProcessingPhoto(true);
-                    setProcessingStatus('画像を読み込み中...');
-                    try {
-                      // 画像をBase64に変換
-                      const reader = new FileReader();
-                      reader.onloadend = async () => {
-                        const base64Image = reader.result as string;
-                        
-                        setProcessingStatus('画像を最適化中...');
-                        
-                        // 画像を最適化
-                        const optimizedImage = await optimizeImageForScan(base64Image);
-                        
-                        setProcessingStatus('AIで日本酒を検出中...');
-                        
-                        // OCR処理を実行
-                        const result = await processImage(optimizedImage);
-                        
-                        if (result && result.foundSakeNames && result.foundSakeNames.length > 0) {
-                          setPhotoResults(result.foundSakeNames);
-                          onMenuItemsChange([...menuItems, ...result.foundSakeNames]);
-                          setProcessingStatus(`${result.foundSakeNames.length}件の日本酒を検出しました`);
-                          setNoSakeDetected(false);
-                          
-                          // 成功時は少し待ってからUIを閉じる（結果は残す）
-                          setTimeout(() => {
-                            setIsProcessingPhoto(false);
-                            setShowPhotoUpload(false);
-                            setProcessingStatus('');
-                          }, 2000);
-                        } else {
-                          // 日本酒が見つからなかった場合
-                          setNoSakeDetected(true);
-                          setProcessingStatus('日本酒が検出されませんでした');
-                          setTimeout(() => {
-                            setIsProcessingPhoto(false);
-                            setShowPhotoUpload(false);
-                            setProcessingStatus('');
-                          }, 2000);
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    } catch (error) {
-                      console.error('画像処理エラー:', error);
-                      setProcessingStatus('エラーが発生しました');
-                      setTimeout(() => {
-                        setIsProcessingPhoto(false);
-                        setShowPhotoUpload(false);
-                        setProcessingStatus('');
-                      }, 2000);
-                    }
+                    handleImageProcessing(file);
                   }
                 }}
               />
@@ -434,9 +418,9 @@ export const RestaurantTab = ({
                     }
                   }}
                   className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isProcessingPhoto}
+                  disabled={isOCRProcessing}
                 >
-                  {isProcessingPhoto ? (
+                  {isOCRProcessing ? (
                     <>
                       <span className="animate-spin inline-block mr-2">⏳</span>
                       処理中...
@@ -452,7 +436,7 @@ export const RestaurantTab = ({
                     galleryInputRef.current?.click();
                   }}
                   className="flex-1 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isProcessingPhoto}
+                  disabled={isOCRProcessing}
                 >
                   <>🖼️ ギャラリーから選択</>
                 </button>
@@ -462,11 +446,11 @@ export const RestaurantTab = ({
               </p>
               
               {/* 処理状態表示 */}
-              {isProcessingPhoto && (
+              {isOCRProcessing && (
                 <div className="mt-4 p-3 bg-white rounded-lg animate-pulse">
                   <div className="flex items-center justify-center gap-2">
                     <span className="animate-spin text-xl">⏳</span>
-                    <span className="text-blue-600 font-medium">{processingStatus}</span>
+                    <span className="text-blue-600 font-medium">{ocrProcessingStatus}</span>
                   </div>
                 </div>
               )}
@@ -506,8 +490,21 @@ export const RestaurantTab = ({
           </div>
         )}
         
+        {/* OCR処理中の状態表示 */}
+        {isOCRProcessing && (
+          <div className="mt-4 p-6 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-center gap-3">
+              <span className="animate-spin text-2xl">⏳</span>
+              <div>
+                <h3 className="text-lg font-semibold text-blue-800">画像を解析中...</h3>
+                <p className="text-sm text-blue-600">{ocrProcessingStatus || 'メニューから日本酒を検出しています'}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* 日本酒が検出されなかった場合の表示 */}
-        {noSakeDetected && photoResults.length === 0 && (
+        {noSakeDetected && photoResults.length === 0 && !isOCRProcessing && (
           <div className="mt-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
             <h3 className="text-sm font-semibold text-orange-800 mb-2">⚠️ 日本酒が検出されませんでした</h3>
             <p className="text-sm text-orange-700 mb-3">
@@ -528,31 +525,39 @@ export const RestaurantTab = ({
           </div>
         )}
         
-        {/* メニューの日本酒比較 */}
-        {(menuItems.length > 0 || isLoadingMenuData) && (
+        {/* データ取得中の表示 */}
+        {menuItems.length > 0 && !isOCRProcessing && isLoadingMenuData && (
           <div className="mt-4 bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4 flex items-center">
               <span className="mr-2">🍾</span>
               メニューの日本酒比較
             </h2>
             <div className="bg-gray-50 p-4 rounded-lg">
-              {isLoadingMenuData && (
-                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                  <div className="flex items-center justify-center gap-2">
-                    <span className="animate-spin text-xl">⏳</span>
-                    <span className="text-blue-600 font-medium">データ取得中...</span>
-                  </div>
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="animate-spin text-xl">⏳</span>
+                  <span className="text-blue-600 font-medium">データ取得中...</span>
                 </div>
-              )}
-              
-              {!isLoadingMenuData && (
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm font-medium text-gray-700">
-                    {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
-                    {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
-                    {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
-                  </span>
-                  <div className="flex gap-2">
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* メニューの日本酒比較 */}
+        {menuItems.length > 0 && !isOCRProcessing && !isLoadingMenuData && (
+          <div className="mt-4 bg-white rounded-lg shadow-md p-6">
+            <h2 className="text-xl font-bold mb-4 flex items-center">
+              <span className="mr-2">🍾</span>
+              メニューの日本酒比較
+            </h2>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium text-gray-700">
+                  {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
+                  {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
+                  {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
+                </span>
+                <div className="flex gap-2">
                     <button
                       onClick={() => {
                         // データありの日本酒のみを一括で比較リストに追加
@@ -585,10 +590,8 @@ export const RestaurantTab = ({
                     </button>
                   </div>
                 </div>
-              )}
               
-              {!isLoadingMenuData && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {/* APIで見つかった日本酒 */}
                 {menuSakeData.map((sake) => (
                   <div
@@ -679,8 +682,7 @@ export const RestaurantTab = ({
                     </div>
                   </div>
                 ))}
-                </div>
-              )}
+              </div>
             </div>
           </div>
         )}
