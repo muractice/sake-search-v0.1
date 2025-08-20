@@ -36,12 +36,17 @@ export async function processWithGeminiVision(
       console.error(`Status: ${response.status} ${response.statusText}`);
       console.error(`Result:`, result);
       
-      if (response.status === 408 || result.timeout) {
+      // Vercel環境でのデバッグ情報を含める
+      if (response.status === 500 && result.error?.includes('Gemini API key not configured')) {
+        throw new Error('Gemini APIキーが設定されていません。Vercel Dashboard > Settings > Environment Variables で GEMINI_API_KEY を設定してください。');
+      } else if (response.status === 408 || result.timeout) {
         const timeoutError = new Error('画像解析がタイムアウトしました（15秒）。画像が複雑すぎるため、画像サイズを小さくして再試行してください。');
         console.error('Throwing timeout error:', timeoutError.message);
         throw timeoutError;
       } else if (result.error) {
-        throw new Error(result.error);
+        // デバッグ情報があれば含める
+        const debugInfo = result.debug ? ` (環境: ${result.debug.vercelEnv || 'unknown'})` : '';
+        throw new Error(result.error + debugInfo);
       } else {
         throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
