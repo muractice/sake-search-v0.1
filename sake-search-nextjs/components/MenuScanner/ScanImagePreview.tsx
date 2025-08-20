@@ -21,6 +21,21 @@ export default function ScanImagePreview({
   onProcessImage,
   onReset
 }: ScanImagePreviewProps) {
+  // 画像サイズを計算
+  const getImageSizeInfo = (base64Image: string) => {
+    const sizeBytes = base64Image.length * 0.75; // base64のエンコード効率考慮
+    const sizeKB = Math.round(sizeBytes / 1024);
+    const sizeMB = (sizeKB / 1024).toFixed(2);
+    
+    return {
+      sizeKB,
+      sizeMB: parseFloat(sizeMB),
+      displayText: sizeKB > 1024 ? `${sizeMB}MB` : `${sizeKB}KB`
+    };
+  };
+
+  const sizeInfo = getImageSizeInfo(image);
+
   return (
     <div className="space-y-4">
       <div className="text-center relative">
@@ -32,6 +47,11 @@ export default function ScanImagePreview({
           className="max-w-full h-auto rounded-lg mx-auto"
           style={{ width: 'auto', height: 'auto' }}
         />
+        
+        {/* 画像サイズ情報表示 */}
+        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+          {sizeInfo.displayText}
+        </div>
       </div>
       
       <div className="mb-4 p-3 bg-purple-50 rounded-lg border border-purple-200">
@@ -45,6 +65,21 @@ export default function ScanImagePreview({
           </div>
         </div>
       </div>
+
+      {/* 画像サイズ警告 */}
+      {sizeInfo.sizeKB > 1500 && (
+        <div className="mb-4 p-3 bg-orange-50 rounded-lg border border-orange-200">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⚠️</span>
+            <div className="flex-1">
+              <p className="font-medium text-orange-800">画像サイズが大きめです ({sizeInfo.displayText})</p>
+              <p className="text-xs text-orange-600">
+                Vercelでの処理が失敗する可能性があります。自動圧縮を適用済みです。
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="flex gap-4 justify-center">
         <button

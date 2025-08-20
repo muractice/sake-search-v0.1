@@ -7,6 +7,7 @@ import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import { SakeData } from '@/types/sake';
 import { useScanOCR } from '@/hooks/scan/useScanOCR';
+import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
 
 interface RestaurantTabProps {
   comparisonList: SakeData[];
@@ -310,10 +311,15 @@ export const RestaurantTab = ({
                       reader.onloadend = async () => {
                         const base64Image = reader.result as string;
                         
+                        setProcessingStatus('画像を最適化中...');
+                        
+                        // 画像を最適化
+                        const optimizedImage = await optimizeImageForScan(base64Image);
+                        
                         setProcessingStatus('AIで日本酒を検出中...');
                         
                         // OCR処理を実行
-                        const result = await processImage(base64Image);
+                        const result = await processImage(optimizedImage);
                         
                         if (result && result.foundSakeNames && result.foundSakeNames.length > 0) {
                           setPhotoResults(result.foundSakeNames);
@@ -368,10 +374,15 @@ export const RestaurantTab = ({
                       reader.onloadend = async () => {
                         const base64Image = reader.result as string;
                         
+                        setProcessingStatus('画像を最適化中...');
+                        
+                        // 画像を最適化
+                        const optimizedImage = await optimizeImageForScan(base64Image);
+                        
                         setProcessingStatus('AIで日本酒を検出中...');
                         
                         // OCR処理を実行
-                        const result = await processImage(base64Image);
+                        const result = await processImage(optimizedImage);
                         
                         if (result && result.foundSakeNames && result.foundSakeNames.length > 0) {
                           setPhotoResults(result.foundSakeNames);

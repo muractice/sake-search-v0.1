@@ -39,6 +39,9 @@ export async function processWithGeminiVision(
       // Vercel環境でのデバッグ情報を含める
       if (response.status === 500 && result.error?.includes('Gemini API key not configured')) {
         throw new Error('Gemini APIキーが設定されていません。Vercel Dashboard > Settings > Environment Variables で GEMINI_API_KEY を設定してください。');
+      } else if (response.status === 413) {
+        const sizeInfo = result.size ? ` (${result.size})` : '';
+        throw new Error(`画像サイズが大きすぎます${sizeInfo}。より小さな画像をお使いください。自動圧縮機能が正常に動作しない場合があります。`);
       } else if (response.status === 408 || result.timeout) {
         const timeoutError = new Error('画像解析がタイムアウトしました（15秒）。画像が複雑すぎるため、画像サイズを小さくして再試行してください。');
         console.error('Throwing timeout error:', timeoutError.message);

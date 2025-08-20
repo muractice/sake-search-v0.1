@@ -30,12 +30,15 @@ export async function POST(request: NextRequest) {
     const imageSizeMB = (imageSizeKB / 1024).toFixed(2);
     console.log(`DEBUG: Image size - ${imageSizeKB}KB (${imageSizeMB}MB)`);
     
-    // Vercel制限チェック（4MB以下に制限）
-    if (imageSizeKB > 4000) {
+    // Vercel制限チェック（より厳しく2MB以下に制限）
+    // Vercelのファンクションペイロード制限は実際は4.5MBだが、
+    // リクエストボディ全体（JSON構造含む）で制限されるため、より保守的に設定
+    if (imageSizeKB > 2000) {
       console.log('ERROR: Image size exceeds Vercel limit');
       return NextResponse.json({ 
-        error: `Image too large: ${imageSizeMB}MB (max 4MB for Vercel)`,
-        size: imageSizeMB
+        error: `Image too large: ${imageSizeMB}MB (max 2MB for Vercel). Please reduce image size and try again.`,
+        size: imageSizeMB,
+        suggestion: 'Try compressing the image or taking a smaller photo'
       }, { status: 413 });
     }
     
