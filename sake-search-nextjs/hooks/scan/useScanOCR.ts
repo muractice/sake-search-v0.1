@@ -15,7 +15,7 @@ export function useScanOCR() {
   const [useHighPerformanceOCR] = useState(true);
 
   const processImage = async (image: string) => {
-    if (!image) return;
+    if (!image) return null;
 
     setIsProcessing(true);
     setProcessingStatus('画像を処理中...');
@@ -52,7 +52,7 @@ export function useScanOCR() {
         setExtractedText('');
         setFoundSakeNames([]);
         console.log('OCR処理が全て失敗しました');
-        return;
+        return null;
       }
       
       if (result.sake_names && result.sake_names.length > 0) {
@@ -61,6 +61,7 @@ export function useScanOCR() {
         setExtractedText(text);
         
         console.log('AI抽出された日本酒名:', sakeNames);
+        return { foundSakeNames: sakeNames, extractedText: text };
       } else {
         text = normalizeOCRText(text);
         
@@ -71,6 +72,7 @@ export function useScanOCR() {
 
         sakeNames = extractSakeNames(text);
         setFoundSakeNames(sakeNames);
+        return { foundSakeNames: sakeNames, extractedText: text };
       }
     } catch (error) {
       console.error('=== OCR処理エラー Debug ===');
@@ -83,6 +85,7 @@ export function useScanOCR() {
       
       console.error('About to show alert with message:', errorMessage);
       alert(errorMessage);
+      return null;
     } finally {
       setIsProcessing(false);
     }

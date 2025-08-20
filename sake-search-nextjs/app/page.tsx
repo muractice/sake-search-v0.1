@@ -17,18 +17,27 @@ import { SakeData } from '@/types/sake';
 export default function Home() {
   const [activeTab, setActiveTab] = useState('search');
   const [showAuthForm, setShowAuthForm] = useState(false);
+  const [menuItems, setMenuItems] = useState<string[]>([]);
   const [dialogState, setDialogState] = useState({
     isOpen: false,
     title: '酒サーチ',
     message: ''
   });
   
-  // カスタムフックを使用
+  // カスタムフックを使用（日本酒を調べるタブ用）
   const {
     comparisonList,
     toggleComparison,
     isInComparison,
     clearComparison,
+  } = useComparison();
+  
+  // 飲食店タブ用の独立した比較リスト
+  const {
+    comparisonList: restaurantComparisonList,
+    toggleComparison: toggleRestaurantComparison,
+    isInComparison: isInRestaurantComparison,
+    clearComparison: clearRestaurantComparison,
   } = useComparison();
 
   const {
@@ -130,13 +139,15 @@ export default function Home() {
 
           {activeTab === 'restaurant' && (
             <RestaurantTab
-              comparisonList={comparisonList}
-              onToggleComparison={handleToggleComparison}
-              isInComparison={isInComparison}
-              onClearComparison={clearComparison}
+              comparisonList={restaurantComparisonList}
+              onToggleComparison={toggleRestaurantComparison}
+              isInComparison={isInRestaurantComparison}
+              onClearComparison={clearRestaurantComparison}
               onSelectSake={selectSake}
               onChartClick={handleChartClick}
               onSearch={search}
+              menuItems={menuItems}
+              onMenuItemsChange={setMenuItems}
             />
           )}
 
