@@ -124,12 +124,6 @@ export const RestaurantTab = ({
 
   // メニューアイテムが変更されたら日本酒データを取得
   useEffect(() => {
-    // OCR処理中は重い処理を避ける
-    if (isOCRProcessing) {
-      console.log('OCR処理中のため、データ取得をスキップ');
-      return;
-    }
-    
     const fetchMenuSakeData = async () => {
       if (menuItems.length === 0) {
         setMenuSakeData([]);
@@ -171,7 +165,7 @@ export const RestaurantTab = ({
     // debounce効果を付与して、連続更新を回避
     const timer = setTimeout(fetchMenuSakeData, 300);
     return () => clearTimeout(timer);
-  }, [menuItems, onSearch, isOCRProcessing]);
+  }, [menuItems, onSearch]);
 
   // メニューから見つかった日本酒を処理
   const handleSakeFound = async (sakeName: string) => {
@@ -557,7 +551,7 @@ export const RestaurantTab = ({
                   {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
                   {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
                 </span>
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={() => {
                         // データありの日本酒のみを一括で比較リストに追加
@@ -574,7 +568,7 @@ export const RestaurantTab = ({
                         alert(`${sakesToAdd.length}件の日本酒を比較リストに追加しました`);
                       }}
                       disabled={menuSakeData.length === 0}
-                      className="text-sm text-blue-600 hover:text-blue-800 px-3 py-1 rounded-lg hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
                     >
                       一括登録
                     </button>
@@ -584,7 +578,7 @@ export const RestaurantTab = ({
                         setMenuSakeData([]);
                         setNotFoundItems([]);
                       }}
-                      className="text-sm text-red-600 hover:text-red-800 px-3 py-1 rounded-lg hover:bg-red-50"
+                      className="text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg min-h-[44px] flex items-center justify-center"
                     >
                       すべてクリア
                     </button>
@@ -708,7 +702,7 @@ export const RestaurantTab = ({
               <span className="mr-3 text-2xl">📊</span>
               比較リストの味わいマップ
             </h2>
-            <div className="h-96 md:h-[500px] lg:h-[600px]">
+            <div className="min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
               <TasteChart 
                 sakeData={comparisonList}
                 onSakeClick={onChartClick}
