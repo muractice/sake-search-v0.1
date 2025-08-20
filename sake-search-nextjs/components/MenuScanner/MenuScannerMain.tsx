@@ -8,18 +8,14 @@ import { useScanOCR } from '@/hooks/scan/useScanOCR';
 import { useScanSakeExtraction } from '@/hooks/scan/useScanSakeExtraction';
 
 interface MenuScannerMainProps {
-  onSakeFound: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onMultipleSakeFound?: (sakeNames: string[], updateStatus?: (statusMap: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>) => void) => void;
-  onRemoveFromComparison?: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onIndividualAdd?: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onIndividualRemove?: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onClose: () => void;
 }
 
 export default function MenuScannerMain({ 
-  onSakeFound, 
   onMultipleSakeFound, 
-  onRemoveFromComparison, 
   onIndividualAdd,
   onIndividualRemove,
   onClose 
@@ -110,9 +106,7 @@ export default function MenuScannerMain({
                 <ScanResultsList
                   foundSakeNames={foundSakeNames}
                   sakeStatus={sakeStatus}
-                  onSakeFound={onSakeFound}
                   onMultipleSakeFound={onMultipleSakeFound}
-                  onRemoveFromComparison={onRemoveFromComparison}
                   onIndividualAdd={onIndividualAdd}
                   onIndividualRemove={onIndividualRemove}
                   onRemoveSake={handleRemoveSake}

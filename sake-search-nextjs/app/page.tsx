@@ -130,7 +130,6 @@ export default function Home() {
               isLoading={isLoading}
               comparisonList={comparisonList}
               onToggleComparison={handleToggleComparison}
-              isInComparison={isInComparison}
               onClearComparison={clearComparison}
               onSelectSake={selectSake}
               onChartClick={handleChartClick}

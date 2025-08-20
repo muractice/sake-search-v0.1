@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// テスト環境でのログを制御
-const debugLog = (...args: any[]) => {
-  if (process.env.NODE_ENV !== 'test') {
-    console.log(...args);
-  }
-};
-
-const debugError = (...args: any[]) => {
-  if (process.env.NODE_ENV !== 'test') {
-    console.error(...args);
-  }
-};
-
 export async function POST(request: NextRequest) {
   try {
     if (process.env.NODE_ENV !== 'test') {

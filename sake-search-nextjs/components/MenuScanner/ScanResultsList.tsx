@@ -3,7 +3,6 @@
 interface ScanResultsListProps {
   foundSakeNames: string[];
   sakeStatus: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>;
-  onSakeFound: (sakeName: string) => Promise<{success: boolean, message: string}>;
   onMultipleSakeFound?: (sakeNames: string[], updateStatus?: (statusMap: Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>) => void) => void;
   onRemoveSake: (index: number, name: string) => void;
   setSakeStatus: React.Dispatch<React.SetStateAction<Map<string, {status: 'pending' | 'added' | 'not_found' | 'limit_exceeded', message?: string}>>>;
@@ -11,12 +10,9 @@ interface ScanResultsListProps {
   onIndividualRemove?: (sakeName: string) => Promise<{success: boolean, message: string}>;
 }
 
-import { useState } from 'react';
-
 export default function ScanResultsList({
   foundSakeNames,
   sakeStatus,
-  onSakeFound,
   onMultipleSakeFound,
   onRemoveSake,
   setSakeStatus,
@@ -88,14 +84,6 @@ export default function ScanResultsList({
         </button>
       </div>
       
-      {showNotFoundMessage && (
-        <div className="mb-3 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-          <p className="text-sm text-orange-800">
-            ⚠️ 一部の日本酒はデータベースに見つかりませんでした。
-            データがある日本酒のみ比較リストに追加されました。
-          </p>
-        </div>
-      )}
       <div className="space-y-2">
         {foundSakeNames.map((name, index) => {
           const status = sakeStatus.get(name)?.status || 'pending';
