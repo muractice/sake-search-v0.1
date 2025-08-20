@@ -49,11 +49,23 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY;
     console.log('DEBUG: API key exists:', !!apiKey);
     console.log('DEBUG: API key length:', apiKey?.length || 0);
+    console.log('DEBUG: API key first 8 chars:', apiKey?.substring(0, 8) || 'NOT SET');
+    console.log('DEBUG: Environment:', {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: process.env.VERCEL,
+      VERCEL_ENV: process.env.VERCEL_ENV,
+    });
     
     if (!apiKey) {
       console.log('ERROR: Gemini API key not configured');
       return NextResponse.json({ 
-        error: 'Gemini API key not configured' 
+        error: 'Gemini API key not configured',
+        debug: {
+          env: process.env.NODE_ENV,
+          vercel: process.env.VERCEL,
+          vercelEnv: process.env.VERCEL_ENV,
+          suggestion: 'Please set GEMINI_API_KEY in Vercel Dashboard > Settings > Environment Variables'
+        }
       }, { status: 500 });
     }
 
@@ -152,7 +164,17 @@ JSONのみを返し、他の説明文は含めないでください。`
     if (!geminiResponse.ok) {
       const errorData = await geminiResponse.text();
       console.error('ERROR: Gemini API failed:', geminiResponse.status, errorData);
-      throw new Error(`Gemini API error: ${geminiResponse.status}`);
+      
+      // APIキーエラーの詳細な判定
+      if (geminiResponse.status === 400 && errorData.includes('API_KEY')) {
+        throw new Error('Invalid Gemini API key. Please check your API key configuration.');
+      } else if (geminiResponse.status === 403) {
+        throw new Error('Gemini API key is not authorized. Please check API key permissions.');
+      } else if (geminiResponse.status === 429) {
+        throw new Error('Gemini API rate limit exceeded. Please try again later.');
+      }
+      
+      throw new Error(`Gemini API error: ${geminiResponse.status} - ${errorData.substring(0, 200)}`);
     }
 
     const geminiResult = await geminiResponse.json();
