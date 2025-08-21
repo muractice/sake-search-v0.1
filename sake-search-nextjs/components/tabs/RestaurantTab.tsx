@@ -15,6 +15,7 @@ interface RestaurantTabProps {
   onSearch: (query: string) => Promise<SakeData | null>;
   menuItems: string[];
   onMenuItemsChange: (items: string[]) => void;
+  onTabChange?: (tabId: string) => void;
 }
 
 type SegmentType = 'registration' | 'recommendations';
@@ -29,6 +30,7 @@ export const RestaurantTab = ({
   onSearch,
   menuItems,
   onMenuItemsChange,
+  onTabChange,
 }: RestaurantTabProps) => {
   const [activeSegment, setActiveSegment] = useState<SegmentType>('registration');
   const [menuSakeData, setMenuSakeData] = useState<SakeData[]>([]);
@@ -134,6 +136,7 @@ export const RestaurantTab = ({
           menuItems={menuItems}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
+          onTabChange={onTabChange}
         />
       )}
     </div>

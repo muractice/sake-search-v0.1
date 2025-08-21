@@ -142,6 +142,7 @@ export default function Home() {
               onSearch={search}
               menuItems={menuItems}
               onMenuItemsChange={setMenuItems}
+              onTabChange={setActiveTab}
             />
           )}
 

@@ -5,7 +5,10 @@ import { TestSakeDataService } from '@/services/testSakeDataService';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
     
     // 認証は任意（トレンドは誰でも見られる）
     await supabase.auth.getUser();

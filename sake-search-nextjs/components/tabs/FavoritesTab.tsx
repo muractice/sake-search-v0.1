@@ -18,7 +18,16 @@ export const FavoritesTab = ({
   onToggleComparison,
   isInComparison,
 }: FavoritesTabProps) => {
-  const { favorites, removeFavorite } = useFavoritesContext();
+  const { favorites, removeFavorite, user } = useFavoritesContext();
+  
+  // ログイン状態確認のログ出力
+  console.log('🌟 FavoritesTab状態:', {
+    isLoggedIn: !!user,
+    userId: user?.id,
+    userEmail: user?.email,
+    favoritesCount: favorites.length,
+    favoritesItems: favorites.map(f => f.name)
+  });
 
   return (
     <div className="space-y-6">

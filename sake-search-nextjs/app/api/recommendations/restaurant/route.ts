@@ -27,7 +27,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    
+    // 🔍 cookies内容をログ出力
+    const allCookies = [...cookieStore.getAll()];
+    console.log('🍪 Cookies状態確認:', {
+      cookieStoreType: typeof cookieStore,
+      cookieStoreConstructor: cookieStore.constructor.name,
+      hasAuthToken: cookieStore.has('sb-uyrlwwmbujeqmnpgyvam-auth-token'),
+      authTokenValue: cookieStore.get('sb-uyrlwwmbujeqmnpgyvam-auth-token')?.value?.substring(0, 50) + '...',
+      authTokenExists: !!cookieStore.get('sb-uyrlwwmbujeqmnpgyvam-auth-token'),
+      totalCookies: allCookies.length,
+      allCookieNames: allCookies.map(c => c.name)
+    });
+    
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
+    
+    console.log('🔧 Supabaseクライアント作成完了');
     
     // 日本酒データを取得
     const sakeDataService = SakeDataService.getInstance();
@@ -63,21 +81,26 @@ export async function POST(request: NextRequest) {
     switch (type) {
       case 'similarity': {
         // ユーザーの好みに基づくレコメンド
-        const { data: { user } } = await supabase.auth.getUser();
+        console.log('🔐 認証取得を開始...');
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
         
-        if (!user) {
-          // 未ログインの場合は人気順で返す
-          recommendations = menuSakeData
-            .sort(() => Math.random() - 0.5)  // 暫定的にランダム
-            .slice(0, count)
-            .map((sake, index) => ({
-              sake,
-              score: 0.9 - (index * 0.05),
-              type: 'trending',
-              reason: '人気の銘柄です',
-              similarityScore: 0.8 - (index * 0.05),
-              predictedRating: 4.0 - (index * 0.2)
-            }));
+        console.log('🔍 認証結果:', {
+          hasUser: !!user,
+          userId: user?.id,
+          userEmail: user?.email,
+          authError: authError?.message
+        });
+        
+        if (!user || authError) {
+          // 未ログインの場合はお気に入り登録を促す
+          console.log('🚫 Restaurant recommendations: User not logged in', { authError });
+          return NextResponse.json({
+            recommendations: [],
+            notFound,
+            totalFound: menuSakeData.length,
+            requiresMoreFavorites: true,
+            message: 'レコメンド機能を利用するにはログインが必要です'
+          });
         } else {
           // お気に入りデータを取得
           const { data: favorites } = await supabase
@@ -85,19 +108,23 @@ export async function POST(request: NextRequest) {
             .select('*')
             .eq('user_id', user.id);
 
+          console.log(`👤 Restaurant recommendations for user ${user.id}:`, {
+            favoritesCount: favorites?.length || 0,
+            menuItemsCount: menuSakeData.length,
+            type: type
+          });
+
           if (!favorites || favorites.length < 3) {
-            // お気に入りが少ない場合は人気順
-            recommendations = menuSakeData
-              .sort(() => Math.random() - 0.5)
-              .slice(0, count)
-              .map((sake, index) => ({
-                sake,
-                score: 0.9 - (index * 0.05),
-                type: 'trending',
-                reason: 'おすすめの銘柄です',
-                similarityScore: 0.8 - (index * 0.05),
-                predictedRating: 4.0 - (index * 0.2)
-              }));
+            // お気に入りが少ない場合はお気に入り登録を促す
+            console.log(`⚠️ Not enough favorites: ${favorites?.length || 0}/3`);
+            return NextResponse.json({
+              recommendations: [],
+              notFound,
+              totalFound: menuSakeData.length,
+              requiresMoreFavorites: true,
+              favoritesCount: favorites?.length || 0,
+              message: `レコメンド機能を利用するには、お気に入りを3件以上登録してください（現在${favorites?.length || 0}件）。お店のメニューから選択、または「日本酒を調べる」タブで他の日本酒を探してみてください。`
+            });
           } else {
             // 好み分析を実行
             const analyzer = new PreferenceAnalyzer();
@@ -128,6 +155,8 @@ export async function POST(request: NextRequest) {
             recommendations = similarityScores
               .sort((a, b) => b.score - a.score)
               .slice(0, count);
+            
+            console.log(`✅ Generated ${recommendations.length} similarity recommendations for user ${user.id}`);
           }
         }
         break;
@@ -144,11 +173,28 @@ export async function POST(request: NextRequest) {
       }
 
       case 'random': {
-        // おすすめガチャ（重み付きランダム）
-        recommendations = generateRandomRecommendations(
-          menuSakeData,
-          count
-        );
+        // おすすめガチャ（完全ランダムで1つだけ）
+        if (menuSakeData.length === 0) {
+          return NextResponse.json({
+            recommendations: [],
+            notFound,
+            totalFound: 0,
+            error: 'メニューに日本酒がありません'
+          });
+        }
+        
+        // 完全ランダムで1つ選択
+        const randomIndex = Math.floor(Math.random() * menuSakeData.length);
+        const selectedSake = menuSakeData[randomIndex];
+        
+        recommendations = [{
+          sake: selectedSake,
+          score: 1.0,
+          type: 'random' as const,
+          reason: generateRandomReason(),
+          similarityScore: 0.5 + Math.random() * 0.3,
+          predictedRating: 3.5 + Math.random() * 1.5
+        }];
         break;
       }
 
@@ -258,33 +304,6 @@ function generatePairingReason(dishType: string, _sake: SakeData): string {
   return reasons[dishType] || reasons['general'];
 }
 
-// ランダムレコメンド生成（重み付き）
-function generateRandomRecommendations(
-  sakes: SakeData[],
-  count: number
-) {
-  // 各日本酒に重みを付ける
-  const weighted = sakes.map(sake => {
-    // ランダム要素 + 味わいバランススコア
-    const balanceScore = Math.abs(sake.sweetness) < 2 && Math.abs(sake.richness) < 2 ? 0.3 : 0;
-    const randomScore = Math.random();
-    const totalScore = balanceScore + randomScore;
-    
-    return {
-      sake,
-      score: totalScore,
-      type: 'random' as const,
-      reason: generateRandomReason(),
-      similarityScore: 0.5 + Math.random() * 0.3,
-      predictedRating: 3.5 + Math.random() * 1.5
-    };
-  });
-
-  // スコア順にソートしてランダム性を保ちつつ良いものを選択
-  return weighted
-    .sort((a, b) => b.score - a.score)
-    .slice(0, count);
-}
 
 // ランダムレコメンド理由生成
 function generateRandomReason(): string {

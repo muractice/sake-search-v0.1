@@ -8,7 +8,16 @@ import { SakeData } from '@/types/sake';
 
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    // 🔍 GET版のcookies確認
+    const cookieStore = await cookies();
+    console.log('🍪 GET版Cookies状態確認:', {
+      hasAuthToken: cookieStore.has('sb-uyrlwwmbujeqmnpgyvam-auth-token'),
+      authTokenExists: !!cookieStore.get('sb-uyrlwwmbujeqmnpgyvam-auth-token')
+    });
+    
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
     
     // 認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -161,7 +170,10 @@ export async function GET(request: NextRequest) {
 
 export async function DELETE() {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createRouteHandlerClient({ 
+      cookies: () => cookieStore 
+    });
     
     // 認証チェック
     const { data: { user }, error: authError } = await supabase.auth.getUser();

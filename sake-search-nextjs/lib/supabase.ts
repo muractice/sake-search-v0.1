@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { SakeData } from '@/types/sake'
 
 // 環境に応じたSupabase設定を使用
@@ -16,14 +17,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-  },
-})
+// cookieベースの認証を使用（Next.js auth-helpers）
+export const supabase = typeof window !== 'undefined' 
+  ? createClientComponentClient() 
+  : createClient(supabaseUrl, supabaseAnonKey)
 
 // 型定義
 export type Database = {
