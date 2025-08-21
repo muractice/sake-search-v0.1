@@ -104,14 +104,9 @@ export default function Home() {
                   日本酒の味覚を視覚化
                 </p>
               </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3">
-                <UserProfile 
-                  onShowAuth={() => setShowAuthForm(true)} 
-                  onAddToComparison={handleToggleComparison}
-                  isInComparison={isInComparison}
-                  onSelectSake={selectSake}
-                />
-              </div>
+              <UserProfile 
+                onShowAuth={() => setShowAuthForm(true)} 
+              />
             </div>
           </div>
         </header>

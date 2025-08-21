@@ -367,8 +367,8 @@ export const MenuRegistrationSection = ({
       {comparisonList.length > 0 && (
         <ComparisonPanel
           comparisonList={comparisonList}
-          onToggleComparison={onToggleComparison}
-          onClearComparison={onClearComparison}
+          onRemove={onToggleComparison}
+          onClear={onClearComparison}
           onSelectSake={onSelectSake}
         />
       )}

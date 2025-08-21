@@ -38,9 +38,8 @@ export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) =>
                 `}
                 aria-current={activeTab === tab.id ? 'page' : undefined}
               >
-                <span className="mr-1 sm:mr-2 text-lg sm:text-xl">{tab.icon}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden text-xs">{tab.shortLabel}</span>
+                <span className="mr-1 sm:mr-2 text-base sm:text-xl">{tab.icon}</span>
+                <span className="text-xs sm:text-base whitespace-nowrap">{tab.label}</span>
               </button>
             ))}
           </nav>

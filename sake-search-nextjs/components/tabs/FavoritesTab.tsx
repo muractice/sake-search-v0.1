@@ -35,39 +35,78 @@ export const FavoritesTab = ({
           </p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {favorites.map(sake => (
+            {favorites.map((sake, index) => (
               <div
                 key={sake.id}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow"
+                className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-4 border border-purple-200 animate-fade-in hover:shadow-md transition-all duration-200"
               >
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-bold text-lg">{sake.name}</h3>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <h3 
+                        className="font-bold text-base cursor-pointer hover:text-blue-600 transition-colors text-gray-900"
+                        onClick={() => onSelectSake(sake)}
+                        title="クリックして詳細を表示"
+                      >
+                        {sake.name}
+                      </h3>
+                      <p className="text-sm text-gray-800 font-medium">{sake.brewery}</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => removeFavorite(sake.id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-red-500 hover:text-red-700 transition-colors text-xl"
                     title="お気に入りから削除"
                   >
-                    ❌
+                    ✕
                   </button>
                 </div>
-                <p className="text-gray-600 text-sm mb-3">{sake.brewery}</p>
+                
+                {/* 特徴 */}
+                <div className="mb-3 p-3 bg-white/70 rounded-lg">
+                  <p className="text-sm text-gray-900 leading-relaxed font-medium">
+                    {sake.description || '説明がありません'}
+                  </p>
+                </div>
+                
+                {/* 味覚指標 */}
+                <div className="grid grid-cols-2 gap-2 mb-3 text-sm">
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-800 font-semibold">甘辛:</span>
+                    <span className="font-bold text-gray-900">
+                      {sake.sweetness > 0 ? `甘口 +${sake.sweetness.toFixed(1)}` : `辛口 ${sake.sweetness.toFixed(1)}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-800 font-semibold">淡濃:</span>
+                    <span className="font-bold text-gray-900">
+                      {sake.richness > 0 ? `濃醇 +${sake.richness.toFixed(1)}` : `淡麗 ${sake.richness.toFixed(1)}`}
+                    </span>
+                  </div>
+                </div>
+                
+                {/* ボタン */}
                 <div className="flex gap-2">
                   <button
-                    onClick={() => onSelectSake(sake)}
-                    className="flex-1 bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm 
-                             hover:bg-blue-200 transition-colors"
+                    onClick={() => {
+                      alert('準備中です');
+                    }}
+                    className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors font-medium"
                   >
-                    詳細を見る
+                    購入する
                   </button>
                   <button
                     onClick={() => onToggleComparison(sake)}
-                    className={`flex-1 px-3 py-1 rounded text-sm transition-colors
+                    className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors font-medium
                       ${isInComparison(sake.id)
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-300 text-gray-600'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
                       }`}
                   >
-                    {isInComparison(sake.id) ? '比較中' : '比較する'}
+                    {isInComparison(sake.id) ? '追加済' : '比較'}
                   </button>
                 </div>
               </div>

@@ -51,7 +51,7 @@ export const SearchTab = ({
             <span className="mr-3 text-2xl">📊</span>
             味わいマップ
           </h2>
-          <div className="h-96 md:h-[500px] lg:h-[600px]">
+          <div className="min-h-[500px] md:min-h-[600px] lg:min-h-[700px]">
             <TasteChart 
               sakeData={comparisonList}
               onSakeClick={onChartClick}
