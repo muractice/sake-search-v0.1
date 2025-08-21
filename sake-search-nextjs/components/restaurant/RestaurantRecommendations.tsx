@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { SakeData } from '@/types/sake';
 
 export type RestaurantRecommendationType = 'similarity' | 'pairing' | 'random';
@@ -15,14 +15,16 @@ interface RecommendationResult {
 }
 
 interface RestaurantRecommendationsProps {
-  menuItems: string[];
+  restaurantMenuItems: string[];
+  restaurantMenuSakeData: SakeData[];
   onToggleComparison: (sake: SakeData) => void;
   isInComparison: (sakeId: string) => boolean;
   onTabChange?: (tabId: string) => void;
 }
 
 export const RestaurantRecommendations = ({
-  menuItems,
+  restaurantMenuItems,
+  restaurantMenuSakeData,
   onToggleComparison,
   isInComparison,
   onTabChange,
@@ -46,14 +48,16 @@ export const RestaurantRecommendations = ({
     setRecommendations([]);
     
     // メニューアイテムからランダムに10個選んでスロットアイテムとする
-    const menuSakeData: SakeData[] = menuItems.map((name, index) => ({
+    const menuSakeData: SakeData[] = restaurantMenuItems.map((name, index) => ({
       id: `temp-${index}`,
       name,
       brewery: '',
+      brandId: 0,
+      breweryId: 0,
       sweetness: 0,
       richness: 0,
       description: ''
-    }));
+    } as SakeData));
     
     // スロット用のアイテムを作成（結果を最後に配置）
     const shuffled = [...menuSakeData].sort(() => Math.random() - 0.5).slice(0, 9);
@@ -101,8 +105,13 @@ export const RestaurantRecommendations = ({
 
   // レコメンドを取得する関数
   const fetchRecommendations = async (type: RestaurantRecommendationType) => {
-    if (menuItems.length === 0) {
+    if (restaurantMenuItems.length === 0) {
       alert('メニューアイテムを登録してください');
+      return;
+    }
+
+    if (restaurantMenuSakeData.length === 0) {
+      alert('メニューの日本酒データを取得してください');
       return;
     }
 
@@ -117,7 +126,8 @@ export const RestaurantRecommendations = ({
         },
         body: JSON.stringify({
           type,
-          menuItems,
+          menuItems: restaurantMenuItems,
+          restaurantMenuSakeData: restaurantMenuSakeData,
           dishType: type === 'pairing' ? pairingDishType : undefined,
           count: 10
         }),
@@ -163,7 +173,7 @@ export const RestaurantRecommendations = ({
     }
   };
 
-  if (menuItems.length === 0) {
+  if (restaurantMenuItems.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center">

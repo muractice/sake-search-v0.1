@@ -262,9 +262,13 @@ export const MenuRegistrationSection = ({
         </div>
       </div>
 
-      {/* メニュー一覧 */}
+      {/* 飲食店のメニュー */}
       {menuItems.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <span className="mr-2">🍽️</span>
+            飲食店のメニュー
+          </h2>
           <div className="mb-4">
             <span className="text-sm font-medium text-gray-700 block mb-3">
               {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています

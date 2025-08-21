@@ -13,12 +13,12 @@ interface RestaurantTabProps {
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
   onSearch: (query: string) => Promise<SakeData | null>;
-  menuItems: string[];
-  onMenuItemsChange: (items: string[]) => void;
+  restaurantMenuItems: string[];
+  onRestaurantMenuItemsChange: (items: string[]) => void;
   onTabChange?: (tabId: string) => void;
 }
 
-type SegmentType = 'registration' | 'recommendations';
+type SegmentType = 'menu' | 'recommendations';
 
 export const RestaurantTab = ({
   comparisonList,
@@ -28,31 +28,27 @@ export const RestaurantTab = ({
   onSelectSake,
   onChartClick,
   onSearch,
-  menuItems,
-  onMenuItemsChange,
+  restaurantMenuItems,
+  onRestaurantMenuItemsChange,
   onTabChange,
 }: RestaurantTabProps) => {
-  const [activeSegment, setActiveSegment] = useState<SegmentType>('registration');
-  const [menuSakeData, setMenuSakeData] = useState<SakeData[]>([]);
-  const [notFoundItems, setNotFoundItems] = useState<string[]>([]);
-  const [isLoadingMenuData, setIsLoadingMenuData] = useState(false);
+  const [activeSegment, setActiveSegment] = useState<SegmentType>('menu');
+  const [restaurantMenuSakeData, setRestaurantMenuSakeData] = useState<SakeData[]>([]);
+  const [menuItemsNotFound, setMenuItemsNotFound] = useState<string[]>([]);
 
-  // メニューアイテムが変更されたら日本酒データを取得
+  // 飲食店のメニューアイテムが変更されたら日本酒データを取得
   useEffect(() => {
-    const fetchMenuSakeData = async () => {
-      if (menuItems.length === 0) {
-        setMenuSakeData([]);
-        setNotFoundItems([]);
-        setIsLoadingMenuData(false);
+    const fetchRestaurantMenuSakeData = async () => {
+      if (restaurantMenuItems.length === 0) {
+        setRestaurantMenuSakeData([]);
+        setMenuItemsNotFound([]);
         return;
       }
-      
-      setIsLoadingMenuData(true);
       const sakeDataList: SakeData[] = [];
       const notFoundList: string[] = [];
       
       // 短時間で処理を完了させるため、並列処理に変更
-      const promises = menuItems.map(async (sakeName) => {
+      const promises = restaurantMenuItems.map(async (sakeName) => {
         try {
           const sakeData = await onSearch(sakeName);
           return { sakeName, sakeData };
@@ -72,15 +68,14 @@ export const RestaurantTab = ({
         }
       }
       
-      setMenuSakeData(sakeDataList);
-      setNotFoundItems(notFoundList);
-      setIsLoadingMenuData(false);
+      setRestaurantMenuSakeData(sakeDataList);
+      setMenuItemsNotFound(notFoundList);
     };
 
     // debounce効果を付与して、連続更新を回避
-    const timer = setTimeout(fetchMenuSakeData, 300);
+    const timer = setTimeout(fetchRestaurantMenuSakeData, 300);
     return () => clearTimeout(timer);
-  }, [menuItems, onSearch]);
+  }, [restaurantMenuItems, onSearch]);
 
 
   return (
@@ -89,16 +84,16 @@ export const RestaurantTab = ({
       <div className="bg-white rounded-lg shadow-md p-2">
         <div className="flex gap-2">
           <button
-            onClick={() => setActiveSegment('registration')}
+            onClick={() => setActiveSegment('menu')}
             className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-              activeSegment === 'registration'
+              activeSegment === 'menu'
                 ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
             <span className="flex items-center justify-center gap-2">
-              <span>📝</span>
-              メニュー登録・比較
+              <span>🍽️</span>
+              飲食店のメニュー
             </span>
           </button>
           <button
@@ -118,12 +113,12 @@ export const RestaurantTab = ({
       </div>
 
       {/* コンテンツ表示 */}
-      {activeSegment === 'registration' ? (
+      {activeSegment === 'menu' ? (
         <MenuRegistrationSection
-          menuItems={menuItems}
-          onMenuItemsChange={onMenuItemsChange}
-          menuSakeData={menuSakeData}
-          notFoundItems={notFoundItems}
+          menuItems={restaurantMenuItems}
+          onMenuItemsChange={onRestaurantMenuItemsChange}
+          menuSakeData={restaurantMenuSakeData}
+          notFoundItems={menuItemsNotFound}
           comparisonList={comparisonList}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
@@ -133,7 +128,8 @@ export const RestaurantTab = ({
         />
       ) : (
         <RestaurantRecommendations
-          menuItems={menuItems}
+          restaurantMenuItems={restaurantMenuItems}
+          restaurantMenuSakeData={restaurantMenuSakeData}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}

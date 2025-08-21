@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     });
     
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
+      cookies: () => Promise.resolve(cookieStore)
     });
     
     // 認証チェック
@@ -172,7 +172,7 @@ export async function DELETE() {
   try {
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
+      cookies: () => Promise.resolve(cookieStore)
     });
     
     // 認証チェック

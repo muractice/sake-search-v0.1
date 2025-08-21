@@ -144,13 +144,26 @@ export class RecommendationEngine {
   ): number {
     const sakeVector = this.sakeToVector(sake);
     
-    // コサイン類似度
-    const dotProduct = this.dotProduct(preferenceVector, sakeVector);
-    const magnitude1 = this.magnitude(preferenceVector);
-    const magnitude2 = this.magnitude(sakeVector);
+    // ユークリッド距離ベースの類似度計算
+    // 距離が近いほど類似度が高い
+    // 甘辛・淡濃を重視（重み2.0）、その他の要素は補助的（重み0.3）
+    const distance = Math.sqrt(
+      Math.pow(preferenceVector.sweetness - sakeVector.sweetness, 2) * 2.0 +
+      Math.pow(preferenceVector.richness - sakeVector.richness, 2) * 2.0 +
+      Math.pow(preferenceVector.f1_floral - sakeVector.f1_floral, 2) * 0.3 +
+      Math.pow(preferenceVector.f2_mellow - sakeVector.f2_mellow, 2) * 0.3 +
+      Math.pow(preferenceVector.f3_heavy - sakeVector.f3_heavy, 2) * 0.3 +
+      Math.pow(preferenceVector.f4_mild - sakeVector.f4_mild, 2) * 0.3 +
+      Math.pow(preferenceVector.f5_dry - sakeVector.f5_dry, 2) * 0.3 +
+      Math.pow(preferenceVector.f6_light - sakeVector.f6_light, 2) * 0.3
+    );
     
-    if (magnitude1 === 0 || magnitude2 === 0) return 0;
-    return Math.max(0, dotProduct / (magnitude1 * magnitude2));
+    // 距離を0-1の類似度に変換（距離0で類似度1、距離が大きいほど類似度0に近づく）
+    // 最大距離を8と仮定（重み付け調整後の値）
+    const maxDistance = 8;
+    const similarity = Math.max(0, 1 - (distance / maxDistance));
+    
+    return similarity;
   }
 
   /**

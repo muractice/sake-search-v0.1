@@ -129,6 +129,20 @@ export const PersonalizedRecommendations = ({
     return acc;
   }, {} as Record<string, SakeRecommendation[]>);
 
+  // デバッグログ
+  console.log('📊 Recommendations debug:', {
+    total: recommendations.length,
+    types: Object.keys(groupedRecommendations),
+    similar: groupedRecommendations.similar?.length || 0,
+    explore: groupedRecommendations.explore?.length || 0,
+    trending: groupedRecommendations.trending?.length || 0,
+    raw: recommendations.slice(0, 3).map(r => ({
+      name: r.sake.name,
+      type: r.type,
+      score: r.similarityScore
+    }))
+  });
+
   return (
     <div className="space-y-6">
       {/* 気分選択 */}
@@ -173,7 +187,7 @@ export const PersonalizedRecommendations = ({
             {/* 好みに近い */}
             {groupedRecommendations.similar && (
               <RecommendationGroup
-                title="ぴったりの味わい"
+                title={`ぴったりの味わい (${groupedRecommendations.similar.length}件)`}
                 recommendations={groupedRecommendations.similar}
                 onSelectSake={onSelectSake}
                 onAddToComparison={onAddToComparison}
@@ -247,7 +261,7 @@ const RecommendationGroup = ({
     <div>
       <h4 className={`text-sm font-bold mb-3 ${colorClasses[color]}`}>{title}</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {recommendations.slice(0, 4).map(rec => (
+        {recommendations.slice(0, 10).map(rec => (
           <div
             key={rec.sake.id}
             onClick={() => handleClick(rec.sake)}

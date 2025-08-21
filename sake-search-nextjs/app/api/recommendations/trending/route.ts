@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
+      cookies: () => Promise.resolve(cookieStore)
     });
     
     // 認証は任意（トレンドは誰でも見られる）

@@ -140,8 +140,8 @@ export default function Home() {
               onSelectSake={selectSake}
               onChartClick={handleChartClick}
               onSearch={search}
-              menuItems={menuItems}
-              onMenuItemsChange={setMenuItems}
+              restaurantMenuItems={menuItems}
+              onRestaurantMenuItemsChange={setMenuItems}
               onTabChange={setActiveTab}
             />
           )}

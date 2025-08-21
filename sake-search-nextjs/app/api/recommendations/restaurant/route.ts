@@ -11,6 +11,7 @@ export type RestaurantRecommendationType = 'similarity' | 'pairing' | 'random';
 interface RestaurantRecommendationRequest {
   type: RestaurantRecommendationType;
   menuItems: string[];  // 利用可能な日本酒名リスト
+  restaurantMenuSakeData?: SakeData[];  // 飲食店のメニュー日本酒データ（直接提供）
   dishType?: string;    // 料理タイプ（pairingの場合）
   count?: number;       // 結果件数（デフォルト: 10）
 }
@@ -18,7 +19,7 @@ interface RestaurantRecommendationRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: RestaurantRecommendationRequest = await request.json();
-    const { type, menuItems, dishType, count = 10 } = body;
+    const { type, menuItems, restaurantMenuSakeData, dishType, count = 10 } = body;
 
     if (!menuItems || menuItems.length === 0) {
       return NextResponse.json(
@@ -42,30 +43,43 @@ export async function POST(request: NextRequest) {
     });
     
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore 
+      cookies: () => Promise.resolve(cookieStore)
     });
     
     console.log('🔧 Supabaseクライアント作成完了');
     
-    // 日本酒データを取得
+    // 日本酒データを取得（お気に入り分析でも必要）
     const sakeDataService = SakeDataService.getInstance();
     const allSakes = await sakeDataService.getAllSakes();
     
-    // メニューアイテムから日本酒データを取得
-    const menuSakeData: SakeData[] = [];
+    // 飲食店のメニューデータを直接使用（フォールバック）
+    let menuSakeData: SakeData[] = [];
     const notFound: string[] = [];
     
-    for (const menuItem of menuItems) {
-      const sake = allSakes.find(s => 
-        s.name === menuItem || 
-        s.name.includes(menuItem) || 
-        menuItem.includes(s.name)
-      );
+    if (restaurantMenuSakeData && restaurantMenuSakeData.length > 0) {
+      // 飲食店のメニューデータが提供された場合はそれを直接使用
+      menuSakeData = restaurantMenuSakeData;
+      console.log('🍽️ Using restaurant menu sake data directly:', menuSakeData.length);
+    } else {
+      // フォールバック: 従来の方式でデータベースから検索
+      console.log('📚 Fallback: searching in database:', allSakes.length);
       
-      if (sake) {
-        menuSakeData.push(sake);
-      } else {
-        notFound.push(menuItem);
+      for (const menuItem of menuItems) {
+        // スペースを除去して正規化
+        const normalizedMenuItem = menuItem.replace(/\s+/g, '').toLowerCase();
+        
+        const sake = allSakes.find(s => {
+          const normalizedSakeName = s.name.replace(/\s+/g, '').toLowerCase();
+          return normalizedSakeName === normalizedMenuItem || 
+                 normalizedSakeName.includes(normalizedMenuItem) || 
+                 normalizedMenuItem.includes(normalizedSakeName);
+        });
+        
+        if (sake && !menuSakeData.some(m => m.id === sake.id)) {
+          menuSakeData.push(sake);
+        } else if (!sake) {
+          notFound.push(menuItem);
+        }
       }
     }
 
@@ -156,7 +170,15 @@ export async function POST(request: NextRequest) {
               .sort((a, b) => b.score - a.score)
               .slice(0, count);
             
-            console.log(`✅ Generated ${recommendations.length} similarity recommendations for user ${user.id}`);
+            console.log(`✅ Similarity recommendations:`, {
+              userId: user.id,
+              menuItemsRequested: menuItems.length,
+              menuSakeDataFound: menuSakeData.length,
+              notFound: notFound.length,
+              notFoundItems: notFound,
+              requestedCount: count,
+              actualRecommendations: recommendations.length
+            });
           }
         }
         break;
@@ -268,7 +290,7 @@ function generatePairingRecommendations(
       const score = (sake.sweetness > 0 ? 1 : 0.5) + (sake.flavorChart?.f1 || 0.5);
       return score;
     },
-    'general': (sake) => {
+    'general': () => {
       // 一般的にはバランス型
       return 0.5 + Math.random() * 0.5;
     }
@@ -276,11 +298,11 @@ function generatePairingRecommendations(
 
   const scoringFunction = pairingRules[dishType] || pairingRules['general'];
 
-  const scored = sakes.map(sake => ({
+  const scored = sakes.map((sake) => ({
     sake,
     score: scoringFunction(sake),
     type: 'pairing' as const,
-    reason: generatePairingReason(dishType, sake),
+    reason: generatePairingReason(dishType),
     similarityScore: scoringFunction(sake) / 2,
     predictedRating: 3 + scoringFunction(sake)
   }));
@@ -291,7 +313,7 @@ function generatePairingRecommendations(
 }
 
 // ペアリング理由生成
-function generatePairingReason(dishType: string, _sake: SakeData): string {
+function generatePairingReason(dishType: string): string {
   const reasons: Record<string, string> = {
     'sashimi': '刺身の繊細な味わいを引き立てます',
     'grilled': '焼き物の香ばしさと相性抜群',
