@@ -138,7 +138,7 @@ export class RecommendationEngine {
   /**
    * コサイン類似度の計算
    */
-  private calculateSimilarity(
+  public calculateSimilarity(
     preferenceVector: PreferenceVector,
     sake: SakeData
   ): number {
