@@ -265,13 +265,15 @@ export const MenuRegistrationSection = ({
       {/* メニュー一覧 */}
       {menuItems.length > 0 && (
         <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-gray-700">
+          <div className="mb-4">
+            <span className="text-sm font-medium text-gray-700 block mb-3">
               {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
               {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
               {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
             </span>
-            <div className="flex flex-col sm:flex-row gap-2">
+            
+            {/* スマホ対応: ボタンを下に配置・横並び */}
+            <div className="flex gap-2">
               <button
                 onClick={() => {
                   // データありの日本酒のみを一括で比較リストに追加
@@ -288,7 +290,7 @@ export const MenuRegistrationSection = ({
                   alert(`${sakesToAdd.length}件の日本酒を比較リストに追加しました`);
                 }}
                 disabled={menuSakeData.length === 0}
-                className="text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
+                className="flex-2 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
               >
                 一括登録
               </button>
@@ -296,7 +298,7 @@ export const MenuRegistrationSection = ({
                 onClick={() => {
                   onMenuItemsChange([]);
                 }}
-                className="text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg min-h-[44px] flex items-center justify-center"
+                className="flex-1 text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg min-h-[44px] flex items-center justify-center"
               >
                 すべてクリア
               </button>
