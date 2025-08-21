@@ -84,7 +84,7 @@ export const FavoritesTab = ({
               <span className="mr-3 text-2xl">📊</span>
               お気に入りの味わい分布
             </h2>
-            <div className="h-96 md:h-[500px] lg:h-[600px]">
+            <div className="min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
               <TasteChart 
                 sakeData={favorites}
                 onSakeClick={onSelectSake}
