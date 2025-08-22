@@ -17,11 +17,6 @@ export const PrefectureMap = () => {
     return counts;
   }, [prefectureStats]);
 
-  const handlePrefectureClick = (prefectureName: string) => {
-    const stat = prefectureStats.find(s => s.prefecture.name === prefectureName);
-    setSelectedPrefecture(stat || null);
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -80,32 +75,9 @@ export const PrefectureMap = () => {
           <span className="mr-2">🗾</span>
           都道府県別飲酒記録
         </h2>
-        
-        <div className="mb-4">
-          <div className="flex items-center space-x-4 text-sm">
-            <span>記録数：</span>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gray-200 rounded"></div>
-              <span>0件</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-200 rounded"></div>
-              <span>少</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-400 rounded"></div>
-              <span>中</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-600 rounded"></div>
-              <span>多</span>
-            </div>
-          </div>
-        </div>
 
         <JapanMapJS 
           prefectureStats={prefectureRecordCounts}
-          onPrefectureClick={handlePrefectureClick}
         />
       </div>
 

@@ -1,15 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Japan from '@react-map/japan';
 
 interface JapanMapJSProps {
   prefectureStats: { [key: string]: number };
-  onPrefectureClick: (prefectureName: string) => void;
 }
 
-export const JapanMapJS = ({ prefectureStats, onPrefectureClick }: JapanMapJSProps) => {
-  const [hoveredPrefecture, setHoveredPrefecture] = useState<string | null>(null);
+export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
+  const [mapSize, setMapSize] = useState(350);
+
+  useEffect(() => {
+    const updateMapSize = () => {
+      if (typeof window !== 'undefined') {
+        const screenWidth = window.innerWidth;
+        // 北海道上部に余裕を持たせるため、さらに小さく
+        setMapSize(Math.min(280, screenWidth - 70));
+      }
+    };
+
+    updateMapSize();
+    window?.addEventListener('resize', updateMapSize);
+    return () => window?.removeEventListener('resize', updateMapSize);
+  }, []);
 
   // 記録数に基づく色を取得
   const getColorForPrefecture = (count: number) => {
@@ -98,30 +111,43 @@ export const JapanMapJS = ({ prefectureStats, onPrefectureClick }: JapanMapJSPro
       </div>
 
       {/* 日本地図 */}
-      <div className="bg-gray-50 rounded-lg p-4 border">
+      <div className="bg-gray-50 rounded-lg p-2 sm:p-4 border overflow-hidden">
         <div className="flex justify-center">
-          <div style={{ maxWidth: '600px', width: '100%' }}>
-            <Japan
-              type="select-single"
-              size={600}
-              mapColor="#e5e7eb"
-              strokeColor="#374151"
-              strokeWidth={0.5}
-              hoverColor="#065f46"
-              selectColor="#15803d"
-              hints={true}
-              cityColors={cityColors}
-              onSelect={(selectedPrefecture) => {
-                if (selectedPrefecture) {
-                  const prefName = Object.keys(prefectureStats).find(name => 
-                    prefectureNameToKey(name) === selectedPrefecture
-                  );
-                  if (prefName) {
-                    onPrefectureClick(prefName);
-                  }
-                }
-              }}
-            />
+          <div className="w-full max-w-[85vw] sm:max-w-[600px]">
+            <div className="block sm:hidden" style={{ pointerEvents: 'none' }}>
+              <Japan
+                type="select-multiple"
+                size={mapSize}
+                mapColor="#e5e7eb"
+                strokeColor="#374151"
+                strokeWidth={0.3}
+                hoverColor="#e5e7eb"
+                hints={false}
+                cityColors={cityColors}
+                disableClick={true}
+                disableHover={true}
+                onSelect={() => {
+                  // クリック時の色変更を防ぐため何もしない
+                }}
+              />
+            </div>
+            <div className="hidden sm:block" style={{ pointerEvents: 'none' }}>
+              <Japan
+                type="select-multiple"
+                size={600}
+                mapColor="#e5e7eb"
+                strokeColor="#374151"
+                strokeWidth={0.5}
+                hoverColor="#e5e7eb"
+                hints={false}
+                cityColors={cityColors}
+                disableClick={true}
+                disableHover={true}
+                onSelect={() => {
+                  // クリック時の色変更を防ぐため何もしない
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
