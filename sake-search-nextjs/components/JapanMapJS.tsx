@@ -152,17 +152,6 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
         </div>
       </div>
 
-      {/* ホバー時の詳細情報 */}
-      {hoveredPrefecture && (
-        <div className="absolute top-20 left-4 bg-white shadow-xl px-4 py-3 rounded-lg border z-20">
-          <div className="font-bold text-gray-900">{hoveredPrefecture}</div>
-          <div className="text-sm text-gray-600 mt-1">
-            飲んだ種類: <span className="font-semibold text-green-600">
-              {prefectureStats[hoveredPrefecture] || 0}銘柄
-            </span>
-          </div>
-        </div>
-      )}
 
       {/* ランキングと凡例 */}
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,7 +160,7 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
           <h4 className="text-sm font-bold mb-2 text-gray-700">都道府県ごとのランキング</h4>
           <div className="space-y-1">
             {Object.entries(prefectureStats)
-              .filter(([_, count]) => count > 0)
+              .filter(([, count]) => count > 0)
               .sort((a, b) => b[1] - a[1])
               .slice(0, 5)
               .map(([name, count], index) => (
