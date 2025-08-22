@@ -34,7 +34,6 @@ export const MenuRegistrationSection = ({
   onChartClick,
 }: MenuRegistrationSectionProps) => {
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
-  const [showTextInput, setShowTextInput] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [photoResults, setPhotoResults] = useState<string[]>([]);
   const [noSakeDetected, setNoSakeDetected] = useState(false);
@@ -113,7 +112,6 @@ export const MenuRegistrationSection = ({
       const newItems = [...new Set([...menuItems, ...lines])];
       onMenuItemsChange(newItems);
       setTextInput('');
-      setShowTextInput(false);
     }
   };
 
@@ -131,74 +129,56 @@ export const MenuRegistrationSection = ({
         </h2>
         
         <div className="space-y-4">
-          {/* 登録方法の選択ボタン */}
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => {
-                setShowPhotoUpload(true);
-                setShowTextInput(false);
-              }}
-              className="px-4 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all flex items-center justify-center gap-2"
-            >
-              <span className="text-xl">📷</span>
-              写真から登録
-            </button>
-            <button
-              onClick={() => {
-                setShowTextInput(true);
-                setShowPhotoUpload(false);
-              }}
-              className="px-4 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg hover:from-green-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2"
-            >
-              <span className="text-xl">⌨️</span>
-              手入力で登録
-            </button>
+          {/* 登録方法の選択 */}
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={handleCameraCapture}
+                className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+                title="カメラで撮影"
+              >
+                <span className="text-2xl">📷</span>
+              </button>
+              <button
+                onClick={handleGallerySelect}
+                className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center"
+                title="ギャラリーから選択"
+              >
+                <span className="text-2xl">🖼️</span>
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <input
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                placeholder="日本酒名を入力"
+                className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+              />
+              <button
+                onClick={handleTextSubmit}
+                className="px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+              >
+                <span className="text-xl">🔍</span>
+                検索
+              </button>
+            </div>
           </div>
 
-          {/* 写真アップロードUI */}
-          {showPhotoUpload && (
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-gray-700">写真から日本酒を検出</h3>
-                <button
-                  onClick={() => setShowPhotoUpload(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleCameraCapture}
-                  className="px-4 py-3 bg-white border-2 border-blue-300 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  📸 カメラで撮影
-                </button>
-                <button
-                  onClick={handleGallerySelect}
-                  className="px-4 py-3 bg-white border-2 border-purple-300 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-                >
-                  🖼️ ギャラリーから選択
-                </button>
-              </div>
-              
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <input
-                ref={galleryInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
 
           {/* OCR処理状態の表示 */}
           {isOCRProcessing && (
@@ -232,33 +212,6 @@ export const MenuRegistrationSection = ({
             </div>
           )}
 
-          {/* テキスト入力UI */}
-          {showTextInput && (
-            <div className="bg-green-50 rounded-lg p-4">
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-semibold text-gray-700">日本酒名を入力</h3>
-                <button
-                  onClick={() => setShowTextInput(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-              <textarea
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="日本酒名を入力（改行で複数入力可）"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                rows={4}
-              />
-              <button
-                onClick={handleTextSubmit}
-                className="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                登録
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
