@@ -2,75 +2,19 @@
 
 import { useState, useMemo } from 'react';
 import { usePrefectureStats, PrefectureStats } from '@/hooks/usePrefectureStats';
-import { getAllPrefectures } from '@/utils/prefectureMapping';
-
-// @react-map/japanのライブラリ機能を一時的にモック（実装後に置き換え）
-const JapanMapMock = ({ 
-  onPrefectureClick,
-  prefectureColors 
-}: {
-  onPrefectureClick: (prefectureName: string) => void;
-  prefectureColors: { [key: string]: string };
-}) => {
-  const prefectures = getAllPrefectures();
-  
-  return (
-    <div className="w-full h-96 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
-      <div className="text-center">
-        <div className="text-4xl mb-4">🗾</div>
-        <h3 className="text-lg font-semibold mb-4">都道府県マップ（開発中）</h3>
-        <div className="grid grid-cols-6 gap-2 max-w-md">
-          {prefectures.map(prefecture => (
-            <button
-              key={prefecture.id}
-              onClick={() => onPrefectureClick(prefecture.name)}
-              style={{ 
-                backgroundColor: prefectureColors[prefecture.name] || '#e5e7eb',
-                color: prefectureColors[prefecture.name] ? 'white' : 'black'
-              }}
-              className="px-2 py-1 text-xs rounded hover:opacity-80 transition-opacity"
-              title={prefecture.name}
-            >
-              {prefecture.name.replace(/[都道府県]/g, '')}
-            </button>
-          ))}
-        </div>
-        <p className="text-sm text-gray-600 mt-4">
-          実際のマップは @react-map/japan で実装予定
-        </p>
-      </div>
-    </div>
-  );
-};
+import { JapanMapJS } from './JapanMapJS';
 
 export const PrefectureMap = () => {
   const { prefectureStats, conquestStats, isLoading, error } = usePrefectureStats();
   const [selectedPrefecture, setSelectedPrefecture] = useState<PrefectureStats | null>(null);
 
-  // 都道府県別の色分け（記録数に応じてグラデーション）
-  const prefectureColors = useMemo(() => {
-    const colors: { [key: string]: string } = {};
-    
-    if (prefectureStats.length === 0) return colors;
-
-    const maxRecords = Math.max(...prefectureStats.map(stat => stat.recordCount));
-    
+  // 都道府県別の記録数マッピング
+  const prefectureRecordCounts = useMemo(() => {
+    const counts: { [key: string]: number } = {};
     prefectureStats.forEach(stat => {
-      const intensity = stat.recordCount / maxRecords;
-      if (intensity > 0.8) {
-        colors[stat.prefecture.name] = '#1e40af'; // 濃い青
-      } else if (intensity > 0.6) {
-        colors[stat.prefecture.name] = '#3b82f6'; // 青
-      } else if (intensity > 0.4) {
-        colors[stat.prefecture.name] = '#60a5fa'; // 薄い青
-      } else if (intensity > 0.2) {
-        colors[stat.prefecture.name] = '#93c5fd'; // より薄い青
-      } else {
-        colors[stat.prefecture.name] = '#dbeafe'; // 最も薄い青
-      }
+      counts[stat.prefecture.name] = stat.recordCount;
     });
-
-    return colors;
+    return counts;
   }, [prefectureStats]);
 
   const handlePrefectureClick = (prefectureName: string) => {
@@ -159,9 +103,9 @@ export const PrefectureMap = () => {
           </div>
         </div>
 
-        <JapanMapMock 
+        <JapanMapJS 
+          prefectureStats={prefectureRecordCounts}
           onPrefectureClick={handlePrefectureClick}
-          prefectureColors={prefectureColors}
         />
       </div>
 
