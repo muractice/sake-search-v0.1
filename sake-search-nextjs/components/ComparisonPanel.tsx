@@ -2,6 +2,7 @@
 
 import { SakeData } from '@/types/sake';
 import { FavoriteButton } from './FavoriteButton';
+import { RecordButton } from './RecordButton';
 
 interface ComparisonPanelProps {
   comparisonList: SakeData[];
@@ -99,12 +100,16 @@ export default function ComparisonPanel({
                     </div>
                   </div>
                   
-                  {/* お気に入りボタン */}
-                  <div className="flex justify-center">
+                  {/* アクションボタン */}
+                  <div className="flex flex-col gap-2">
                     <FavoriteButton 
                       sake={sake}
                       size="md"
                       showLabel={true}
+                    />
+                    <RecordButton 
+                      sake={sake}
+                      className="w-full"
                     />
                   </div>
                 </div>

@@ -31,7 +31,21 @@ export const useRecords = () => {
 
       if (fetchError) throw fetchError;
 
-      setRecords(data || []);
+      // スネークケースからキャメルケースに変換
+      const mappedRecords = (data || []).map(record => ({
+        id: record.id,
+        userId: record.user_id,
+        sakeId: record.sake_id,
+        sakeName: record.sake_name,
+        sakeBrewery: record.sake_brewery,
+        date: record.date,
+        rating: record.rating,
+        memo: record.memo,
+        createdAt: record.created_at,
+        updatedAt: record.updated_at
+      }));
+
+      setRecords(mappedRecords);
     } catch (err) {
       console.error('Error fetching records:', err);
       setError('記録の取得に失敗しました');
@@ -72,8 +86,22 @@ export const useRecords = () => {
 
       if (createError) throw createError;
 
+      // スネークケースからキャメルケースに変換
+      const mappedRecord = {
+        id: data.id,
+        userId: data.user_id,
+        sakeId: data.sake_id,
+        sakeName: data.sake_name,
+        sakeBrewery: data.sake_brewery,
+        date: data.date,
+        rating: data.rating,
+        memo: data.memo,
+        createdAt: data.created_at,
+        updatedAt: data.updated_at
+      };
+
       // 記録リストを更新
-      setRecords(prev => [data, ...prev]);
+      setRecords(prev => [mappedRecord, ...prev]);
       return true;
     } catch (err) {
       console.error('Error creating record:', err);
