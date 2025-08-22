@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useRecords } from '@/hooks/useRecords';
 import { DrinkingRecord } from '@/types/record';
+import { PrefectureMap } from '@/components/PrefectureMap';
 
 export const RecordsTab = () => {
   const { records, isLoading, error, deleteRecord } = useRecords();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline');
 
   const handleDelete = async (record: DrinkingRecord) => {
     if (!confirm(`「${record.sakeName}」の記録を削除しますか？`)) {
@@ -74,12 +76,36 @@ export const RecordsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* 統計サマリー */}
+      {/* 統計サマリー & ビュー切り替え */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <span className="mr-2">📊</span>
-          記録サマリー
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold flex items-center">
+            <span className="mr-2">📊</span>
+            記録サマリー
+          </h2>
+          <div className="flex rounded-lg bg-gray-100 p-1">
+            <button
+              onClick={() => setViewMode('timeline')}
+              className={`px-4 py-2 rounded-md transition-colors ${
+                viewMode === 'timeline' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              📝 タイムライン
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-4 py-2 rounded-md transition-colors ${
+                viewMode === 'map' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🗾 マップ
+            </button>
+          </div>
+        </div>
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
@@ -98,79 +124,90 @@ export const RecordsTab = () => {
         </div>
       </div>
 
-      {/* 記録一覧 */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <span className="mr-2">🍶</span>
-          飲酒記録
-        </h2>
+      {/* コンテンツ表示 */}
+      {viewMode === 'timeline' ? (
+        /* タイムライン表示 */
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center">
+            <span className="mr-2">🍶</span>
+            飲酒記録
+          </h2>
 
-        <div className="space-y-6">
-          {sortedMonths.map(month => {
-            const [year, monthNum] = month.split('-');
-            const monthLabel = `${year}年${parseInt(monthNum)}月`;
-            const monthRecords = groupedRecords[month];
+          <div className="space-y-6">
+            {sortedMonths.map(month => {
+              const [year, monthNum] = month.split('-');
+              const monthLabel = `${year}年${parseInt(monthNum)}月`;
+              const monthRecords = groupedRecords[month];
 
-            return (
-              <div key={month}>
-                <h3 className="font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
-                  {monthLabel} ({monthRecords.length}件)
-                </h3>
-                <div className="space-y-3">
-                  {monthRecords.map(record => (
-                    <div
-                      key={record.id}
-                      className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className="text-sm text-gray-500">
-                              {record.date}
-                            </span>
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <span
-                                  key={i}
-                                  className={`text-lg ${
-                                    i < record.rating ? 'text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                >
-                                  ★
+              return (
+                <div key={month}>
+                  <h3 className="font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                    {monthLabel} ({monthRecords.length}件)
+                  </h3>
+                  <div className="space-y-3">
+                    {monthRecords.map(record => (
+                      <div
+                        key={record.id}
+                        className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-sm text-gray-500">
+                                {record.date}
+                              </span>
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`text-lg ${
+                                      i < record.rating ? 'text-yellow-400' : 'text-gray-300'
+                                    }`}
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                              {record.sakePrefecture && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                  {record.sakePrefecture}
                                 </span>
-                              ))}
+                              )}
                             </div>
+                            <h4 className="font-semibold text-lg mb-1">
+                              {record.sakeName}
+                            </h4>
+                            {record.sakeBrewery && (
+                              <p className="text-sm text-gray-600 mb-2">
+                                {record.sakeBrewery}
+                              </p>
+                            )}
+                            {record.memo && (
+                              <p className="text-sm text-gray-700 bg-white rounded p-2">
+                                {record.memo}
+                              </p>
+                            )}
                           </div>
-                          <h4 className="font-semibold text-lg mb-1">
-                            {record.sakeName}
-                          </h4>
-                          {record.sakeBrewery && (
-                            <p className="text-sm text-gray-600 mb-2">
-                              {record.sakeBrewery}
-                            </p>
-                          )}
-                          {record.memo && (
-                            <p className="text-sm text-gray-700 bg-white rounded p-2">
-                              {record.memo}
-                            </p>
-                          )}
+                          <button
+                            onClick={() => handleDelete(record)}
+                            disabled={deletingId === record.id}
+                            className="ml-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {deletingId === record.id ? '削除中...' : '削除'}
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDelete(record)}
-                          disabled={deletingId === record.id}
-                          className="ml-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {deletingId === record.id ? '削除中...' : '削除'}
-                        </button>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* マップ表示 */
+        <PrefectureMap />
+      )}
     </div>
   );
 };

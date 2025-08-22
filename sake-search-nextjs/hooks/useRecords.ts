@@ -22,8 +22,9 @@ export const useRecords = () => {
         return;
       }
 
+      // ビューを使用して蔵元・地域情報も含めて取得
       const { data, error: fetchError } = await supabase
-        .from('drinking_records')
+        .from('drinking_records_with_area')
         .select('*')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
@@ -31,13 +32,15 @@ export const useRecords = () => {
 
       if (fetchError) throw fetchError;
 
-      // スネークケースからキャメルケースに変換
+      // スネークケースからキャメルケースに変換（ビューから取得）
       const mappedRecords = (data || []).map(record => ({
         id: record.id,
         userId: record.user_id,
         sakeId: record.sake_id,
         sakeName: record.sake_name,
-        sakeBrewery: record.sake_brewery,
+        sakeBrewery: record.sake_brewery || record.brewery_name, // ビューから取得
+        sakePrefecture: record.area_name, // ビューから取得した地域名
+        sakeAreaId: record.area_id, // ビューから取得
         date: record.date,
         rating: record.rating,
         memo: record.memo,
@@ -76,6 +79,7 @@ export const useRecords = () => {
             sake_id: input.sakeId,
             sake_name: input.sakeName,
             sake_brewery: input.sakeBrewery,
+            brewery_id: input.breweryId,
             date: recordDate,
             rating: input.rating,
             memo: input.memo
@@ -93,6 +97,8 @@ export const useRecords = () => {
         sakeId: data.sake_id,
         sakeName: data.sake_name,
         sakeBrewery: data.sake_brewery,
+        sakePrefecture: data.sake_prefecture,
+        sakeAreaId: data.sake_area_id,
         date: data.date,
         rating: data.rating,
         memo: data.memo,

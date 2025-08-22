@@ -1,5 +1,6 @@
 import { Brand, Brewery, FlavorChart, SakeData } from '@/types/sake';
 import { convertFlavorToCoordinates, createFlavorDescription } from '@/domain/sakeCoordinates';
+import { getPrefectureName } from '@/utils/prefectureMapping';
 
 const SAKENOWA_API_BASE = 'https://muro.sakenowa.com/sakenowa-data/api';
 
@@ -84,6 +85,8 @@ export async function searchRealSakeData(query: string): Promise<SakeData[]> {
           name: brand.name,
           brewery: brewery.name,
           breweryId: brand.breweryId,
+          prefecture: brewery.areaId ? getPrefectureName(brewery.areaId) : undefined,
+          areaId: brewery.areaId,
           sweetness: coordinates.sweetness,
           richness: coordinates.richness,
           description: createFlavorDescription(flavorChart),

@@ -18,6 +18,7 @@
     "sync:run": "tsx scripts/sync-sake-data-with-history.js"
   },
   "dependencies": {
+    "@react-map/japan": "^1.0.10",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.54.0",
     "chart.js": "^4.5.0",

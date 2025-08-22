@@ -4,6 +4,8 @@ export interface SakeData {
   name: string;
   brewery: string;
   breweryId: number;
+  prefecture?: string; // 都道府県名
+  areaId?: number; // Sake NoWaのareaId
   sweetness: number;
   richness: number;
   description: string;

@@ -34,6 +34,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
       sakeId: sake.id,
       sakeName: sake.name,
       sakeBrewery: sake.brewery,
+      breweryId: sake.breweryId,
       date,
       rating,
       memo: memo.trim() || undefined
