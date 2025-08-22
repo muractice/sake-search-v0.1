@@ -24,53 +24,53 @@ export const JapanMapJS = ({ prefectureStats, onPrefectureClick }: JapanMapJSPro
   // 都道府県名から@react-map/japan用の形式に変換
   const prefectureNameToKey = (name: string) => {
     const mapping: { [key: string]: string } = {
-      '北海道': 'hokkaido',
-      '青森県': 'aomori',
-      '岩手県': 'iwate',
-      '宮城県': 'miyagi',
-      '秋田県': 'akita',
-      '山形県': 'yamagata',
-      '福島県': 'fukushima',
-      '茨城県': 'ibaraki',
-      '栃木県': 'tochigi',
-      '群馬県': 'gunma',
-      '埼玉県': 'saitama',
-      '千葉県': 'chiba',
-      '東京都': 'tokyo',
-      '神奈川県': 'kanagawa',
-      '新潟県': 'niigata',
-      '富山県': 'toyama',
-      '石川県': 'ishikawa',
-      '福井県': 'fukui',
-      '山梨県': 'yamanashi',
-      '長野県': 'nagano',
-      '岐阜県': 'gifu',
-      '静岡県': 'shizuoka',
-      '愛知県': 'aichi',
-      '三重県': 'mie',
-      '滋賀県': 'shiga',
-      '京都府': 'kyoto',
-      '大阪府': 'osaka',
-      '兵庫県': 'hyogo',
-      '奈良県': 'nara',
-      '和歌山県': 'wakayama',
-      '鳥取県': 'tottori',
-      '島根県': 'shimane',
-      '岡山県': 'okayama',
-      '広島県': 'hiroshima',
-      '山口県': 'yamaguchi',
-      '徳島県': 'tokushima',
-      '香川県': 'kagawa',
-      '愛媛県': 'ehime',
-      '高知県': 'kochi',
-      '福岡県': 'fukuoka',
-      '佐賀県': 'saga',
-      '長崎県': 'nagasaki',
-      '熊本県': 'kumamoto',
-      '大分県': 'oita',
-      '宮崎県': 'miyazaki',
-      '鹿児島県': 'kagoshima',
-      '沖縄県': 'okinawa'
+      '北海道': 'Hokkaido',
+      '青森県': 'Aomori',
+      '岩手県': 'Iwate',
+      '宮城県': 'Miyagi',
+      '秋田県': 'Akita',
+      '山形県': 'Yamagata',
+      '福島県': 'Fukushima',
+      '茨城県': 'Ibaraki',
+      '栃木県': 'Tochigi',
+      '群馬県': 'Gunma',
+      '埼玉県': 'Saitama',
+      '千葉県': 'Chiba',
+      '東京都': 'Tokyo',
+      '神奈川県': 'Kanagawa',
+      '新潟県': 'Niigata',
+      '富山県': 'Toyama',
+      '石川県': 'Ishikawa',
+      '福井県': 'Fukui',
+      '山梨県': 'Yamanashi',
+      '長野県': 'Nagano',
+      '岐阜県': 'Gifu',
+      '静岡県': 'Shizuoka',
+      '愛知県': 'Aichi',
+      '三重県': 'Mie',
+      '滋賀県': 'Shiga',
+      '京都府': 'Kyoto',
+      '大阪府': 'Osaka',
+      '兵庫県': 'Hyogo',
+      '奈良県': 'Nara',
+      '和歌山県': 'Wakayama',
+      '鳥取県': 'Tottori',
+      '島根県': 'Shimane',
+      '岡山県': 'Okayama',
+      '広島県': 'Hiroshima',
+      '山口県': 'Yamaguchi',
+      '徳島県': 'Tokushima',
+      '香川県': 'Kagawa',
+      '愛媛県': 'Ehime',
+      '高知県': 'Kochi',
+      '福岡県': 'Fukuoka',
+      '佐賀県': 'Saga',
+      '長崎県': 'Nagasaki',
+      '熊本県': 'Kumamoto',
+      '大分県': 'Oita',
+      '宮崎県': 'Miyazaki',
+      '鹿児島県': 'Kagoshima',
+      '沖縄県': 'Okinawa'
     };
     return mapping[name];
   };
@@ -99,27 +99,30 @@ export const JapanMapJS = ({ prefectureStats, onPrefectureClick }: JapanMapJSPro
 
       {/* 日本地図 */}
       <div className="bg-gray-50 rounded-lg p-4 border">
-        <div className="mx-auto" style={{ maxWidth: '800px' }}>
-          <Japan
-            type="select-single"
-            size={800}
-            strokeColor="#374151"
-            strokeWidth={0.5}
-            hoverColor="#065f46"
-            selectColor="#15803d"
-            hints={true}
-            cityColors={cityColors}
-            onSelect={(selectedPrefecture) => {
-              if (selectedPrefecture) {
-                const prefName = Object.keys(prefectureStats).find(name => 
-                  prefectureNameToKey(name) === selectedPrefecture
-                );
-                if (prefName) {
-                  onPrefectureClick(prefName);
+        <div className="flex justify-center">
+          <div style={{ maxWidth: '600px', width: '100%' }}>
+            <Japan
+              type="select-single"
+              size={600}
+              mapColor="#e5e7eb"
+              strokeColor="#374151"
+              strokeWidth={0.5}
+              hoverColor="#065f46"
+              selectColor="#15803d"
+              hints={true}
+              cityColors={cityColors}
+              onSelect={(selectedPrefecture) => {
+                if (selectedPrefecture) {
+                  const prefName = Object.keys(prefectureStats).find(name => 
+                    prefectureNameToKey(name) === selectedPrefecture
+                  );
+                  if (prefName) {
+                    onPrefectureClick(prefName);
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
+          </div>
         </div>
       </div>
 
