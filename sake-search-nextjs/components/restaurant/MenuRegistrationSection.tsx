@@ -239,12 +239,23 @@ export const MenuRegistrationSection = ({
                     alert('すべての日本酒が既に比較リストに追加されています');
                     return;
                   }
-                  if (comparisonList.length + sakesToAdd.length > 10) {
-                    alert(`比較リストは10件までです。現在${comparisonList.length}件登録済みのため、${10 - comparisonList.length}件まで追加できます。`);
+                  
+                  // 比較リストの空き枠数を計算
+                  const availableSlots = 10 - comparisonList.length;
+                  if (availableSlots === 0) {
+                    alert('比較リストは既に上限の10件に達しています');
                     return;
                   }
-                  sakesToAdd.forEach(sake => onToggleComparison(sake));
-                  alert(`${sakesToAdd.length}件の日本酒を比較リストに追加しました`);
+                  
+                  // 追加可能な数まで追加
+                  const itemsToAdd = sakesToAdd.slice(0, availableSlots);
+                  itemsToAdd.forEach(sake => onToggleComparison(sake));
+                  
+                  if (sakesToAdd.length > availableSlots) {
+                    alert(`比較リストの上限により、${sakesToAdd.length}件中${itemsToAdd.length}件を追加しました（残り${sakesToAdd.length - itemsToAdd.length}件は追加されませんでした）`);
+                  } else {
+                    alert(`${itemsToAdd.length}件の日本酒を比較リストに追加しました`);
+                  }
                 }}
                 disabled={menuSakeData.length === 0}
                 className="flex-2 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
