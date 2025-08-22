@@ -2,6 +2,7 @@
 
 import { SakeData } from '@/types/sake';
 import { FavoriteButton } from './FavoriteButton';
+import { RecordButton } from './RecordButton';
 
 interface SakeDetailProps {
   sake: SakeData;
@@ -13,18 +14,22 @@ interface SakeDetailProps {
 export default function SakeDetail({ sake, onCompare, isInComparison, showCompareButton = false }: SakeDetailProps) {
   return (
     <div className="space-y-4">
-      {showCompareButton && onCompare && (
-        <button
-          onClick={() => onCompare(sake)}
-          className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
-            isInComparison
-              ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-          }`}
-        >
-          {isInComparison ? '比較から削除' : '比較に追加'}
-        </button>
-      )}
+      {/* アクションボタンエリア */}
+      <div className="space-y-2">
+        {showCompareButton && onCompare && (
+          <button
+            onClick={() => onCompare(sake)}
+            className={`w-full py-3 rounded-lg font-semibold transition-all duration-300 ${
+              isInComparison
+                ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+            }`}
+          >
+            {isInComparison ? '比較から削除' : '比較に追加'}
+          </button>
+        )}
+        <RecordButton sake={sake} className="w-full" />
+      </div>
       
       <div className="border-b border-gray-200 pb-3">
         <div className="flex items-center justify-between">

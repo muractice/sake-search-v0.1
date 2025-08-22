@@ -16,6 +16,7 @@ const tabs: Tab[] = [
   { id: 'search', label: '日本酒を調べる', icon: '🔍', shortLabel: '日本酒' },
   { id: 'restaurant', label: '飲食店で使う', icon: '🍽️', shortLabel: '飲食店' },
   { id: 'favorites', label: 'お気に入り管理', icon: '⭐', shortLabel: 'お気に入り' },
+  { id: 'records', label: '記録管理', icon: '📝', shortLabel: '記録' },
 ];
 
 export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {

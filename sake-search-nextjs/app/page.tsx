@@ -5,6 +5,7 @@ import { TabNavigation } from '@/components/TabNavigation';
 import { SearchTab } from '@/components/tabs/SearchTab';
 import { RestaurantTab } from '@/components/tabs/RestaurantTab';
 import { FavoritesTab } from '@/components/tabs/FavoritesTab';
+import { RecordsTab } from '@/components/tabs/RecordsTab';
 import { UserProfile } from '@/components/UserProfile';
 import { AuthForm } from '@/components/AuthForm';
 import CustomDialog from '@/components/CustomDialog';
@@ -152,6 +153,10 @@ export default function Home() {
               onToggleComparison={handleToggleComparison}
               isInComparison={isInComparison}
             />
+          )}
+
+          {activeTab === 'records' && (
+            <RecordsTab />
           )}
         </main>
 
