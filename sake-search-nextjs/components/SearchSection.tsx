@@ -1,14 +1,25 @@
 'use client';
 
 import { useState } from 'react';
+import { SakeData } from '@/types/sake';
 
 interface SearchSectionProps {
   onSearch: (query: string) => void;
   isLoading: boolean;
   onShowMenuScanner?: () => void;
+  searchResults?: SakeData[];
+  onSelectSake?: (sake: SakeData) => void;
+  isInComparison?: (sakeId: string) => boolean;
 }
 
-export default function SearchSection({ onSearch, isLoading, onShowMenuScanner }: SearchSectionProps) {
+export default function SearchSection({ 
+  onSearch, 
+  isLoading, 
+  onShowMenuScanner,
+  searchResults = [],
+  onSelectSake,
+  isInComparison
+}: SearchSectionProps) {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,6 +107,41 @@ export default function SearchSection({ onSearch, isLoading, onShowMenuScanner }
           ))}
         </div>
       </div>
+
+      {/* 検索結果一覧 */}
+      {searchResults.length > 0 && (
+        <div className="mt-6 animate-fade-in">
+          <p className="mb-3 font-medium text-gray-700">
+            🍶 検索結果: {searchResults.length}件の日本酒が見つかりました
+          </p>
+          <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
+            {searchResults.map((sake) => (
+              <div
+                key={sake.id}
+                className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div className="flex-1">
+                  <p className="font-semibold text-gray-800">{sake.name}</p>
+                  <p className="text-sm text-gray-600">{sake.brewery}</p>
+                </div>
+                {onSelectSake && (
+                  <button
+                    onClick={() => onSelectSake(sake)}
+                    disabled={isInComparison?.(sake.id)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isInComparison?.(sake.id)
+                        ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
+                    }`}
+                  >
+                    {isInComparison?.(sake.id) ? '追加済' : 'マップに追加'}
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

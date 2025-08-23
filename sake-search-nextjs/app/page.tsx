@@ -44,6 +44,7 @@ export default function Home() {
   const {
     isLoading,
     search,
+    currentSakeData,
   } = useSearch();
 
   const {
@@ -54,7 +55,6 @@ export default function Home() {
   const handleSearch = async (query: string) => {
     try {
       const searchResult = await search(query);
-      selectSake(searchResult);
       
       if (!searchResult) {
         setDialogState({
@@ -62,12 +62,8 @@ export default function Home() {
           title: '酒サーチ',
           message: '該当する日本酒が見つかりませんでした'
         });
-      } else {
-        // 検索結果を自動的に比較リストに追加（既に存在しない場合のみ）
-        if (!isInComparison(searchResult.id)) {
-          toggleComparison(searchResult);
-        }
       }
+      // 検索結果は全て一覧表示から選択（SearchSectionで処理）
     } catch {
       setDialogState({
         isOpen: true,
@@ -124,11 +120,13 @@ export default function Home() {
             <SearchTab
               onSearch={handleSearch}
               isLoading={isLoading}
+              searchResults={currentSakeData}
               comparisonList={comparisonList}
               onToggleComparison={handleToggleComparison}
               onClearComparison={clearComparison}
               onSelectSake={selectSake}
               onChartClick={handleChartClick}
+              isInComparison={isInComparison}
             />
           )}
 

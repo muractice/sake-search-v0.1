@@ -9,21 +9,25 @@ import { SakeData } from '@/types/sake';
 interface SearchTabProps {
   onSearch: (query: string) => Promise<void>;
   isLoading: boolean;
+  searchResults: SakeData[];
   comparisonList: SakeData[];
   onToggleComparison: (sake: SakeData) => void;
   onClearComparison: () => void;
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
+  isInComparison: (sakeId: string) => boolean;
 }
 
 export const SearchTab = ({
   onSearch,
   isLoading,
+  searchResults,
   comparisonList,
   onToggleComparison,
   onClearComparison,
   onSelectSake,
   onChartClick,
+  isInComparison,
 }: SearchTabProps) => {
   return (
     <div className="space-y-6">
@@ -31,6 +35,9 @@ export const SearchTab = ({
       <SearchSection 
         onSearch={onSearch}
         isLoading={isLoading}
+        searchResults={searchResults}
+        onSelectSake={onToggleComparison}
+        isInComparison={isInComparison}
       />
 
       {/* 比較パネル */}
