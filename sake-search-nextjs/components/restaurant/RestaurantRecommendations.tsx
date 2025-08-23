@@ -134,7 +134,9 @@ export const RestaurantRecommendations = ({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch recommendations');
+        const errorText = await response.text();
+        console.error(`API Error ${response.status}: ${response.statusText}`, errorText);
+        throw new Error(`レコメンド取得エラー (${response.status}): ${response.statusText}`);
       }
 
       const data = await response.json();
@@ -168,6 +170,8 @@ export const RestaurantRecommendations = ({
     } catch (error) {
       console.error('Error fetching recommendations:', error);
       setRecommendations([]);
+      // エラーを詳細表示
+      alert(`レコメンド機能でエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsLoadingRecommendations(false);
     }
@@ -326,7 +330,15 @@ export const RestaurantRecommendations = ({
             </h3>
             
             {recommendationType === 'pairing' && (
-              <div className="mb-3">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <span className="text-amber-600 mr-2">🚧</span>
+                  <p className="text-amber-800 font-semibold">この機能は現在開発中です</p>
+                </div>
+                <p className="text-sm text-amber-700">
+                  料理とのペアリング機能は近日公開予定です。もうしばらくお待ちください。
+                </p>
+                {/* 開発中でも見せるため、一旦コメントアウト
                 <select
                   value={pairingDishType}
                   onChange={(e) => {
@@ -335,7 +347,8 @@ export const RestaurantRecommendations = ({
                       fetchRecommendations('pairing');
                     }
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-3"
+                  disabled
                 >
                   <option value="">料理を選択してください</option>
                   <option value="sashimi">刺身・お造り</option>
@@ -345,6 +358,7 @@ export const RestaurantRecommendations = ({
                   <option value="dessert">デザート・甘味</option>
                   <option value="general">その他・おまかせ</option>
                 </select>
+                */}
               </div>
             )}
             

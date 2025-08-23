@@ -145,6 +145,27 @@ export const RecommendationDisplay = ({
     );
   }
 
+  // 作成中メッセージを表示（早期リターン）
+  return (
+    <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
+      <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+        <div className="flex items-center mb-3">
+          <span className="text-amber-600 mr-2">🚧</span>
+          <p className="text-amber-800 font-semibold">この機能は現在開発中です</p>
+        </div>
+        <p className="text-amber-700">
+          あなたの好みを学習し、パーソナライズされたおすすめを提供する機能は近日公開予定です。
+        </p>
+        <p className="text-sm text-amber-600 mt-2">
+          お気に入りに追加した日本酒の情報を基に、AIがあなた好みの日本酒をご提案します。
+        </p>
+      </div>
+    </div>
+  );
+  
+  // 以下の元のコードは開発中のため実行されません
+  
   // おすすめ機能が未起動の場合
   if (!isActivated) {
     return (

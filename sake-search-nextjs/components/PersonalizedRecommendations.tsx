@@ -143,84 +143,23 @@ export const PersonalizedRecommendations = ({
     }))
   });
 
+  // 開発中メッセージを表示（早期リターン）
   return (
     <div className="space-y-6">
-      {/* 気分選択 */}
-      <div className="bg-white rounded-lg shadow-md p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold">今日の気分は？</h4>
-          <button
-            onClick={refreshRecommendations}
-            className="text-xs text-blue-600 hover:text-blue-800"
-          >
-            🔄 更新
-          </button>
-        </div>
-        <div className="grid grid-cols-4 gap-2">
-          {moodOptions.map(mood => (
-            <button
-              key={mood.key}
-              onClick={() => setSelectedMood(mood.key)}
-              className={`p-2 rounded-md text-xs text-center transition-colors ${
-                selectedMood === mood.key
-                  ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                  : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <div className="text-lg mb-1">{mood.icon}</div>
-              <div>{mood.label}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* レコメンド結果 */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <h3 className="text-lg font-bold mb-4">🎯 あなたへのおすすめ</h3>
-        
-        {recommendations.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            レコメンドがありません
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
+          <div className="flex items-center mb-3">
+            <span className="text-amber-600 mr-2">🚧</span>
+            <p className="text-amber-800 font-semibold">この機能は現在開発中です</p>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {/* 好みに近い */}
-            {groupedRecommendations.similar && (
-              <RecommendationGroup
-                title={`ぴったりの味わい (${groupedRecommendations.similar.length}件)`}
-                recommendations={groupedRecommendations.similar}
-                onSelectSake={onSelectSake}
-                onAddToComparison={onAddToComparison}
-                isInComparison={isInComparison}
-                color="blue"
-              />
-            )}
-
-            {/* 探索的 */}
-            {groupedRecommendations.explore && (
-              <RecommendationGroup
-                title="新しい出会い"
-                recommendations={groupedRecommendations.explore}
-                onSelectSake={onSelectSake}
-                onAddToComparison={onAddToComparison}
-                isInComparison={isInComparison}
-                color="green"
-              />
-            )}
-
-            {/* トレンド */}
-            {groupedRecommendations.trending && (
-              <RecommendationGroup
-                title="みんなのお気に入り"
-                recommendations={groupedRecommendations.trending}
-                onSelectSake={onSelectSake}
-                onAddToComparison={onAddToComparison}
-                isInComparison={isInComparison}
-                color="purple"
-              />
-            )}
-          </div>
-        )}
+          <p className="text-amber-700">
+            あなたの好みを学習し、パーソナライズされたおすすめを提供する機能は近日公開予定です。
+          </p>
+          <p className="text-sm text-amber-600 mt-2">
+            お気に入りに追加した日本酒の情報を基に、AIがあなた好みの日本酒をご提案します。
+          </p>
+        </div>
       </div>
     </div>
   );
