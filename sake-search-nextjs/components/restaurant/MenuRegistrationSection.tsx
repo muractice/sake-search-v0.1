@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { SakeData } from '@/types/sake';
+import { RestaurantMenu, RestaurantMenuFormData } from '@/types/restaurant';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import { useScanOCR } from '@/hooks/scan/useScanOCR';
 import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface MenuRegistrationSectionProps {
   menuItems: string[];
@@ -37,8 +39,15 @@ export const MenuRegistrationSection = ({
   const [textInput, setTextInput] = useState('');
   const [photoResults, setPhotoResults] = useState<string[]>([]);
   const [noSakeDetected, setNoSakeDetected] = useState(false);
+  const [restaurants, setRestaurants] = useState<RestaurantMenu[]>([]);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
+  const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
+  const [newRestaurantName, setNewRestaurantName] = useState('');
+  const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
+  const [savingToMenu, setSavingToMenu] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const supabase = createClientComponentClient();
 
   // OCR処理用のフック
   const { processImage, isProcessing: isOCRProcessing, processingStatus: ocrProcessingStatus } = useScanOCR();
@@ -117,6 +126,104 @@ export const MenuRegistrationSection = ({
 
   const handleIndividualRemove = (item: string) => {
     onMenuItemsChange(menuItems.filter(menuItem => menuItem !== item));
+  };
+
+  // 飲食店一覧を取得
+  const fetchRestaurants = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('restaurant_menus')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('restaurant_name', { ascending: true });
+
+      if (error) throw error;
+      setRestaurants(data || []);
+      
+      if (data && data.length > 0 && !selectedRestaurant) {
+        setSelectedRestaurant(data[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
+  // 新しい飲食店を追加
+  const handleAddRestaurant = async () => {
+    if (!newRestaurantName.trim()) {
+      alert('飲食店名を入力してください');
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('restaurant_menus')
+        .insert({
+          user_id: user.id,
+          restaurant_name: newRestaurantName,
+          location: newRestaurantLocation || null
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchRestaurants();
+      setSelectedRestaurant(data.id);
+      setShowAddRestaurantForm(false);
+      setNewRestaurantName('');
+      setNewRestaurantLocation('');
+    } catch (error) {
+      console.error('Error adding restaurant:', error);
+      alert('飲食店の追加に失敗しました');
+    }
+  };
+
+  // メニューを飲食店に保存
+  const handleSaveToRestaurant = async () => {
+    if (!selectedRestaurant) {
+      alert('飲食店を選択してください');
+      return;
+    }
+
+    if (menuSakeData.length === 0) {
+      alert('保存する日本酒データがありません');
+      return;
+    }
+
+    setSavingToMenu(true);
+    try {
+      const newSakes = menuSakeData.map(sake => ({
+        restaurant_menu_id: selectedRestaurant,
+        sake_id: sake.id,
+        brand_id: sake.brandId || null,
+        is_available: true,
+        menu_notes: null
+      }));
+
+      const { error } = await supabase
+        .from('restaurant_menu_sakes')
+        .insert(newSakes);
+
+      if (error) throw error;
+
+      alert(`${newSakes.length}件の日本酒を飲食店メニューに保存しました`);
+    } catch (error) {
+      console.error('Error saving to restaurant menu:', error);
+      alert('メニューへの保存に失敗しました');
+    } finally {
+      setSavingToMenu(false);
+    }
   };
 
   return (
@@ -222,6 +329,82 @@ export const MenuRegistrationSection = ({
             <span className="mr-2">🍽️</span>
             飲食店のメニュー
           </h2>
+
+          {/* 飲食店選択セクション */}
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-gray-700">
+                メニューを保存する飲食店:
+              </label>
+              <button
+                onClick={() => setShowAddRestaurantForm(!showAddRestaurantForm)}
+                className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                + 新規作成
+              </button>
+            </div>
+            
+            {showAddRestaurantForm ? (
+              <div className="space-y-2 mb-3">
+                <input
+                  type="text"
+                  value={newRestaurantName}
+                  onChange={(e) => setNewRestaurantName(e.target.value)}
+                  placeholder="飲食店名 *"
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+                <input
+                  type="text"
+                  value={newRestaurantLocation}
+                  onChange={(e) => setNewRestaurantLocation(e.target.value)}
+                  placeholder="場所・住所（任意）"
+                  className="w-full px-3 py-2 border rounded-lg"
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAddRestaurant}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                  >
+                    作成
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddRestaurantForm(false);
+                      setNewRestaurantName('');
+                      setNewRestaurantLocation('');
+                    }}
+                    className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 text-sm"
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            ) : restaurants.length > 0 && (
+              <select
+                value={selectedRestaurant}
+                onChange={(e) => setSelectedRestaurant(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">飲食店を選択してください</option>
+                {restaurants.map((restaurant) => (
+                  <option key={restaurant.id} value={restaurant.id}>
+                    {restaurant.restaurant_name}
+                    {restaurant.location && ` - ${restaurant.location}`}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {selectedRestaurant && menuSakeData.length > 0 && (
+              <button
+                onClick={handleSaveToRestaurant}
+                disabled={savingToMenu}
+                className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              >
+                {savingToMenu ? '保存中...' : `${menuSakeData.length}件を飲食店メニューに保存`}
+              </button>
+            )}
+          </div>
           <div className="mb-4">
             <span className="text-sm font-medium text-gray-700 block mb-3">
               {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
@@ -260,7 +443,7 @@ export const MenuRegistrationSection = ({
                 disabled={menuSakeData.length === 0}
                 className="flex-2 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
               >
-                一括登録
+                一括比較
               </button>
               <button
                 onClick={() => {

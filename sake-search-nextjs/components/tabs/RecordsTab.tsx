@@ -4,11 +4,17 @@ import { useState } from 'react';
 import { useRecords } from '@/hooks/useRecords';
 import { DrinkingRecord } from '@/types/record';
 import { PrefectureMap } from '@/components/PrefectureMap';
+import { MenuManagement } from '@/components/restaurant/MenuManagement';
+import { RestaurantRecords } from '@/components/restaurant/RestaurantRecords';
+
+type RecordType = 'sake' | 'restaurant';
+type ViewMode = 'timeline' | 'map' | 'management';
 
 export const RecordsTab = () => {
   const { records, isLoading, error, deleteRecord } = useRecords();
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline');
+  const [recordType, setRecordType] = useState<RecordType>('sake');
+  const [viewMode, setViewMode] = useState<ViewMode>('timeline');
 
   const handleDelete = async (record: DrinkingRecord) => {
     if (!confirm(`「${record.sakeName}」の記録を削除しますか？`)) {
@@ -76,61 +82,119 @@ export const RecordsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* 統計サマリー & ビュー切り替え */}
+      {/* レコードタイプ切り替え */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold flex items-center">
-            <span className="mr-2">📊</span>
-            記録サマリー
-          </h2>
           <div className="flex rounded-lg bg-gray-100 p-1">
             <button
-              onClick={() => setViewMode('timeline')}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                viewMode === 'timeline' 
+              onClick={() => setRecordType('sake')}
+              className={`px-6 py-2 rounded-md transition-colors ${
+                recordType === 'sake' 
                   ? 'bg-blue-600 text-white' 
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              📝 タイムライン
+              🍶 日本酒記録
             </button>
             <button
-              onClick={() => setViewMode('map')}
-              className={`px-4 py-2 rounded-md transition-colors ${
-                viewMode === 'map' 
-                  ? 'bg-blue-600 text-white' 
+              onClick={() => setRecordType('restaurant')}
+              className={`px-6 py-2 rounded-md transition-colors ${
+                recordType === 'restaurant' 
+                  ? 'bg-green-600 text-white' 
                   : 'text-gray-600 hover:text-gray-800'
               }`}
             >
-              🗾 マップ
+              🍽️ 飲食店記録
             </button>
           </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
-            <div className="text-sm text-gray-600">総記録数</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-green-600">{uniqueSakes}</div>
-            <div className="text-sm text-gray-600">銘柄数</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-yellow-600">
-              {averageRating.toFixed(1)}
+          
+          {/* ビューモード切り替え（日本酒記録の場合のみ） */}
+          {recordType === 'sake' && (
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'timeline' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                📝 タイムライン
+              </button>
+              <button
+                onClick={() => setViewMode('map')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'map' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🗾 マップ
+              </button>
             </div>
-            <div className="text-sm text-gray-600">平均評価</div>
-          </div>
+          )}
+          
+          {/* ビューモード切り替え（飲食店記録の場合） */}
+          {recordType === 'restaurant' && (
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => setViewMode('timeline')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'timeline' 
+                    ? 'bg-green-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                📝 記録一覧
+              </button>
+              <button
+                onClick={() => setViewMode('management')}
+                className={`px-4 py-2 rounded-md transition-colors ${
+                  viewMode === 'management' 
+                    ? 'bg-green-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🍽️ メニュー管理
+              </button>
+            </div>
+          )}
         </div>
+        
+        {/* 統計サマリー（日本酒記録の場合のみ） */}
+        {recordType === 'sake' && (
+          <div>
+            <h2 className="text-xl font-bold flex items-center mb-4">
+              <span className="mr-2">📊</span>
+              日本酒記録サマリー
+            </h2>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
+                <div className="text-sm text-gray-600">総記録数</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-green-600">{uniqueSakes}</div>
+                <div className="text-sm text-gray-600">銘柄数</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-yellow-600">
+                  {averageRating.toFixed(1)}
+                </div>
+                <div className="text-sm text-gray-600">平均評価</div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* コンテンツ表示 */}
-      {viewMode === 'timeline' ? (
-        /* タイムライン表示 */
+      {recordType === 'sake' && viewMode === 'timeline' ? (
+        /* 日本酒記録タイムライン表示 */
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 flex items-center">
             <span className="mr-2">🍶</span>
-            飲酒記録
+            日本酒記録
           </h2>
 
           <div className="space-y-6">
@@ -204,10 +268,19 @@ export const RecordsTab = () => {
             })}
           </div>
         </div>
-      ) : (
-        /* マップ表示 */
+      ) : recordType === 'sake' && viewMode === 'map' ? (
+        /* 日本酒記録マップ表示 */
         <PrefectureMap />
-      )}
+      ) : recordType === 'restaurant' && viewMode === 'timeline' ? (
+        /* 飲食店記録一覧表示 */
+        <RestaurantRecords />
+      ) : recordType === 'restaurant' && viewMode === 'management' ? (
+        /* 飲食店メニュー管理 */
+        <MenuManagement 
+          restaurantMenuSakeData={[]}
+          onMenuUpdate={() => {}}
+        />
+      ) : null}
     </div>
   );
 };
