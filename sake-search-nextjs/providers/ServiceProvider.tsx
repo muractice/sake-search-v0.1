@@ -9,12 +9,13 @@ import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { ApiClient } from '@/services/core/ApiClient';
 import { SakeService } from '@/services/SakeService';
 import { RecordService } from '@/services/RecordService';
+import { RestaurantService } from '@/services/RestaurantService';
 
 interface ServiceContainer {
   sakeService: SakeService;
   recordService: RecordService;
+  restaurantService: RestaurantService;
   // 将来追加予定のサービス
-  // restaurantService: RestaurantService;
   // recommendationService: RecommendationService;
 }
 
@@ -44,6 +45,7 @@ export const ServiceProvider = ({
       return {
         sakeService: mockServices.sakeService || defaultServices.sakeService,
         recordService: mockServices.recordService || defaultServices.recordService,
+        restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
       };
     }
 
@@ -81,6 +83,17 @@ export const useRecordService = (): RecordService => {
 };
 
 /**
+ * RestaurantServiceにアクセスするためのhook
+ */
+export const useRestaurantService = (): RestaurantService => {
+  const services = useContext(ServiceContext);
+  if (!services) {
+    throw new Error('useRestaurantService must be used within ServiceProvider');
+  }
+  return services.restaurantService;
+};
+
+/**
  * 全サービスにアクセスするためのhook（将来的な拡張用）
  */
 export const useServices = (): ServiceContainer => {
@@ -107,6 +120,7 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
   return {
     sakeService: new SakeService(apiClient),
     recordService: new RecordService(apiClient),
+    restaurantService: new RestaurantService(apiClient),
   };
 }
 
