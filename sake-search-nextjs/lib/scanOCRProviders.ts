@@ -15,7 +15,7 @@ export async function processWithGeminiVision(
   setProcessingStatus: (status: string) => void
 ): Promise<OCRResult> {
   try {
-    setProcessingStatus('🚀 Gemini AIで解析中...');
+    setProcessingStatus('解析中...');
     
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000); // Vercel Pro Plan考慮で15秒

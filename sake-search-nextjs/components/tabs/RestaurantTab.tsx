@@ -19,7 +19,7 @@ interface RestaurantTabProps {
   onTabChange?: (tabId: string) => void;
 }
 
-type SegmentType = 'menu' | 'recommendations' | 'management';
+type SegmentType = 'menu' | 'recommendations';
 
 export const RestaurantTab = ({
   comparisonList,
@@ -94,7 +94,7 @@ export const RestaurantTab = ({
           >
             <span className="flex items-center justify-center gap-2">
               <span>🍽️</span>
-              メニュースキャン
+              メニュー
             </span>
           </button>
           <button
@@ -108,19 +108,6 @@ export const RestaurantTab = ({
             <span className="flex items-center justify-center gap-2">
               <span>💡</span>
               おすすめ
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveSegment('management')}
-            className={`flex-1 px-4 py-3 rounded-lg font-medium transition-all ${
-              activeSegment === 'management'
-                ? 'bg-green-600 text-white shadow-md'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <span className="flex items-center justify-center gap-2">
-              <span>📝</span>
-              メニュー管理
             </span>
           </button>
         </div>
@@ -139,22 +126,15 @@ export const RestaurantTab = ({
           onClearComparison={onClearComparison}
           onSelectSake={onSelectSake}
           onChartClick={onChartClick}
+          onSearch={onSearch}
         />
-      ) : activeSegment === 'recommendations' ? (
+      ) : (
         <RestaurantRecommendations
           restaurantMenuItems={restaurantMenuItems}
           restaurantMenuSakeData={restaurantMenuSakeData}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}
-        />
-      ) : (
-        <MenuManagement
-          restaurantMenuSakeData={restaurantMenuSakeData}
-          onMenuUpdate={() => {
-            // メニュー更新後の処理
-            console.log('Menu updated');
-          }}
         />
       )}
     </div>

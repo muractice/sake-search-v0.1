@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SakeData } from '@/types/sake';
-import { RestaurantMenu, RestaurantMenuFormData } from '@/types/restaurant';
+import { RestaurantMenu, RestaurantMenuFormData, RestaurantMenuWithSakes } from '@/types/restaurant';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
@@ -21,6 +21,7 @@ interface MenuRegistrationSectionProps {
   onClearComparison: () => void;
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
+  onSearch: (query: string) => Promise<SakeData | null>;
 }
 
 export const MenuRegistrationSection = ({
@@ -34,6 +35,7 @@ export const MenuRegistrationSection = ({
   onClearComparison,
   onSelectSake,
   onChartClick,
+  onSearch,
 }: MenuRegistrationSectionProps) => {
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -45,6 +47,16 @@ export const MenuRegistrationSection = ({
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
   const [savingToMenu, setSavingToMenu] = useState(false);
+  const [savedMenus, setSavedMenus] = useState<RestaurantMenuWithSakes[]>([]);
+  const [selectedSavedMenu, setSelectedSavedMenu] = useState<string>('');
+  const [loadingMenu, setLoadingMenu] = useState(false);
+  const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
+    restaurant_menu_id: string;
+    restaurant_name: string;
+    location?: string;
+    restaurant_created_at: string;
+    count: number;
+  }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
@@ -86,6 +98,22 @@ export const MenuRegistrationSection = ({
         const newItems = [...new Set([...menuItems, ...result.foundSakeNames])];
         onMenuItemsChange(newItems);
         setPhotoResults(result.foundSakeNames);
+        
+        // 新しいアイテムを保存済みメニューに追加
+        if (selectedSavedMenu) {
+          for (const sakeName of result.foundSakeNames) {
+            if (!menuItems.includes(sakeName)) {
+              try {
+                const sakeData = await onSearch(sakeName);
+                if (sakeData) {
+                  await handleAddItemToSavedMenu(sakeName, sakeData);
+                }
+              } catch (error) {
+                console.error('Error adding item to saved menu:', error);
+              }
+            }
+          }
+        }
       } else {
         setNoSakeDetected(true);
         setPhotoResults([]);
@@ -115,16 +143,37 @@ export const MenuRegistrationSection = ({
     }
   };
 
-  const handleTextSubmit = () => {
+  const handleTextSubmit = async () => {
     if (textInput.trim()) {
       const lines = textInput.split('\n').filter(line => line.trim());
       const newItems = [...new Set([...menuItems, ...lines])];
       onMenuItemsChange(newItems);
       setTextInput('');
+      
+      // 新しいアイテムを保存済みメニューに追加（データが取得できた場合のみ）
+      if (selectedSavedMenu) {
+        for (const line of lines) {
+          if (!menuItems.includes(line)) {
+            // 新規追加アイテムの場合、データを検索して保存
+            try {
+              const sakeData = await onSearch(line);
+              if (sakeData) {
+                await handleAddItemToSavedMenu(line, sakeData);
+              }
+            } catch (error) {
+              console.error('Error searching sake data:', error);
+            }
+          }
+        }
+      }
     }
   };
 
-  const handleIndividualRemove = (item: string) => {
+  const handleIndividualRemove = async (item: string) => {
+    // 保存済みメニューが選択されている場合、DBからも削除
+    if (selectedSavedMenu) {
+      await handleRemoveItemFromSavedMenu(item);
+    }
     onMenuItemsChange(menuItems.filter(menuItem => menuItem !== item));
   };
 
@@ -153,7 +202,63 @@ export const MenuRegistrationSection = ({
 
   useEffect(() => {
     fetchRestaurants();
+    fetchSavedMenus();
   }, []);
+
+  // 保存済みメニュー一覧を取得
+  const fetchSavedMenus = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 全ての飲食店を取得し、それぞれの日本酒件数も取得
+      const { data: restaurantsData, error } = await supabase
+        .from('restaurant_menus')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // 各飲食店の日本酒件数を取得
+      const restaurantsWithCount = await Promise.all(
+        (restaurantsData || []).map(async (restaurant) => {
+          const { count } = await supabase
+            .from('restaurant_menu_sakes')
+            .select('*', { count: 'exact' })
+            .eq('restaurant_menu_id', restaurant.id);
+
+          return {
+            restaurant_menu_id: restaurant.id,
+            restaurant_name: restaurant.restaurant_name,
+            location: restaurant.location,
+            restaurant_created_at: restaurant.created_at,
+            count: count || 0
+          };
+        })
+      );
+
+      // groupedSavedMenus形式に合わせたデータを作成
+      const groupedData = restaurantsWithCount.reduce((acc, restaurant) => {
+        acc[restaurant.restaurant_menu_id] = restaurant;
+        return acc;
+      }, {} as Record<string, {
+        restaurant_menu_id: string;
+        restaurant_name: string;
+        location?: string;
+        restaurant_created_at: string;
+        count: number;
+      }>);
+
+      // savedMenusは元の形式で維持（空の配列でも問題なし）
+      setSavedMenus([]);
+      // groupedSavedMenusを直接更新するために、一時的にstateとして管理
+      setGroupedSavedMenusData(groupedData);
+
+    } catch (error) {
+      console.error('Error fetching saved menus:', error);
+    }
+  };
 
   // 新しい飲食店を追加
   const handleAddRestaurant = async () => {
@@ -170,22 +275,107 @@ export const MenuRegistrationSection = ({
         .from('restaurant_menus')
         .insert({
           user_id: user.id,
-          restaurant_name: newRestaurantName,
-          location: newRestaurantLocation || null
+          restaurant_name: newRestaurantName.trim(),
+          location: newRestaurantLocation.trim() || null
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding restaurant:', error);
+        
+        // エラーメッセージをユーザーフレンドリーに変換
+        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+          // 既存の飲食店を探して自動選択
+          const existingRestaurant = restaurants.find(r => 
+            r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
+          );
+          
+          if (existingRestaurant) {
+            setSelectedRestaurant(existingRestaurant.id);
+            setSelectedSavedMenu(existingRestaurant.id);
+            setShowAddRestaurantForm(false);
+            setNewRestaurantName('');
+            setNewRestaurantLocation('');
+            
+            // メニューデータがある場合は自動で保存
+            if (menuSakeData.length > 0) {
+              try {
+                const newSakes = menuSakeData.map(sake => ({
+                  restaurant_menu_id: existingRestaurant.id,
+                  sake_id: sake.id,
+                  brand_id: sake.brandId || null,
+                  is_available: true,
+                  menu_notes: null
+                }));
+
+                const { error: saveError } = await supabase
+                  .from('restaurant_menu_sakes')
+                  .insert(newSakes);
+
+                if (saveError) throw saveError;
+
+                await fetchSavedMenus();
+                alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店にメニューを保存しました。`);
+              } catch (saveError) {
+                console.error('Error saving to existing restaurant:', saveError);
+                alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しましたが、メニューの保存に失敗しました。`);
+              }
+            } else {
+              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しました。`);
+            }
+          } else {
+            // 念のため再読み込み
+            await fetchRestaurants();
+            await fetchSavedMenus();
+            alert(`「${newRestaurantName}」という名前の飲食店は既に登録されています。\n別の名前を入力するか、既存のメニューを選択してください。`);
+          }
+        } else if (error.code === '23503') {
+          alert('認証エラーが発生しました。ページを再読み込みしてください。');
+        } else {
+          alert('飲食店の追加に失敗しました。しばらく経ってから再度お試しください。');
+        }
+        return;
+      }
 
       await fetchRestaurants();
+      await fetchSavedMenus(); // 保存済みメニューを更新
       setSelectedRestaurant(data.id);
+      setSelectedSavedMenu(data.id); // セレクトボックスも新規作成した飲食店を選択
       setShowAddRestaurantForm(false);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
+      
+      // メニューデータがある場合は自動で保存
+      if (menuSakeData.length > 0) {
+        try {
+          const newSakes = menuSakeData.map(sake => ({
+            restaurant_menu_id: data.id,
+            sake_id: sake.id,
+            brand_id: sake.brandId || null,
+            is_available: true,
+            menu_notes: null
+          }));
+
+          const { error: saveError } = await supabase
+            .from('restaurant_menu_sakes')
+            .insert(newSakes);
+
+          if (saveError) throw saveError;
+
+          await fetchSavedMenus(); // 保存後にメニューを再読み込み
+          alert(`飲食店「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒をメニューに保存しました。`);
+        } catch (saveError) {
+          console.error('Error saving menu to new restaurant:', saveError);
+          alert(`飲食店「${newRestaurantName}」は作成されましたが、メニューの保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
+        }
+      } else {
+        // メニューデータがない場合
+        alert(`飲食店「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
+      }
     } catch (error) {
       console.error('Error adding restaurant:', error);
-      alert('飲食店の追加に失敗しました');
+      alert('予期しないエラーが発生しました。しばらく経ってから再度お試しください。');
     }
   };
 
@@ -218,6 +408,7 @@ export const MenuRegistrationSection = ({
       if (error) throw error;
 
       alert(`${newSakes.length}件の日本酒を飲食店メニューに保存しました`);
+      await fetchSavedMenus(); // 保存済みメニューを更新
     } catch (error) {
       console.error('Error saving to restaurant menu:', error);
       alert('メニューへの保存に失敗しました');
@@ -225,6 +416,110 @@ export const MenuRegistrationSection = ({
       setSavingToMenu(false);
     }
   };
+
+  // 保存済みメニューをロード
+  const handleLoadSavedMenu = async (restaurantMenuId: string) => {
+    if (!restaurantMenuId) return;
+
+    const hasExistingItems = menuItems.length > 0;
+    if (hasExistingItems) {
+      const confirmed = confirm('現在のメニューをクリアして、保存済みメニューを読み込みますか？');
+      if (!confirmed) return;
+    }
+
+    setLoadingMenu(true);
+    try {
+      const { data, error } = await supabase
+        .from('restaurant_menu_with_sakes')
+        .select('*')
+        .eq('restaurant_menu_id', restaurantMenuId)
+        .not('sake_id', 'is', null);
+
+      if (error) throw error;
+
+      // 日本酒名を取得してメニューアイテムとして設定
+      // sake_nameがない場合はsake_masterから取得を試みる
+      const sakeNames: string[] = [];
+      
+      for (const item of data) {
+        if (item.sake_name) {
+          // sake_nameがある場合はそれを使用
+          sakeNames.push(item.sake_name);
+        } else if (item.sake_id) {
+          // sake_nameがない場合、sake_masterから取得
+          const { data: sakeData } = await supabase
+            .from('sake_master')
+            .select('brand_name')
+            .eq('id', item.sake_id)
+            .single();
+          
+          if (sakeData?.brand_name) {
+            sakeNames.push(sakeData.brand_name);
+          } else {
+            // brand_nameも取得できない場合はIDを使用（最後の手段）
+            sakeNames.push(item.sake_id);
+          }
+        }
+      }
+      
+      // 重複を除去してメニューアイテムとして設定
+      const uniqueSakeNames = [...new Set(sakeNames)];
+      onMenuItemsChange(uniqueSakeNames);
+      
+      setSelectedSavedMenu(restaurantMenuId);
+    } catch (error) {
+      console.error('Error loading saved menu:', error);
+      alert('保存済みメニューの読み込みに失敗しました');
+    } finally {
+      setLoadingMenu(false);
+    }
+  };
+
+  // メニューアイテムを保存済みメニューに追加
+  const handleAddItemToSavedMenu = async (sakeName: string, sakeData: SakeData) => {
+    if (!selectedSavedMenu) return;
+
+    try {
+      const { error } = await supabase
+        .from('restaurant_menu_sakes')
+        .insert({
+          restaurant_menu_id: selectedSavedMenu,
+          sake_id: sakeData.id,
+          brand_id: sakeData.brandId || null,
+          is_available: true,
+          menu_notes: null
+        });
+
+      if (error) throw error;
+      await fetchSavedMenus();
+    } catch (error) {
+      console.error('Error adding item to saved menu:', error);
+    }
+  };
+
+  // メニューアイテムを保存済みメニューから削除
+  const handleRemoveItemFromSavedMenu = async (sakeName: string) => {
+    if (!selectedSavedMenu) return;
+
+    try {
+      // sake_nameまたはsake_idから一致するアイテムを削除
+      const { error } = await supabase
+        .from('restaurant_menu_sakes')
+        .delete()
+        .eq('restaurant_menu_id', selectedSavedMenu)
+        .in('sake_id', [
+          ...menuSakeData.filter(sake => sake.name === sakeName).map(sake => sake.id)
+        ]);
+
+      if (error) throw error;
+      await fetchSavedMenus();
+    } catch (error) {
+      console.error('Error removing item from saved menu:', error);
+    }
+  };
+
+  // 保存済みメニューのグループ化データ（stateから取得）
+  const groupedSavedMenus = groupedSavedMenusData;
 
   return (
     <div className="space-y-6">
@@ -300,14 +595,9 @@ export const MenuRegistrationSection = ({
           {/* 結果表示 */}
           {photoResults.length > 0 && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <p className="text-green-700 font-semibold mb-2">
+              <p className="text-green-700 font-semibold">
                 {photoResults.length}件の日本酒を検出しました！
               </p>
-              <ul className="text-sm text-green-600">
-                {photoResults.map((name, index) => (
-                  <li key={index}>✓ {name}</li>
-                ))}
-              </ul>
             </div>
           )}
 
@@ -323,29 +613,81 @@ export const MenuRegistrationSection = ({
       </div>
 
       {/* 飲食店のメニュー */}
-      {menuItems.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6">
+      <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 flex items-center">
             <span className="mr-2">🍽️</span>
             飲食店のメニュー
           </h2>
 
           {/* 飲食店選択セクション */}
-          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-            <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-gray-700">
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="mb-3">
+              <label className="text-sm font-medium text-gray-700 block mb-2">
                 メニューを保存する飲食店:
               </label>
-              <button
-                onClick={() => setShowAddRestaurantForm(!showAddRestaurantForm)}
-                className="text-sm px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                + 新規作成
-              </button>
             </div>
             
-            {showAddRestaurantForm ? (
-              <div className="space-y-2 mb-3">
+            {/* 保存済みメニュー選択 */}
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <select
+                  value={selectedSavedMenu}
+                  onChange={(e) => {
+                    setSelectedSavedMenu(e.target.value);
+                    if (e.target.value) {
+                      handleLoadSavedMenu(e.target.value);
+                      // 選択したメニューの飲食店を自動選択
+                      setSelectedRestaurant(e.target.value);
+                      // 既存メニュー選択時は新規作成フォームを閉じる
+                      setShowAddRestaurantForm(false);
+                    } else {
+                      setSelectedRestaurant('');
+                      // 「新しいメニュー」選択時はフォームは開かない（保存ボタンで開く）
+                    }
+                  }}
+                  disabled={loadingMenu}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <option value="">新しいメニュー</option>
+                  {Object.values(groupedSavedMenus).map((menu) => (
+                    <option key={menu.restaurant_menu_id} value={menu.restaurant_menu_id}>
+                      {menu.restaurant_name}
+                      {menu.location && ` (${menu.location})`}
+                      {` - ${menu.count}件 - ${new Date(menu.restaurant_created_at).toLocaleDateString()}`}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => {
+                    if (!selectedSavedMenu) {
+                      if (showAddRestaurantForm && selectedRestaurant && menuSakeData.length > 0) {
+                        // 新規作成フォーム表示中で飲食店が作成済みの場合、保存を実行
+                        handleSaveToRestaurant();
+                      } else {
+                        // 「新しいメニュー」選択中の場合、新規登録フォームを表示
+                        setShowAddRestaurantForm(true);
+                      }
+                    } else if (menuSakeData.length > 0) {
+                      // 既存メニュー選択中の場合、保存を実行
+                      handleSaveToRestaurant();
+                    }
+                  }}
+                  disabled={savingToMenu || (!selectedSavedMenu && !showAddRestaurantForm && menuSakeData.length === 0)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {savingToMenu ? '保存中...' : '保存'}
+                </button>
+              </div>
+              {loadingMenu && (
+                <div className="text-blue-600 text-sm flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                  メニューを読み込み中...
+                </div>
+              )}
+            </div>
+            
+            {showAddRestaurantForm && (
+              <div className="space-y-2 mt-3 p-3 bg-white rounded-lg border border-gray-200">
                 <input
                   type="text"
                   value={newRestaurantName}
@@ -379,38 +721,19 @@ export const MenuRegistrationSection = ({
                   </button>
                 </div>
               </div>
-            ) : restaurants.length > 0 && (
-              <select
-                value={selectedRestaurant}
-                onChange={(e) => setSelectedRestaurant(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">飲食店を選択してください</option>
-                {restaurants.map((restaurant) => (
-                  <option key={restaurant.id} value={restaurant.id}>
-                    {restaurant.restaurant_name}
-                    {restaurant.location && ` - ${restaurant.location}`}
-                  </option>
-                ))}
-              </select>
-            )}
-
-            {selectedRestaurant && menuSakeData.length > 0 && (
-              <button
-                onClick={handleSaveToRestaurant}
-                disabled={savingToMenu}
-                className="mt-3 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
-                {savingToMenu ? '保存中...' : `${menuSakeData.length}件を飲食店メニューに保存`}
-              </button>
             )}
           </div>
-          <div className="mb-4">
-            <span className="text-sm font-medium text-gray-700 block mb-3">
-              {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
-              {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
-              {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
-            </span>
+
+          {/* メニュー内容は日本酒が登録されている場合のみ表示 */}
+          {(menuItems.length > 0) && (
+            <>
+              <div className="mb-4">
+                <span className="text-sm font-medium text-gray-700 block mb-3">
+                  {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
+                  {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
+                  {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
+                  {selectedSavedMenu && <span className="text-blue-600"> (保存済みメニュー選択中)</span>}
+                </span>
             
             {/* スマホ対応: ボタンを下に配置・横並び */}
             <div className="flex gap-2">
@@ -451,7 +774,7 @@ export const MenuRegistrationSection = ({
                 }}
                 className="flex-1 text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg min-h-[44px] flex items-center justify-center"
               >
-                すべてクリア
+                すべて削除
               </button>
             </div>
           </div>
@@ -511,8 +834,9 @@ export const MenuRegistrationSection = ({
               </div>
             ))}
           </div>
+            </>
+          )}
         </div>
-      )}
 
       {/* 比較パネル */}
       {comparisonList.length > 0 && (
