@@ -1,0 +1,117 @@
+'use client';
+
+/**
+ * Serviceの依存性注入を提供するProvider
+ * Web/Mobile両対応
+ */
+
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { ApiClient } from '@/services/core/ApiClient';
+import { SakeService } from '@/services/SakeService';
+
+interface ServiceContainer {
+  sakeService: SakeService;
+  // 将来追加予定のサービス
+  // recordService: RecordService;
+  // restaurantService: RestaurantService;
+  // recommendationService: RecommendationService;
+}
+
+interface ServiceProviderProps {
+  children: ReactNode;
+  // テスト時にmockサービスを注入するため
+  mockServices?: Partial<ServiceContainer>;
+  // API設定のオーバーライド
+  apiConfig?: {
+    baseURL?: string;
+    timeout?: number;
+    defaultHeaders?: Record<string, string>;
+  };
+}
+
+const ServiceContext = createContext<ServiceContainer | null>(null);
+
+export const ServiceProvider = ({ 
+  children, 
+  mockServices,
+  apiConfig = {}
+}: ServiceProviderProps) => {
+  const services = useMemo(() => {
+    // モックサービスが提供されている場合はそれを使用（テスト時）
+    if (mockServices) {
+      return {
+        sakeService: mockServices.sakeService || createDefaultSakeService(apiConfig),
+      };
+    }
+
+    // 本番環境では標準のサービスを作成
+    return createDefaultServices(apiConfig);
+  }, [mockServices, apiConfig]);
+
+  return (
+    <ServiceContext.Provider value={services}>
+      {children}
+    </ServiceContext.Provider>
+  );
+};
+
+/**
+ * SakeServiceにアクセスするためのhook
+ */
+export const useSakeService = (): SakeService => {
+  const services = useContext(ServiceContext);
+  if (!services) {
+    throw new Error('useSakeService must be used within ServiceProvider');
+  }
+  return services.sakeService;
+};
+
+/**
+ * 全サービスにアクセスするためのhook（将来的な拡張用）
+ */
+export const useServices = (): ServiceContainer => {
+  const services = useContext(ServiceContext);
+  if (!services) {
+    throw new Error('useServices must be used within ServiceProvider');
+  }
+  return services;
+};
+
+/**
+ * デフォルトのサービスコンテナを作成
+ */
+function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}): ServiceContainer {
+  const apiClient = new ApiClient({
+    baseURL: apiConfig.baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || '',
+    timeout: apiConfig.timeout || 10000,
+    defaultHeaders: {
+      'Content-Type': 'application/json',
+      ...apiConfig.defaultHeaders,
+    },
+  });
+
+  return {
+    sakeService: new SakeService(apiClient),
+  };
+}
+
+/**
+ * デフォルトのSakeServiceのみを作成（テスト用）
+ */
+function createDefaultSakeService(apiConfig: ServiceProviderProps['apiConfig'] = {}): SakeService {
+  const apiClient = new ApiClient(apiConfig);
+  return new SakeService(apiClient);
+}
+
+/**
+ * 環境変数から設定を取得するヘルパー
+ */
+export function getApiConfig() {
+  return {
+    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '',
+    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10),
+    defaultHeaders: {
+      'X-App-Version': process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
+    },
+  };
+}
