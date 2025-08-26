@@ -629,24 +629,40 @@ export const MenuRegistrationSection = ({
             
             {/* 保存済みメニュー選択 */}
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={selectedSavedMenu}
                   onChange={(e) => {
-                    setSelectedSavedMenu(e.target.value);
-                    if (e.target.value) {
-                      handleLoadSavedMenu(e.target.value);
-                      // 選択したメニューの飲食店を自動選択
-                      setSelectedRestaurant(e.target.value);
-                      // 既存メニュー選択時は新規作成フォームを閉じる
+                    const newValue = e.target.value;
+                    
+                    if (newValue) {
+                      // 既存メニューを選択した場合
+                      handleLoadSavedMenu(newValue);
+                      setSelectedRestaurant(newValue);
                       setShowAddRestaurantForm(false);
                     } else {
+                      // 「新しいメニュー」を選択した場合
+                      if (selectedSavedMenu && menuItems.length > 0) {
+                        // 他のメニューから「新しいメニュー」に変更する場合、確認ダイアログ表示
+                        const shouldClear = confirm(
+                          '現在のメニューをどうしますか？\n\n' +
+                          '「OK」: クリア\n' +
+                          '「キャンセル」: そのまま'
+                        );
+                        
+                        if (shouldClear) {
+                          onMenuItemsChange([]); // メニューをクリア
+                        }
+                        // どちらの場合も「新しいメニュー」状態にする
+                      }
+                      
+                      setSelectedSavedMenu('');
                       setSelectedRestaurant('');
-                      // 「新しいメニュー」選択時はフォームは開かない（保存ボタンで開く）
+                      setShowAddRestaurantForm(false);
                     }
                   }}
                   disabled={loadingMenu}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   <option value="">新しいメニュー</option>
                   {Object.values(groupedSavedMenus).map((menu) => (
@@ -673,7 +689,7 @@ export const MenuRegistrationSection = ({
                     }
                   }}
                   disabled={savingToMenu || (!selectedSavedMenu && !showAddRestaurantForm && menuSakeData.length === 0)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap sm:min-w-[80px]"
                 >
                   {savingToMenu ? '保存中...' : '保存'}
                 </button>

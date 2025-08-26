@@ -14,7 +14,18 @@ export const RecordsTab = () => {
   const { records, isLoading, error, deleteRecord } = useRecords();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('sake');
-  const [viewMode, setViewMode] = useState<ViewMode>('timeline');
+  const [viewMode, setViewMode] = useState<ViewMode>('map');
+  
+  // レコードタイプが変更されたときのデフォルトビューモード設定
+  const handleRecordTypeChange = (newRecordType: RecordType) => {
+    setRecordType(newRecordType);
+    // デフォルトビューモードを設定
+    if (newRecordType === 'sake') {
+      setViewMode('map'); // 日本酒記録は「マップ」がデフォルト
+    } else {
+      setViewMode('management'); // 飲食店記録は「メニュー管理」がデフォルト
+    }
+  };
 
   const handleDelete = async (record: DrinkingRecord) => {
     if (!confirm(`「${record.sakeName}」の記録を削除しますか？`)) {
@@ -82,83 +93,87 @@ export const RecordsTab = () => {
 
   return (
     <div className="space-y-6">
-      {/* レコードタイプ切り替え */}
+      {/* セグメントコントロール - 2行構成 */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex rounded-lg bg-gray-100 p-1">
-            <button
-              onClick={() => setRecordType('sake')}
-              className={`px-6 py-2 rounded-md transition-colors ${
-                recordType === 'sake' 
-                  ? 'bg-blue-600 text-white' 
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              🍶 日本酒記録
-            </button>
-            <button
-              onClick={() => setRecordType('restaurant')}
-              className={`px-6 py-2 rounded-md transition-colors ${
-                recordType === 'restaurant' 
-                  ? 'bg-green-600 text-white' 
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              🍽️ 飲食店記録
-            </button>
+        <div className="space-y-4 mb-4">
+          {/* 第1行: レコードタイプ切り替え */}
+          <div className="flex justify-center">
+            <div className="flex rounded-lg bg-gray-100 p-1">
+              <button
+                onClick={() => handleRecordTypeChange('sake')}
+                className={`px-6 py-2 rounded-md transition-colors ${
+                  recordType === 'sake' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🍶 日本酒記録
+              </button>
+              <button
+                onClick={() => handleRecordTypeChange('restaurant')}
+                className={`px-6 py-2 rounded-md transition-colors ${
+                  recordType === 'restaurant' 
+                    ? 'bg-green-600 text-white' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                🍽️ 飲食店記録
+              </button>
+            </div>
           </div>
           
-          {/* ビューモード切り替え（日本酒記録の場合のみ） */}
-          {recordType === 'sake' && (
-            <div className="flex rounded-lg bg-gray-100 p-1">
-              <button
-                onClick={() => setViewMode('timeline')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  viewMode === 'timeline' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                📝 タイムライン
-              </button>
-              <button
-                onClick={() => setViewMode('map')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  viewMode === 'map' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                🗾 マップ
-              </button>
-            </div>
-          )}
-          
-          {/* ビューモード切り替え（飲食店記録の場合） */}
-          {recordType === 'restaurant' && (
-            <div className="flex rounded-lg bg-gray-100 p-1">
-              <button
-                onClick={() => setViewMode('timeline')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  viewMode === 'timeline' 
-                    ? 'bg-green-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                📝 記録一覧
-              </button>
-              <button
-                onClick={() => setViewMode('management')}
-                className={`px-4 py-2 rounded-md transition-colors ${
-                  viewMode === 'management' 
-                    ? 'bg-green-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                🍽️ メニュー管理
-              </button>
-            </div>
-          )}
+          {/* 第2行: ビューモード切り替え */}
+          <div className="flex justify-center">
+            {recordType === 'sake' && (
+              <div className="flex rounded-lg bg-gray-100 p-1">
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    viewMode === 'map' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  🗾 マップ
+                </button>
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    viewMode === 'timeline' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  📝 タイムライン
+                </button>
+              </div>
+            )}
+            
+            {recordType === 'restaurant' && (
+              <div className="flex rounded-lg bg-gray-100 p-1">
+                <button
+                  onClick={() => setViewMode('management')}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    viewMode === 'management' 
+                      ? 'bg-green-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  🍽️ メニュー管理
+                </button>
+                <button
+                  onClick={() => setViewMode('timeline')}
+                  className={`px-4 py-2 rounded-md transition-colors ${
+                    viewMode === 'timeline' 
+                      ? 'bg-green-600 text-white' 
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  📝 記録一覧
+                </button>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* 統計サマリー（日本酒記録の場合のみ） */}
