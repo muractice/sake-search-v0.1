@@ -91,7 +91,7 @@ export const RestaurantRecords = () => {
     }
     acc[record.restaurant_name].push(record);
     return acc;
-  }, {} as { [key: string]: RestaurantDrinkingRecord[] });
+  }, {} as { [key: string]: RestaurantDrinkingRecordDetail[] });
 
   // 統計情報
   const totalRecords = records.length;
@@ -153,7 +153,7 @@ export const RestaurantRecords = () => {
             <div className="space-y-3">
               {restaurantRecords.map(record => (
                 <div
-                  key={record.id}
+                  key={record.record_id}
                   className="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex justify-between items-start">
