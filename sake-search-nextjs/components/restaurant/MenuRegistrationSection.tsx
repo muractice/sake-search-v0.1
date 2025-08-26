@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SakeData } from '@/types/sake';
-import { RestaurantMenu, RestaurantMenuFormData, RestaurantMenuWithSakes } from '@/types/restaurant';
+import { RestaurantMenu } from '@/types/restaurant';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
@@ -37,7 +37,6 @@ export const MenuRegistrationSection = ({
   onChartClick,
   onSearch,
 }: MenuRegistrationSectionProps) => {
-  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
   const [textInput, setTextInput] = useState('');
   const [photoResults, setPhotoResults] = useState<string[]>([]);
   const [noSakeDetected, setNoSakeDetected] = useState(false);
@@ -47,7 +46,6 @@ export const MenuRegistrationSection = ({
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
   const [savingToMenu, setSavingToMenu] = useState(false);
-  const [savedMenus, setSavedMenus] = useState<RestaurantMenuWithSakes[]>([]);
   const [selectedSavedMenu, setSelectedSavedMenu] = useState<string>('');
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
@@ -75,7 +73,6 @@ export const MenuRegistrationSection = ({
     }
     
     // 即座にUIを閉じて、処理中状態に依存しない
-    setShowPhotoUpload(false);
     setNoSakeDetected(false);
     setPhotoResults([]);
     
@@ -250,8 +247,6 @@ export const MenuRegistrationSection = ({
         count: number;
       }>);
 
-      // savedMenusは元の形式で維持（空の配列でも問題なし）
-      setSavedMenus([]);
       // groupedSavedMenusを直接更新するために、一時的にstateとして管理
       setGroupedSavedMenusData(groupedData);
 

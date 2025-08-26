@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { MenuRegistrationSection } from '@/components/restaurant/MenuRegistrationSection';
 import { RestaurantRecommendations } from '@/components/restaurant/RestaurantRecommendations';
-import { MenuManagement } from '@/components/restaurant/MenuManagement';
 import { SakeData } from '@/types/sake';
 
 interface RestaurantTabProps {

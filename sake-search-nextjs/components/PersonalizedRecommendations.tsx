@@ -22,7 +22,7 @@ export const PersonalizedRecommendations = ({
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMood, setSelectedMood] = useState<string>('usual');
+  const [selectedMood] = useState<string>('usual');
 
   useEffect(() => {
     const fetchRecommendations = async () => {
@@ -55,21 +55,6 @@ export const PersonalizedRecommendations = ({
     }
   };
 
-  const refreshRecommendations = async () => {
-    if (!user) return;
-
-    setLoading(true);
-    try {
-      // キャッシュをクリア
-      await fetch('/api/recommendations', { method: 'DELETE' });
-      
-      // 新規取得（キャッシュをスキップ）
-      await loadRecommendations(true);
-    } catch (err) {
-      console.error('Error refreshing recommendations:', err);
-      setError('レコメンドの更新に失敗しました');
-    }
-  };
 
   if (!hasEnoughData) {
     return (
@@ -116,12 +101,6 @@ export const PersonalizedRecommendations = ({
     );
   }
 
-  const moodOptions = [
-    { key: 'usual', label: 'いつもの', icon: '🏠' },
-    { key: 'adventure', label: '冒険したい', icon: '🎲' },
-    { key: 'special', label: '特別な日', icon: '✨' },
-    { key: 'relax', label: 'リラックス', icon: '😌' },
-  ];
 
   const groupedRecommendations = recommendations.reduce((acc, rec) => {
     if (!acc[rec.type]) acc[rec.type] = [];
@@ -160,74 +139,6 @@ export const PersonalizedRecommendations = ({
             お気に入りに追加した日本酒の情報を基に、AIがあなた好みの日本酒をご提案します。
           </p>
         </div>
-      </div>
-    </div>
-  );
-};
-
-interface RecommendationGroupProps {
-  title: string;
-  recommendations: SakeRecommendation[];
-  onSelectSake?: (sake: SakeData) => void;
-  onAddToComparison?: (sake: SakeData) => void;
-  isInComparison?: (sakeId: string) => boolean;
-  color: 'blue' | 'green' | 'purple';
-}
-
-const RecommendationGroup = ({
-  title,
-  recommendations,
-  onSelectSake,
-  onAddToComparison,
-  isInComparison,
-  color
-}: RecommendationGroupProps) => {
-  const colorClasses = {
-    blue: 'text-blue-800',
-    green: 'text-green-800',
-    purple: 'text-purple-800'
-  };
-
-  const handleClick = (sake: SakeData) => {
-    if (isInComparison?.(sake.id)) {
-      onSelectSake?.(sake);
-    } else {
-      onAddToComparison?.(sake);
-    }
-  };
-
-  return (
-    <div>
-      <h4 className={`text-sm font-bold mb-3 ${colorClasses[color]}`}>{title}</h4>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {recommendations.slice(0, 10).map(rec => (
-          <div
-            key={rec.sake.id}
-            onClick={() => handleClick(rec.sake)}
-            className={`p-3 rounded-lg border cursor-pointer transition-all ${
-              isInComparison?.(rec.sake.id)
-                ? 'bg-blue-50 border-blue-300'
-                : 'bg-white border-gray-200 hover:border-gray-300 hover:shadow-md'
-            }`}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div className="flex-1">
-                <h5 className="font-medium text-sm">{rec.sake.name}</h5>
-                <p className="text-xs text-gray-600">{rec.sake.brewery}</p>
-              </div>
-              <div className="text-xs text-gray-500">
-                {Math.round(rec.similarityScore * 100)}%
-              </div>
-            </div>
-            <p className="text-xs text-gray-600 mb-2">{rec.reason}</p>
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span>予測評価: ★{rec.predictedRating.toFixed(1)}</span>
-              {isInComparison?.(rec.sake.id) && (
-                <span className="text-blue-600">✓ 比較中</span>
-              )}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );

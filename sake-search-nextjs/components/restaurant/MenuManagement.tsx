@@ -5,7 +5,6 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { SakeData } from '@/types/sake';
 import { 
   RestaurantMenu, 
-  RestaurantMenuSake, 
   RestaurantMenuWithSakes,
   RestaurantMenuFormData 
 } from '@/types/restaurant';
@@ -26,7 +25,6 @@ export const MenuManagement = ({
   const [loading, setLoading] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
-  const [currentRestaurantName, setCurrentRestaurantName] = useState(restaurantName);
   
   const supabase = createClientComponentClient();
 
@@ -217,7 +215,7 @@ export const MenuManagement = ({
           <RestaurantForm
             onSubmit={handleAddRestaurant}
             onCancel={() => setShowAddRestaurantForm(false)}
-            initialName={currentRestaurantName}
+            initialName={restaurantName}
           />
         )}
 
