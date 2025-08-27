@@ -8,6 +8,8 @@ import { SakeData } from '@/types/sake';
 
 export async function GET(request: NextRequest) {
   try {
+    const cookieStore = await cookies();
+    
     // 🔍 GET版のcookies確認
     console.log('🍪 GET版Cookies状態確認:', {
       hasAuthToken: cookieStore.has('sb-uyrlwwmbujeqmnpgyvam-auth-token'),

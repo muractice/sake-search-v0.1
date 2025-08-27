@@ -105,20 +105,16 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店メニューを検索・取得
+   * 飲食店一覧を取得（既存の /api/restaurant/menus エンドポイントを使用）
    */
-  async getRestaurants(options: RestaurantSearchOptions = {}): Promise<RestaurantSearchResult> {
+  async getRestaurants(): Promise<RestaurantMenu[]> {
     try {
-      const response = await this.apiClient.post<RestaurantSearchResult>('/api/v1/restaurants/search', {
-        ...options,
-        limit: options.limit || 50,
-        offset: options.offset || 0,
-        sortBy: options.sortBy || 'restaurant_name',
-        sortOrder: options.sortOrder || 'asc',
-      });
-
-      return response.data;
+      console.log('RestaurantService.getRestaurants: APIを呼び出します');
+      const data = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus');
+      console.log('RestaurantService.getRestaurants: レスポンス取得成功', data);
+      return data.restaurants || [];
     } catch (error) {
+      console.error('RestaurantService.getRestaurants: エラー詳細', error);
       this.handleError('飲食店の取得に失敗しました', error);
     }
   }
@@ -228,7 +224,7 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店の詳細情報（日本酒メニュー含む）を取得
+   * 飲食店の詳細情報（日本酒メニュー含む）を取得（既存の /api/restaurant/menus エンドポイントを使用）
    */
   async getRestaurantWithSakes(restaurantId: string): Promise<RestaurantMenuWithSakes[]> {
     try {
@@ -236,9 +232,12 @@ export class RestaurantService {
         throw new RestaurantServiceError('飲食店IDが指定されていません');
       }
 
-      const response = await this.apiClient.get<RestaurantMenuWithSakes[]>(`/api/v1/restaurants/${restaurantId}/with-sakes`);
-      return response.data;
+      console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', restaurantId);
+      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus?restaurant_id=${restaurantId}&with_sakes=true`);
+      console.log('RestaurantService.getRestaurantWithSakes: 取得結果', data);
+      return data.menuWithSakes || [];
     } catch (error) {
+      console.error('RestaurantService.getRestaurantWithSakes: エラー', error);
       this.handleError('飲食店詳細の取得に失敗しました', error);
     }
   }

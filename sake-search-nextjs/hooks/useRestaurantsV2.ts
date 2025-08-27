@@ -189,12 +189,12 @@ export const useRestaurantsV2 = (): UseRestaurantsReturn => {
     updateState({ isLoading: true, error: null });
 
     try {
-      const result = await restaurantService.getRestaurants(options);
+      const restaurants = await restaurantService.getRestaurants();
       
       updateState({
-        restaurants: result.restaurants,
-        hasMore: result.hasMore,
-        total: result.total,
+        restaurants: restaurants,
+        hasMore: false,
+        total: restaurants.length,
         lastFilters: options.filters || null,
         isLoading: false,
       });

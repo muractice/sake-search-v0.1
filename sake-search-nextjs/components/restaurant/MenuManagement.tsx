@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState, useEffect, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
 import { 
   RestaurantMenu, 
   RestaurantMenuWithSakes,
   RestaurantMenuFormData 
 } from '@/types/restaurant';
+import { useRestaurantService } from '@/providers/ServiceProvider';
 
 interface MenuManagementProps {
   restaurantMenuSakeData: SakeData[];
@@ -26,73 +26,46 @@ export const MenuManagement = ({
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
   
-  const supabase = createClientComponentClient();
+  const restaurantService = useRestaurantService();
 
   // 飲食店一覧を取得
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('restaurant_menus')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('restaurant_name', { ascending: true });
-
-      if (error) throw error;
-      setRestaurants(data || []);
+      const restaurants = await restaurantService.getRestaurants();
+      setRestaurants(restaurants || []);
       
-      if (data && data.length > 0 && !selectedRestaurant) {
-        setSelectedRestaurant(data[0].id);
+      if (restaurants && restaurants.length > 0 && !selectedRestaurant) {
+        setSelectedRestaurant(restaurants[0].id);
       }
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  };
+  }, [restaurantService, selectedRestaurant]);
 
   // 選択した飲食店のメニューと日本酒情報を取得
-  const fetchMenuWithSakes = async (restaurantId: string) => {
+  const fetchMenuWithSakes = useCallback(async (restaurantId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('restaurant_menu_with_sakes')
-        .select('*')
-        .eq('restaurant_menu_id', restaurantId);
-
-      if (error) throw error;
+      const data = await restaurantService.getRestaurantWithSakes(restaurantId);
       setMenuWithSakes(data || []);
     } catch (error) {
       console.error('Error fetching menu with sakes:', error);
     }
-  };
+  }, [restaurantService]);
 
   useEffect(() => {
     fetchRestaurants();
-  }, []);
+  }, [fetchRestaurants]);
 
   useEffect(() => {
     if (selectedRestaurant) {
       fetchMenuWithSakes(selectedRestaurant);
     }
-  }, [selectedRestaurant]);
+  }, [selectedRestaurant, fetchMenuWithSakes]);
 
   // 新しい飲食店を追加
   const handleAddRestaurant = async (formData: RestaurantMenuFormData) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('restaurant_menus')
-        .insert({
-          ...formData,
-          user_id: user.id
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
+      const data = await restaurantService.createRestaurant(formData);
       await fetchRestaurants();
       setSelectedRestaurant(data.id);
       setShowAddRestaurantForm(false);
@@ -112,21 +85,17 @@ export const MenuManagement = ({
 
     setLoading(true);
     try {
-      const newSakes = restaurantMenuSakeData.map(sake => ({
-        restaurant_menu_id: selectedRestaurant,
-        sake_id: sake.id,
-        brand_id: sake.brandId || null,
-        is_available: true,
-        menu_notes: null
-      }));
-
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .insert(newSakes);
-
-      if (error) throw error;
-
-      alert(`${newSakes.length}件の日本酒をメニューに追加しました`);
+      // 各日本酒を個別にメニューに追加
+      for (const sake of restaurantMenuSakeData) {
+        await restaurantService.addSakeToMenu(selectedRestaurant, {
+          sake_id: sake.id,
+          brand_id: sake.brandId || undefined,
+          is_available: true,
+          menu_notes: undefined
+        });
+      }
+      
+      alert(`${restaurantMenuSakeData.length}件の日本酒をメニューに追加しました`);
       await fetchMenuWithSakes(selectedRestaurant);
       onMenuUpdate?.();
     } catch (error) {
@@ -140,16 +109,9 @@ export const MenuManagement = ({
   // 日本酒の提供状況を更新
   const handleToggleAvailability = async (menuSakeId: string, isAvailable: boolean) => {
     try {
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .update({ 
-          is_available: isAvailable,
-          updated_at: new Date().toISOString() 
-        })
-        .eq('id', menuSakeId);
-
-      if (error) throw error;
-
+      await restaurantService.updateMenuSake(menuSakeId, {
+        is_available: isAvailable
+      });
       await fetchMenuWithSakes(selectedRestaurant);
     } catch (error) {
       console.error('Error updating availability:', error);
@@ -162,13 +124,7 @@ export const MenuManagement = ({
     if (!confirm(`「${sakeName}」をメニューから削除しますか？`)) return;
 
     try {
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .delete()
-        .eq('id', menuSakeId);
-
-      if (error) throw error;
-
+      await restaurantService.removeSakeFromMenu(menuSakeId);
       await fetchMenuWithSakes(selectedRestaurant);
       onMenuUpdate?.();
     } catch (error) {

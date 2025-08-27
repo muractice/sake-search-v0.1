@@ -3,13 +3,20 @@ import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
+  console.log('[API] /api/restaurant/menus GET: 開始');
+  
   try {
+    console.log('[API] cookies取得開始');
     const cookieStore = await cookies();
+    console.log('[API] cookies取得完了');
+    
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies: () => cookieStore
     });
+    console.log('[API] Supabaseクライアント作成完了');
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('[API] ユーザー認証結果:', { user: user?.id, authError });
     
     if (!user || authError) {
       return NextResponse.json(
@@ -23,13 +30,23 @@ export async function GET(request: NextRequest) {
     const withSakes = searchParams.get('with_sakes') === 'true';
 
     if (withSakes && restaurantId) {
+      console.log('[API] 飲食店詳細取得開始 - restaurantId:', restaurantId);
       // 特定の飲食店のメニューと日本酒情報を取得
       const { data: menuWithSakes, error } = await supabase
         .from('restaurant_menu_with_sakes')
         .select('*')
         .eq('restaurant_menu_id', restaurantId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('[API] 飲食店詳細取得エラー:', error);
+        throw error;
+      }
+      
+      console.log('[API] 飲食店詳細データ取得成功:', { 
+        count: menuWithSakes?.length,
+        sampleData: menuWithSakes?.[0]
+      });
+      
       return NextResponse.json({ menuWithSakes });
     } else {
       // 飲食店一覧を取得
@@ -39,12 +56,19 @@ export async function GET(request: NextRequest) {
         .eq('user_id', user.id)
         .order('restaurant_name', { ascending: true });
 
-      if (error) throw error;
-      return NextResponse.json({ restaurants });
+      if (error) {
+        console.error('[API] Supabaseクエリエラー:', error);
+        throw error;
+      }
+      
+      console.log('[API] 飲食店データ取得成功:', { count: restaurants?.length });
+      const response = NextResponse.json({ restaurants });
+      console.log('[API] レスポンス作成完了');
+      return response;
     }
 
   } catch (error) {
-    console.error('Error fetching menus:', error);
+    console.error('[API] エラーキャッチ:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -56,7 +80,7 @@ export async function POST(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies: () => cookieStore
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -150,7 +174,7 @@ export async function PUT(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies: () => cookieStore
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -244,7 +268,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies: () => cookieStore
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
