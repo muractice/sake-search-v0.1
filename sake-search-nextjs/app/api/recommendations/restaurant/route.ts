@@ -28,22 +28,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const cookieStore = await cookies();
-    
-    // 🔍 cookies内容をログ出力
-    const allCookies = [...cookieStore.getAll()];
-    console.log('🍪 Cookies状態確認:', {
-      cookieStoreType: typeof cookieStore,
-      cookieStoreConstructor: cookieStore.constructor.name,
-      hasAuthToken: cookieStore.has('sb-uyrlwwmbujeqmnpgyvam-auth-token'),
-      authTokenValue: cookieStore.get('sb-uyrlwwmbujeqmnpgyvam-auth-token')?.value?.substring(0, 50) + '...',
-      authTokenExists: !!cookieStore.get('sb-uyrlwwmbujeqmnpgyvam-auth-token'),
-      totalCookies: allCookies.length,
-      allCookieNames: allCookies.map(c => c.name)
-    });
+    console.log('🔧 Creating Supabase client...');
     
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies
     });
     
     console.log('🔧 Supabaseクライアント作成完了');

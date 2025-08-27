@@ -12,6 +12,7 @@ import { RecordService } from '@/services/RecordService';
 import { RestaurantService } from '@/services/RestaurantService';
 import { FavoriteService } from '@/services/FavoriteService';
 import { ComparisonService } from '@/services/ComparisonService';
+import { RecommendationService } from '@/services/RecommendationService';
 
 interface ServiceContainer {
   sakeService: SakeService;
@@ -19,8 +20,7 @@ interface ServiceContainer {
   restaurantService: RestaurantService;
   favoriteService: FavoriteService;
   comparisonService: ComparisonService;
-  // 将来追加予定のサービス
-  // recommendationService: RecommendationService;
+  recommendationService: RecommendationService;
 }
 
 interface ServiceProviderProps {
@@ -52,6 +52,7 @@ export const ServiceProvider = ({
         restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
         favoriteService: mockServices.favoriteService || defaultServices.favoriteService,
         comparisonService: mockServices.comparisonService || defaultServices.comparisonService,
+        recommendationService: mockServices.recommendationService || defaultServices.recommendationService,
       };
     }
 
@@ -122,6 +123,17 @@ export const useComparisonService = (): ComparisonService => {
 };
 
 /**
+ * RecommendationServiceにアクセスするためのhook
+ */
+export const useRecommendationService = (): RecommendationService => {
+  const services = useContext(ServiceContext);
+  if (!services) {
+    throw new Error('useRecommendationService must be used within ServiceProvider');
+  }
+  return services.recommendationService;
+};
+
+/**
  * 全サービスにアクセスするためのhook（将来的な拡張用）
  */
 export const useServices = (): ServiceContainer => {
@@ -151,6 +163,7 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
     restaurantService: new RestaurantService(apiClient),
     favoriteService: new FavoriteService(apiClient),
     comparisonService: new ComparisonService(apiClient),
+    recommendationService: new RecommendationService(apiClient),
   };
 }
 
