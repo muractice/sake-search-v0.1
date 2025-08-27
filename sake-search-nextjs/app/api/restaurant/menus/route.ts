@@ -6,12 +6,8 @@ export async function GET(request: NextRequest) {
   console.log('[API] /api/restaurant/menus GET: 開始');
   
   try {
-    console.log('[API] cookies取得開始');
-    const cookieStore = await cookies();
-    console.log('[API] cookies取得完了');
-    
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore
+      cookies
     });
     console.log('[API] Supabaseクライアント作成完了');
 
@@ -78,9 +74,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -172,9 +167,8 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -266,9 +260,8 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => cookieStore
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
