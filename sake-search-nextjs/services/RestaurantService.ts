@@ -110,7 +110,7 @@ export class RestaurantService {
   async getRestaurants(): Promise<RestaurantMenu[]> {
     try {
       console.log('RestaurantService.getRestaurants: APIを呼び出します');
-      const data = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus');
+      const data = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus') as unknown as { restaurants: RestaurantMenu[] };
       console.log('RestaurantService.getRestaurants: レスポンス取得成功', data);
       return data.restaurants || [];
     } catch (error) {
@@ -233,7 +233,7 @@ export class RestaurantService {
       }
 
       console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', restaurantId);
-      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus?restaurant_id=${restaurantId}&with_sakes=true`);
+      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus?restaurant_id=${restaurantId}&with_sakes=true`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
       console.log('RestaurantService.getRestaurantWithSakes: 取得結果', data);
       return data.menuWithSakes || [];
     } catch (error) {
