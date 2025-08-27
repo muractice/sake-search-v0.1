@@ -520,7 +520,7 @@ export const MenuRegistrationSection = ({
     <div className="space-y-6">
       {/* メニュー登録エリア */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
+        <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
           <span className="mr-2">📝</span>
           メニュー登録
         </h2>
@@ -549,7 +549,7 @@ export const MenuRegistrationSection = ({
                 value={textInput}
                 onChange={(e) => setTextInput(e.target.value)}
                 placeholder="日本酒名を入力"
-                className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="flex-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900"
               />
               <button
                 onClick={handleTextSubmit}
@@ -609,7 +609,7 @@ export const MenuRegistrationSection = ({
 
       {/* 飲食店のメニュー */}
       <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
+          <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
             <span className="mr-2">🍽️</span>
             飲食店のメニュー
           </h2>
@@ -657,7 +657,7 @@ export const MenuRegistrationSection = ({
                     }
                   }}
                   disabled={loadingMenu}
-                  className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
                 >
                   <option value="">新しいメニュー</option>
                   {Object.values(groupedSavedMenus).map((menu) => (
@@ -704,14 +704,14 @@ export const MenuRegistrationSection = ({
                   value={newRestaurantName}
                   onChange={(e) => setNewRestaurantName(e.target.value)}
                   placeholder="飲食店名 *"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg text-gray-900"
                 />
                 <input
                   type="text"
                   value={newRestaurantLocation}
                   onChange={(e) => setNewRestaurantLocation(e.target.value)}
                   placeholder="場所・住所（任意）"
-                  className="w-full px-3 py-2 border rounded-lg"
+                  className="w-full px-3 py-2 border rounded-lg text-gray-900"
                 />
                 <div className="flex gap-2">
                   <button
@@ -739,7 +739,7 @@ export const MenuRegistrationSection = ({
           {(menuItems.length > 0) && (
             <>
               <div className="mb-4">
-                <span className="text-sm font-medium text-gray-700 block mb-3">
+                <span className="text-sm font-medium text-gray-900 block mb-3">
                   {menuSakeData.length + notFoundItems.length}件の日本酒が登録されています
                   {menuSakeData.length > 0 && ` (データあり: ${menuSakeData.length}件)`}
                   {notFoundItems.length > 0 && ` (データなし: ${notFoundItems.length}件)`}
@@ -799,8 +799,8 @@ export const MenuRegistrationSection = ({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{sake.name}</p>
-                    <p className="text-xs text-gray-600 mt-1">{sake.brewery}</p>
+                    <p className="font-semibold text-gray-900">{sake.name}</p>
+                    <p className="text-xs text-gray-800 mt-1">{sake.brewery}</p>
                   </div>
                   <div className="flex gap-1">
                     <button
@@ -832,8 +832,8 @@ export const MenuRegistrationSection = ({
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-600">{item}</p>
-                    <p className="text-xs text-red-500 mt-1">データなし</p>
+                    <p className="font-semibold text-gray-900">{item}</p>
+                    <p className="text-xs text-red-700 mt-1">データなし</p>
                   </div>
                   <button
                     onClick={() => handleIndividualRemove(item)}
@@ -864,7 +864,7 @@ export const MenuRegistrationSection = ({
         <>
           {/* 4象限チャート */}
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
               <span className="mr-3 text-2xl">📊</span>
               比較リストの味わいマップ
             </h2>
@@ -878,7 +878,7 @@ export const MenuRegistrationSection = ({
 
           {/* レーダーチャート */}
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
               <span className="mr-3 text-2xl">🎯</span>
               比較リストの味覚特性
             </h2>

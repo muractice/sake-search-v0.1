@@ -33,13 +33,13 @@ export const FavoritesTab = ({
     <div className="space-y-6">
       {/* お気に入り一覧 */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
+        <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
           <span className="mr-2">⭐</span>
           お気に入りの日本酒 ({favorites.length}件)
         </h2>
         
         {favorites.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-gray-700 text-center py-8">
             お気に入りに登録された日本酒がありません
           </p>
         ) : (
@@ -128,7 +128,7 @@ export const FavoritesTab = ({
       {favorites.length > 0 && (
         <div className="space-y-8">
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
               <span className="mr-3 text-2xl">📊</span>
               お気に入りの味わい分布
             </h2>
@@ -141,7 +141,7 @@ export const FavoritesTab = ({
           </div>
           
           <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center">
+            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
               <span className="mr-3 text-2xl">🎯</span>
               お気に入りの味覚特性
             </h2>

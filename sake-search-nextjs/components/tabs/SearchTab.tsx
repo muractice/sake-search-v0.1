@@ -54,7 +54,7 @@ export const SearchTab = ({
       <div className="space-y-8">
         {/* 4象限チャート */}
         <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
             <span className="mr-3 text-2xl">📊</span>
             味わいマップ
           </h2>
@@ -68,7 +68,7 @@ export const SearchTab = ({
 
         {/* レーダーチャート */}
         <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
             <span className="mr-3 text-2xl">🎯</span>
             味覚特性
           </h2>
