@@ -190,6 +190,30 @@ export class RestaurantService {
   }
 
   /**
+   * 飲食店のメニューに複数の日本酒を一括追加
+   */
+  async addMultipleSakesToMenu(restaurantId: string, sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]): Promise<RestaurantMenuSake[]> {
+    try {
+      if (!restaurantId) {
+        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      }
+
+      if (!Array.isArray(sakes) || sakes.length === 0) {
+        throw new RestaurantServiceError('日本酒データが必要です');
+      }
+
+      const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
+        restaurant_menu_id: restaurantId,
+        sakes
+      }) as unknown as { menuSakes: RestaurantMenuSake[] };
+
+      return response.menuSakes || [];
+    } catch (error) {
+      this.handleError('メニューへの日本酒一括追加に失敗しました', error);
+    }
+  }
+
+  /**
    * メニューの日本酒情報を更新
    */
   async updateMenuSake(menuSakeId: string, input: Partial<RestaurantMenuSakeFormData>): Promise<RestaurantMenuSake> {
@@ -214,11 +238,81 @@ export class RestaurantService {
         throw new RestaurantServiceError('メニュー日本酒IDが指定されていません');
       }
 
-      await this.apiClient.delete(`/api/v1/restaurants/sakes/${menuSakeId}`);
+      await this.apiClient.delete(`/api/restaurant/menus/list?id=${menuSakeId}`);
     } catch (error) {
       if (error instanceof ApiClientError && error.statusCode === 404) {
         return;
       }
+      this.handleError('メニューからの日本酒削除に失敗しました', error);
+    }
+  }
+
+  /**
+   * 単一の日本酒をメニューに追加
+   */
+  async addSingleSakeToMenu(restaurantId: string, sakeData: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }): Promise<void> {
+    try {
+      if (!restaurantId) {
+        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      }
+
+      await this.apiClient.post('/api/restaurant/menus/list', {
+        restaurant_menu_id: restaurantId,
+        sakes: [sakeData]
+      });
+    } catch (error) {
+      this.handleError('メニューへの日本酒追加に失敗しました', error);
+    }
+  }
+
+  /**
+   * 保存済みメニューのアイテムを取得してメニュー名リストとして返す
+   */
+  async getMenuItemNames(restaurantId: string): Promise<string[]> {
+    try {
+      if (!restaurantId) {
+        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      }
+
+      const menuWithSakes = await this.getRestaurantWithSakes(restaurantId);
+      const sakeNames: string[] = [];
+      
+      for (const item of menuWithSakes) {
+        if (item.sake_name) {
+          sakeNames.push(item.sake_name);
+        } else if (item.sake_id) {
+          // sake_nameがない場合はsake_idを使用（フォールバック）
+          sakeNames.push(item.sake_id);
+        }
+      }
+      
+      // 重複を除去
+      return [...new Set(sakeNames)];
+    } catch (error) {
+      this.handleError('メニューアイテム名の取得に失敗しました', error);
+    }
+  }
+
+  /**
+   * 日本酒名に基づいてメニューから日本酒を削除
+   */
+  async removeSakeFromMenuByName(restaurantId: string, sakeName: string, sakeIds: string[]): Promise<void> {
+    try {
+      if (!restaurantId) {
+        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      }
+
+      if (!sakeName || sakeIds.length === 0) {
+        throw new RestaurantServiceError('削除する日本酒の情報が不足しています');
+      }
+
+      // 複数の日本酒IDがある場合に対応するため、各IDで削除を実行
+      const deletePromises = sakeIds.map(sakeId => 
+        this.apiClient.delete(`/api/restaurant/menus/list?id=${sakeId}`)
+      );
+
+      await Promise.allSettled(deletePromises);
+    } catch (error) {
       this.handleError('メニューからの日本酒削除に失敗しました', error);
     }
   }

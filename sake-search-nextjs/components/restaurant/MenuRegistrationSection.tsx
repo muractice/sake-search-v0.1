@@ -9,7 +9,6 @@ import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import { useScanOCR } from '@/hooks/scan/useScanOCR';
 import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
 import { useRestaurantService } from '@/providers/ServiceProvider';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface MenuRegistrationSectionProps {
   menuItems: string[];
@@ -68,7 +67,6 @@ export const MenuRegistrationSection = ({
   }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const supabase = createClientComponentClient();
   const restaurantService = useRestaurantService();
 
   // OCR処理用のフック
@@ -288,19 +286,14 @@ export const MenuRegistrationSection = ({
       // メニューデータがある場合は自動で保存
       if (menuSakeData.length > 0) {
         try {
-          const newSakes = menuSakeData.map(sake => ({
-            restaurant_menu_id: data.id,
+          const sakes = menuSakeData.map(sake => ({
             sake_id: sake.id,
             brand_id: sake.brandId || null,
             is_available: true,
             menu_notes: null
           }));
 
-          const { error: saveError } = await supabase
-            .from('restaurant_menu_sakes')
-            .insert(newSakes);
-
-          if (saveError) throw saveError;
+          await restaurantService.addMultipleSakesToMenu(data.id, sakes);
 
           await fetchSavedMenus();
           alert(`飲食店「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒をメニューに保存しました。`);
@@ -332,19 +325,14 @@ export const MenuRegistrationSection = ({
           // メニューデータがある場合は自動で保存
           if (menuSakeData.length > 0) {
             try {
-              const newSakes = menuSakeData.map(sake => ({
-                restaurant_menu_id: existingRestaurant.id,
+              const sakes = menuSakeData.map(sake => ({
                 sake_id: sake.id,
                 brand_id: sake.brandId || null,
                 is_available: true,
                 menu_notes: null
               }));
 
-              const { error: saveError } = await supabase
-                .from('restaurant_menu_sakes')
-                .insert(newSakes);
-
-              if (saveError) throw saveError;
+              await restaurantService.addMultipleSakesToMenu(existingRestaurant.id, sakes);
 
               await fetchSavedMenus();
               alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店にメニューを保存しました。`);
@@ -382,25 +370,20 @@ export const MenuRegistrationSection = ({
 
     setSavingToMenu(true);
     try {
-      const newSakes = menuSakeData.map(sake => ({
-        restaurant_menu_id: selectedRestaurant,
+      const sakes = menuSakeData.map(sake => ({
         sake_id: sake.id,
         brand_id: sake.brandId || null,
         is_available: true,
         menu_notes: null
       }));
 
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .insert(newSakes);
+      await restaurantService.addMultipleSakesToMenu(selectedRestaurant, sakes);
 
-      if (error) throw error;
-
-      alert(`${newSakes.length}件の日本酒を飲食店メニューに保存しました`);
+      alert(`${sakes.length}件の日本酒を飲食店メニューに保存しました`);
       await fetchSavedMenus(); // 保存済みメニューを更新
     } catch (error) {
       console.error('Error saving to restaurant menu:', error);
-      alert('メニューへの保存に失敗しました');
+      alert(error instanceof Error ? error.message : 'メニューへの保存に失敗しました');
     } finally {
       setSavingToMenu(false);
     }
@@ -418,43 +401,8 @@ export const MenuRegistrationSection = ({
 
     setLoadingMenu(true);
     try {
-      const { data, error } = await supabase
-        .from('restaurant_menu_with_sakes')
-        .select('*')
-        .eq('restaurant_menu_id', restaurantMenuId)
-        .not('sake_id', 'is', null);
-
-      if (error) throw error;
-
-      // 日本酒名を取得してメニューアイテムとして設定
-      // sake_nameがない場合はsake_masterから取得を試みる
-      const sakeNames: string[] = [];
-      
-      for (const item of data) {
-        if (item.sake_name) {
-          // sake_nameがある場合はそれを使用
-          sakeNames.push(item.sake_name);
-        } else if (item.sake_id) {
-          // sake_nameがない場合、sake_masterから取得
-          const { data: sakeData } = await supabase
-            .from('sake_master')
-            .select('brand_name')
-            .eq('id', item.sake_id)
-            .single();
-          
-          if (sakeData?.brand_name) {
-            sakeNames.push(sakeData.brand_name);
-          } else {
-            // brand_nameも取得できない場合はIDを使用（最後の手段）
-            sakeNames.push(item.sake_id);
-          }
-        }
-      }
-      
-      // 重複を除去してメニューアイテムとして設定
-      const uniqueSakeNames = [...new Set(sakeNames)];
-      onMenuItemsChange(uniqueSakeNames);
-      
+      const sakeNames = await restaurantService.getMenuItemNames(restaurantMenuId);
+      onMenuItemsChange(sakeNames);
       setSelectedSavedMenu(restaurantMenuId);
     } catch (error) {
       console.error('Error loading saved menu:', error);
@@ -469,17 +417,12 @@ export const MenuRegistrationSection = ({
     if (!selectedSavedMenu) return;
 
     try {
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .insert({
-          restaurant_menu_id: selectedSavedMenu,
-          sake_id: sakeData.id,
-          brand_id: sakeData.brandId || null,
-          is_available: true,
-          menu_notes: null
-        });
-
-      if (error) throw error;
+      await restaurantService.addSingleSakeToMenu(selectedSavedMenu, {
+        sake_id: sakeData.id,
+        brand_id: sakeData.brandId || null,
+        is_available: true,
+        menu_notes: null
+      });
       await fetchSavedMenus();
     } catch (error) {
       console.error('Error adding item to saved menu:', error);
@@ -491,16 +434,8 @@ export const MenuRegistrationSection = ({
     if (!selectedSavedMenu) return;
 
     try {
-      // sake_nameまたはsake_idから一致するアイテムを削除
-      const { error } = await supabase
-        .from('restaurant_menu_sakes')
-        .delete()
-        .eq('restaurant_menu_id', selectedSavedMenu)
-        .in('sake_id', [
-          ...menuSakeData.filter(sake => sake.name === sakeName).map(sake => sake.id)
-        ]);
-
-      if (error) throw error;
+      const sakeIds = menuSakeData.filter(sake => sake.name === sakeName).map(sake => sake.id);
+      await restaurantService.removeSakeFromMenuByName(selectedSavedMenu, sakeName, sakeIds);
       await fetchSavedMenus();
     } catch (error) {
       console.error('Error removing item from saved menu:', error);
