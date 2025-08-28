@@ -1,40 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useState, useEffect, useCallback } from 'react';
 import { RestaurantDrinkingRecordDetail } from '@/types/restaurant';
+import { useRestaurantService } from '@/providers/ServiceProvider';
 
 export const RestaurantRecords = () => {
   const [records, setRecords] = useState<RestaurantDrinkingRecordDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
+  const restaurantService = useRestaurantService();
 
   // 記録を取得
-  const fetchRecords = async () => {
+  const fetchRecords = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('restaurant_drinking_records_detail')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .order('record_created_at', { ascending: false });
-
-      if (error) throw error;
+      // RestaurantServiceのgetRecentRecordsメソッドを使用
+      const data = await restaurantService.getRecentRecords(100);
       setRecords(data || []);
     } catch (error) {
       console.error('Error fetching restaurant records:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [restaurantService]);
 
   useEffect(() => {
     fetchRecords();
-  }, []);
+  }, [fetchRecords]);
 
   // 記録を削除
   const handleDelete = async (id: string, sakeName: string) => {
@@ -44,13 +35,7 @@ export const RestaurantRecords = () => {
 
     setDeletingId(id);
     try {
-      const { error } = await supabase
-        .from('restaurant_drinking_records')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await restaurantService.deleteRecord(id);
       setRecords(records.filter(r => r.record_id !== id));
     } catch (error) {
       console.error('Error deleting record:', error);

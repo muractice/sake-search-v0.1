@@ -4,9 +4,8 @@ import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -20,9 +19,10 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const restaurantName = searchParams.get('restaurant');
+    const limit = searchParams.get('limit');
 
     let query = supabase
-      .from('restaurant_drinking_records')
+      .from('restaurant_drinking_records_detail')
       .select('*')
       .eq('user_id', user.id);
 
@@ -30,9 +30,13 @@ export async function GET(request: NextRequest) {
       query = query.eq('restaurant_name', restaurantName);
     }
 
+    if (limit) {
+      query = query.limit(parseInt(limit));
+    }
+
     const { data: records, error } = await query
       .order('date', { ascending: false })
-      .order('created_at', { ascending: false });
+      .order('record_created_at', { ascending: false });
 
     if (error) {
       throw error;
@@ -51,9 +55,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -108,9 +111,8 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -163,9 +165,8 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
     const supabase = createRouteHandlerClient({ 
-      cookies: () => Promise.resolve(cookieStore)
+      cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();

@@ -8,6 +8,7 @@ import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import { useScanOCR } from '@/hooks/scan/useScanOCR';
 import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
+import { useRestaurantService } from '@/providers/ServiceProvider';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 interface MenuRegistrationSectionProps {
@@ -58,6 +59,7 @@ export const MenuRegistrationSection = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const supabase = createClientComponentClient();
+  const restaurantService = useRestaurantService();
 
   // OCR処理用のフック
   const { processImage, isProcessing: isOCRProcessing, processingStatus: ocrProcessingStatus } = useScanOCR();
@@ -177,16 +179,7 @@ export const MenuRegistrationSection = ({
   // 飲食店一覧を取得
   const fetchRestaurants = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('restaurant_menus')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('restaurant_name', { ascending: true });
-
-      if (error) throw error;
+      const data = await restaurantService.getRestaurants();
       setRestaurants(data || []);
       
       if (data && data.length > 0 && !selectedRestaurant) {
@@ -205,39 +198,18 @@ export const MenuRegistrationSection = ({
   // 保存済みメニュー一覧を取得
   const fetchSavedMenus = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      const data = await restaurantService.getRestaurants();
+      if (!data) return;
 
-      // 全ての飲食店を取得し、それぞれの日本酒件数も取得
-      const { data: restaurantsData, error } = await supabase
-        .from('restaurant_menus')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // 各飲食店の日本酒件数を取得
-      const restaurantsWithCount = await Promise.all(
-        (restaurantsData || []).map(async (restaurant) => {
-          const { count } = await supabase
-            .from('restaurant_menu_sakes')
-            .select('*', { count: 'exact' })
-            .eq('restaurant_menu_id', restaurant.id);
-
-          return {
-            restaurant_menu_id: restaurant.id,
-            restaurant_name: restaurant.restaurant_name,
-            location: restaurant.location,
-            restaurant_created_at: restaurant.created_at,
-            count: count || 0
-          };
-        })
-      );
-
-      // groupedSavedMenus形式に合わせたデータを作成
-      const groupedData = restaurantsWithCount.reduce((acc, restaurant) => {
-        acc[restaurant.restaurant_menu_id] = restaurant;
+      // レストランデータを保存済みメニュー形式に変換
+      const groupedData = data.reduce((acc, restaurant) => {
+        acc[restaurant.id] = {
+          restaurant_menu_id: restaurant.id,
+          restaurant_name: restaurant.restaurant_name,
+          location: restaurant.location,
+          restaurant_created_at: restaurant.created_at,
+          count: 0 // TODO: RestaurantServiceにsake count取得機能を追加する
+        };
         return acc;
       }, {} as Record<string, {
         restaurant_menu_id: string;
@@ -247,7 +219,6 @@ export const MenuRegistrationSection = ({
         count: number;
       }>);
 
-      // groupedSavedMenusを直接更新するために、一時的にstateとして管理
       setGroupedSavedMenusData(groupedData);
 
     } catch (error) {
@@ -263,80 +234,15 @@ export const MenuRegistrationSection = ({
     }
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('restaurant_menus')
-        .insert({
-          user_id: user.id,
-          restaurant_name: newRestaurantName.trim(),
-          location: newRestaurantLocation.trim() || null
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error adding restaurant:', error);
-        
-        // エラーメッセージをユーザーフレンドリーに変換
-        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-          // 既存の飲食店を探して自動選択
-          const existingRestaurant = restaurants.find(r => 
-            r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
-          );
-          
-          if (existingRestaurant) {
-            setSelectedRestaurant(existingRestaurant.id);
-            setSelectedSavedMenu(existingRestaurant.id);
-            setShowAddRestaurantForm(false);
-            setNewRestaurantName('');
-            setNewRestaurantLocation('');
-            
-            // メニューデータがある場合は自動で保存
-            if (menuSakeData.length > 0) {
-              try {
-                const newSakes = menuSakeData.map(sake => ({
-                  restaurant_menu_id: existingRestaurant.id,
-                  sake_id: sake.id,
-                  brand_id: sake.brandId || null,
-                  is_available: true,
-                  menu_notes: null
-                }));
-
-                const { error: saveError } = await supabase
-                  .from('restaurant_menu_sakes')
-                  .insert(newSakes);
-
-                if (saveError) throw saveError;
-
-                await fetchSavedMenus();
-                alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店にメニューを保存しました。`);
-              } catch (saveError) {
-                console.error('Error saving to existing restaurant:', saveError);
-                alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しましたが、メニューの保存に失敗しました。`);
-              }
-            } else {
-              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しました。`);
-            }
-          } else {
-            // 念のため再読み込み
-            await fetchRestaurants();
-            await fetchSavedMenus();
-            alert(`「${newRestaurantName}」という名前の飲食店は既に登録されています。\n別の名前を入力するか、既存のメニューを選択してください。`);
-          }
-        } else if (error.code === '23503') {
-          alert('認証エラーが発生しました。ページを再読み込みしてください。');
-        } else {
-          alert('飲食店の追加に失敗しました。しばらく経ってから再度お試しください。');
-        }
-        return;
-      }
+      const data = await restaurantService.createRestaurant({
+        restaurant_name: newRestaurantName.trim(),
+        location: newRestaurantLocation.trim() || undefined
+      });
 
       await fetchRestaurants();
-      await fetchSavedMenus(); // 保存済みメニューを更新
+      await fetchSavedMenus();
       setSelectedRestaurant(data.id);
-      setSelectedSavedMenu(data.id); // セレクトボックスも新規作成した飲食店を選択
+      setSelectedSavedMenu(data.id);
       setShowAddRestaurantForm(false);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -358,19 +264,69 @@ export const MenuRegistrationSection = ({
 
           if (saveError) throw saveError;
 
-          await fetchSavedMenus(); // 保存後にメニューを再読み込み
+          await fetchSavedMenus();
           alert(`飲食店「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒をメニューに保存しました。`);
         } catch (saveError) {
           console.error('Error saving menu to new restaurant:', saveError);
           alert(`飲食店「${newRestaurantName}」は作成されましたが、メニューの保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
         }
       } else {
-        // メニューデータがない場合
         alert(`飲食店「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error adding restaurant:', error);
-      alert('予期しないエラーが発生しました。しばらく経ってから再度お試しください。');
+      
+      // RestaurantServiceのエラーハンドリング
+      const errorWithStatus = error as { statusCode?: number; response?: { error?: string } };
+      if (errorWithStatus.statusCode === 409 || (errorWithStatus.response && errorWithStatus.response.error === 'Restaurant already exists')) {
+        // 既存の飲食店を探して自動選択
+        const existingRestaurant = restaurants.find(r => 
+          r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
+        );
+        
+        if (existingRestaurant) {
+          setSelectedRestaurant(existingRestaurant.id);
+          setSelectedSavedMenu(existingRestaurant.id);
+          setShowAddRestaurantForm(false);
+          setNewRestaurantName('');
+          setNewRestaurantLocation('');
+          
+          // メニューデータがある場合は自動で保存
+          if (menuSakeData.length > 0) {
+            try {
+              const newSakes = menuSakeData.map(sake => ({
+                restaurant_menu_id: existingRestaurant.id,
+                sake_id: sake.id,
+                brand_id: sake.brandId || null,
+                is_available: true,
+                menu_notes: null
+              }));
+
+              const { error: saveError } = await supabase
+                .from('restaurant_menu_sakes')
+                .insert(newSakes);
+
+              if (saveError) throw saveError;
+
+              await fetchSavedMenus();
+              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店にメニューを保存しました。`);
+            } catch (saveError) {
+              console.error('Error saving to existing restaurant:', saveError);
+              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しましたが、メニューの保存に失敗しました。`);
+            }
+          } else {
+            alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しました。`);
+          }
+        } else {
+          await fetchRestaurants();
+          await fetchSavedMenus();
+          alert(`「${newRestaurantName}」という名前の飲食店は既に登録されています。\n別の名前を入力するか、既存のメニューを選択してください。`);
+        }
+      } else if (errorWithStatus.statusCode === 401) {
+        alert('認証エラーが発生しました。ページを再読み込みしてください。');
+      } else {
+        alert('飲食店の追加に失敗しました。しばらく経ってから再度お試しください。');
+      }
     }
   };
 

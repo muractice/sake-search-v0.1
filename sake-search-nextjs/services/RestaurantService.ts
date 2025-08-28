@@ -277,7 +277,7 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店記録を削除
+   * 飲食店記録を削除（既存の /api/restaurant/records エンドポイントを使用）
    */
   async deleteRecord(recordId: string): Promise<void> {
     try {
@@ -285,7 +285,7 @@ export class RestaurantService {
         throw new RestaurantServiceError('記録IDが指定されていません');
       }
 
-      await this.apiClient.delete(`/api/v1/restaurants/records/${recordId}`);
+      await this.apiClient.delete(`/api/restaurant/records?id=${recordId}`);
     } catch (error) {
       if (error instanceof ApiClientError && error.statusCode === 404) {
         return;
@@ -344,17 +344,12 @@ export class RestaurantService {
   }
 
   /**
-   * 最近の飲食店記録を取得
+   * 最近の飲食店記録を取得（既存の /api/restaurant/records エンドポイントを使用）
    */
   async getRecentRecords(limit: number = 10): Promise<RestaurantDrinkingRecordDetail[]> {
     try {
-      const result = await this.getRecords({
-        limit,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      });
-
-      return result.records;
+      const data = await this.apiClient.get<{ records: RestaurantDrinkingRecordDetail[] }>(`/api/restaurant/records?limit=${limit}`) as unknown as { records: RestaurantDrinkingRecordDetail[] };
+      return data.records || [];
     } catch (error) {
       this.handleError('最近の飲食店記録取得に失敗しました', error);
     }
