@@ -42,12 +42,22 @@ export const MenuRegistrationSection = ({
   const [photoResults, setPhotoResults] = useState<string[]>([]);
   const [noSakeDetected, setNoSakeDetected] = useState(false);
   const [restaurants, setRestaurants] = useState<RestaurantMenu[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('selectedRestaurant') || '';
+    }
+    return '';
+  });
   const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
   const [savingToMenu, setSavingToMenu] = useState(false);
-  const [selectedSavedMenu, setSelectedSavedMenu] = useState<string>('');
+  const [selectedSavedMenu, setSelectedSavedMenu] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('selectedSavedMenu') || '';
+    }
+    return '';
+  });
   const [loadingMenu, setLoadingMenu] = useState(false);
   const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
     restaurant_menu_id: string;
@@ -182,8 +192,16 @@ export const MenuRegistrationSection = ({
       const data = await restaurantService.getRestaurants();
       setRestaurants(data || []);
       
-      if (data && data.length > 0 && !selectedRestaurant) {
-        setSelectedRestaurant(data[0].id);
+      // 保存された選択状態が有効かチェックし、無効なら最初の飲食店を選択
+      if (data && data.length > 0) {
+        const savedRestaurantExists = selectedRestaurant && data.some(r => r.id === selectedRestaurant);
+        if (!savedRestaurantExists) {
+          setSelectedRestaurant(data[0].id);
+          // selectedSavedMenuも同期
+          if (!selectedSavedMenu || !data.some(r => r.id === selectedSavedMenu)) {
+            setSelectedSavedMenu(data[0].id);
+          }
+        }
       }
     } catch (error) {
       console.error('Error fetching restaurants:', error);
@@ -194,6 +212,26 @@ export const MenuRegistrationSection = ({
     fetchRestaurants();
     fetchSavedMenus();
   }, []);
+
+  // 保存されたメニューがある場合、初回ロード時に自動で読み込み
+  useEffect(() => {
+    if (selectedSavedMenu && groupedSavedMenusData[selectedSavedMenu] && menuItems.length === 0) {
+      handleLoadSavedMenu(selectedSavedMenu);
+    }
+  }, [selectedSavedMenu, groupedSavedMenusData, menuItems.length]);
+
+  // 選択状態をSessionStorageに保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedRestaurant', selectedRestaurant);
+    }
+  }, [selectedRestaurant]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedSavedMenu', selectedSavedMenu);
+    }
+  }, [selectedSavedMenu]);
 
   // 保存済みメニュー一覧を取得
   const fetchSavedMenus = async () => {
