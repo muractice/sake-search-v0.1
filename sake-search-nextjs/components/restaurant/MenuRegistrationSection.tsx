@@ -239,27 +239,15 @@ export const MenuRegistrationSection = ({
       const data = await restaurantService.getRestaurants();
       if (!data) return;
 
-      // 各飲食店の日本酒件数を取得
-      const restaurantsWithCount = await Promise.all(
-        data.map(async (restaurant) => {
-          const { count } = await supabase
-            .from('restaurant_menu_sakes')
-            .select('*', { count: 'exact' })
-            .eq('restaurant_menu_id', restaurant.id);
-
-          return {
-            restaurant_menu_id: restaurant.id,
-            restaurant_name: restaurant.restaurant_name,
-            location: restaurant.location,
-            restaurant_created_at: restaurant.created_at,
-            count: count || 0
-          };
-        })
-      );
-
-      // groupedData形式に変換
-      const groupedData = restaurantsWithCount.reduce((acc, restaurant) => {
-        acc[restaurant.restaurant_menu_id] = restaurant;
+      // APIが既に件数を含んでいるので、そのまま変換
+      const groupedData = data.reduce((acc, restaurant) => {
+        acc[restaurant.id] = {
+          restaurant_menu_id: restaurant.id,
+          restaurant_name: restaurant.restaurant_name,
+          location: restaurant.location,
+          restaurant_created_at: restaurant.created_at,
+          count: restaurant.sake_count || 0
+        };
         return acc;
       }, {} as Record<string, {
         restaurant_menu_id: string;

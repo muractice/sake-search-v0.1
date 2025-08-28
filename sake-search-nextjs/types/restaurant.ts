@@ -8,6 +8,7 @@ export interface RestaurantMenu {
   notes?: string;
   created_at: string;
   updated_at: string;
+  sake_count?: number; // APIで件数を含めて返す場合
 }
 
 export interface RestaurantMenuSake {

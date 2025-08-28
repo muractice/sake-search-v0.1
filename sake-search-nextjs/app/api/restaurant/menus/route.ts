@@ -57,8 +57,23 @@ export async function GET(request: NextRequest) {
         throw error;
       }
       
-      console.log('[API] 飲食店データ取得成功:', { count: restaurants?.length });
-      const response = NextResponse.json({ restaurants });
+      // 各飲食店の日本酒件数を取得
+      const restaurantsWithCount = await Promise.all(
+        (restaurants || []).map(async (restaurant) => {
+          const { count } = await supabase
+            .from('restaurant_menu_sakes')
+            .select('*', { count: 'exact', head: true })
+            .eq('restaurant_menu_id', restaurant.id);
+          
+          return {
+            ...restaurant,
+            sake_count: count || 0
+          };
+        })
+      );
+      
+      console.log('[API] 飲食店データ取得成功:', { count: restaurantsWithCount?.length });
+      const response = NextResponse.json({ restaurants: restaurantsWithCount });
       console.log('[API] レスポンス作成完了');
       return response;
     }
