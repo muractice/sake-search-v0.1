@@ -224,7 +224,7 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店の詳細情報（日本酒メニュー含む）を取得（既存の /api/restaurant/menus エンドポイントを使用）
+   * 飲食店の詳細情報（日本酒メニュー含む）を取得（/api/restaurant/menus/list エンドポイントを使用）
    */
   async getRestaurantWithSakes(restaurantId: string): Promise<RestaurantMenuWithSakes[]> {
     try {
@@ -233,7 +233,7 @@ export class RestaurantService {
       }
 
       console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', restaurantId);
-      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus?restaurant_id=${restaurantId}&with_sakes=true`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
+      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${restaurantId}`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
       console.log('RestaurantService.getRestaurantWithSakes: 取得結果', data);
       return data.menuWithSakes || [];
     } catch (error) {
