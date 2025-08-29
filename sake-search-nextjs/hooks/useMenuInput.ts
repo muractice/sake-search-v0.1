@@ -33,11 +33,14 @@ export const useMenuInput = () => {
   }, []);
 
   // メニューアイテムを追加
-  const handleMenuItemsAdd = useCallback(async (items: string[]) => {
+  const handleMenuItemsAdd = useCallback(async (items: string[], fromImageProcessing: boolean = false) => {
     if (items.length === 0) return;
 
-    setIsProcessing(true);
-    setProcessingStatus(`${items.length}件の日本酒を検索中...`);
+    // 画像処理からの呼び出しの場合のみ処理状態を表示
+    if (fromImageProcessing) {
+      setIsProcessing(true);
+      setProcessingStatus(`${items.length}件の日本酒を検索中...`);
+    }
 
     try {
       const results = await Promise.all(
@@ -87,17 +90,21 @@ export const useMenuInput = () => {
         message.push(`${notFound.length}件はデータなし`);
       }
       
-      if (message.length > 0) {
+      if (message.length > 0 && fromImageProcessing) {
         setProcessingStatus(message.join('、'));
       }
     } catch (error) {
       console.error('Error processing menu items:', error);
-      setProcessingStatus('エラーが発生しました');
+      if (fromImageProcessing) {
+        setProcessingStatus('エラーが発生しました');
+      }
     } finally {
-      setTimeout(() => {
-        setIsProcessing(false);
-        setProcessingStatus('');
-      }, 2000);
+      if (fromImageProcessing) {
+        setTimeout(() => {
+          setIsProcessing(false);
+          setProcessingStatus('');
+        }, 2000);
+      }
     }
   }, [menuSakeData, menuItems, notFoundItems, searchSake]);
 
@@ -145,7 +152,7 @@ export const useMenuInput = () => {
         
         if (sakeNames.length > 0) {
           setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
-          await handleMenuItemsAdd(sakeNames);
+          await handleMenuItemsAdd(sakeNames, true);
         } else {
           console.warn('日本酒が検出されませんでした。');
           console.warn('備考:', notes);
@@ -187,7 +194,8 @@ export const useMenuInput = () => {
   const handleMenuItemsChange = useCallback((items: string[]) => {
     handleClearAll();
     if (items.length > 0) {
-      handleMenuItemsAdd(items);
+      // メニューロード時はメッセージを表示しない（fromImageProcessing = false）
+      handleMenuItemsAdd(items, false);
     }
   }, [handleClearAll, handleMenuItemsAdd]);
 

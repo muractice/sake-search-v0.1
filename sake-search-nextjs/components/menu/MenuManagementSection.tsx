@@ -131,6 +131,21 @@ export const MenuManagementSection = ({
               onChange={(e) => {
                 const newValue = e.target.value;
                 
+                // 新しいメニューから切り替える場合の確認
+                if (!selectedSavedMenu && menuItems.length > 0 && newValue) {
+                  const shouldProceed = confirm(
+                    '現在の新しいメニューは保存されていません。\n' +
+                    '切り替えると入力した内容が失われます。\n\n' +
+                    '続行しますか？'
+                  );
+                  
+                  if (!shouldProceed) {
+                    // キャンセルされた場合は元に戻す
+                    e.target.value = selectedSavedMenu;
+                    return;
+                  }
+                }
+                
                 if (newValue) {
                   // 既存メニューを選択した場合
                   onLoadSavedMenu(newValue);

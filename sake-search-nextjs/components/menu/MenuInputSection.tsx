@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 
 interface MenuInputSectionProps {
-  onMenuItemsAdd: (items: string[]) => void;
+  onMenuItemsAdd: (items: string[], fromImageProcessing?: boolean) => void;
   onProcessImage: (imageData: string) => void;
   isProcessing: boolean;
   processingStatus?: string;
@@ -22,7 +22,8 @@ export const MenuInputSection = ({
   const handleTextSubmit = () => {
     if (textInput.trim()) {
       const lines = textInput.split('\n').filter(line => line.trim());
-      onMenuItemsAdd(lines);
+      // テキスト入力の場合はfromImageProcessing = false（デフォルト値）
+      onMenuItemsAdd(lines, false);
       setTextInput('');
     }
   };

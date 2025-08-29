@@ -48,14 +48,6 @@ export const MenuSakeListDisplay = ({
     }
   };
 
-  const handleClearAll = () => {
-    if (confirm('すべての日本酒を削除してもよろしいですか？')) {
-      // 親コンポーネントでクリア処理を実行
-      menuSakeData.forEach(sake => onRemoveItem(sake.name));
-      notFoundItems.forEach(item => onRemoveItem(item));
-    }
-  };
-
   const totalItems = menuSakeData.length + notFoundItems.length;
 
   if (totalItems === 0) {
@@ -72,20 +64,14 @@ export const MenuSakeListDisplay = ({
           {selectedSavedMenu && <span className="text-blue-600"> (保存済みメニュー選択中)</span>}
         </span>
         
-        {/* スマホ対応: ボタンを下に配置・横並び */}
+        {/* スマホ対応: ボタンを下に配置 */}
         <div className="flex gap-2">
           <button
             onClick={handleBulkComparison}
             disabled={menuSakeData.length === 0}
-            className="flex-2 text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
+            className="w-full text-sm text-white bg-blue-600 hover:bg-blue-700 px-4 py-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] flex items-center justify-center"
           >
             一括比較
-          </button>
-          <button
-            onClick={handleClearAll}
-            className="flex-1 text-sm text-white bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg min-h-[44px] flex items-center justify-center"
-          >
-            すべて削除
           </button>
         </div>
       </div>
