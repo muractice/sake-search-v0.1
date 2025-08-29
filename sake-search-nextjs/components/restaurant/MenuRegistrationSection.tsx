@@ -9,6 +9,8 @@ import SakeRadarChartSection from '@/components/SakeRadarChartSection';
 import { useScanOCR } from '@/hooks/scan/useScanOCR';
 import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
 import { useRestaurantService } from '@/providers/ServiceProvider';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface MenuRegistrationSectionProps {
   menuItems: string[];
@@ -68,6 +70,8 @@ export const MenuRegistrationSection = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const restaurantService = useRestaurantService();
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
 
   // OCR処理用のフック
   const { processImage, isProcessing: isOCRProcessing, processingStatus: ocrProcessingStatus } = useScanOCR();
@@ -185,7 +189,7 @@ export const MenuRegistrationSection = ({
   };
 
   // メニュー一覧を取得
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
       const data = await restaurantService.getRestaurants();
       setRestaurants(data || []);
@@ -204,35 +208,10 @@ export const MenuRegistrationSection = ({
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  };
-
-  useEffect(() => {
-    fetchRestaurants();
-    fetchSavedMenus();
-  }, []);
-
-  // 保存されたメニューがある場合、初回ロード時に自動で読み込み
-  useEffect(() => {
-    if (selectedSavedMenu && groupedSavedMenusData[selectedSavedMenu] && menuItems.length === 0) {
-      handleLoadSavedMenu(selectedSavedMenu);
-    }
-  }, [selectedSavedMenu, groupedSavedMenusData, menuItems.length]);
-
-  // 選択状態をSessionStorageに保存
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('selectedRestaurant', selectedRestaurant);
-    }
-  }, [selectedRestaurant]);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('selectedSavedMenu', selectedSavedMenu);
-    }
-  }, [selectedSavedMenu]);
+  }, [restaurantService, selectedRestaurant, selectedSavedMenu]);
 
   // 保存済みメニュー一覧を取得
-  const fetchSavedMenus = async () => {
+  const fetchSavedMenus = useCallback(async () => {
     try {
       const data = await restaurantService.getRestaurants();
       if (!data) return;
@@ -260,7 +239,58 @@ export const MenuRegistrationSection = ({
     } catch (error) {
       console.error('Error fetching saved menus:', error);
     }
-  };
+  }, [restaurantService]);
+
+  // 認証状態を取得
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error getting user:', error);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    getUser();
+
+    // 認証状態の変更を監視
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // ユーザーがログインしている場合のみ飲食店データを取得
+    if (user) {
+      fetchRestaurants();
+      fetchSavedMenus();
+    }
+  }, [user, fetchRestaurants, fetchSavedMenus]);
+
+  // 保存されたメニューがある場合、初回ロード時に自動で読み込み
+  useEffect(() => {
+    if (selectedSavedMenu && groupedSavedMenusData[selectedSavedMenu] && menuItems.length === 0) {
+      handleLoadSavedMenu(selectedSavedMenu);
+    }
+  }, [selectedSavedMenu, groupedSavedMenusData, menuItems.length]);
+
+  // 選択状態をSessionStorageに保存
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedRestaurant', selectedRestaurant);
+    }
+  }, [selectedRestaurant]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('selectedSavedMenu', selectedSavedMenu);
+    }
+  }, [selectedSavedMenu]);
 
   // 新しいメニューを追加
   const handleAddRestaurant = async () => {
@@ -543,7 +573,23 @@ export const MenuRegistrationSection = ({
             メニュー管理
           </h2>
 
-          {/* メニュー選択セクション */}
+          {/* 認証チェック */}
+          {isAuthLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+            </div>
+          ) : !user ? (
+            <div className="text-center py-8">
+              <p className="text-gray-600 mb-4">メニューの保存機能を利用するにはログインが必要です</p>
+              <button
+                onClick={() => window.location.href = '/'}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                ログインページへ
+              </button>
+            </div>
+          ) : (
+          /* メニュー選択セクション */
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="mb-3">
               <label className="text-sm font-medium text-gray-700 block mb-2">
@@ -663,6 +709,7 @@ export const MenuRegistrationSection = ({
               </div>
             )}
           </div>
+          )}
 
           {/* メニュー内容は日本酒が登録されている場合のみ表示 */}
           {(menuItems.length > 0) && (

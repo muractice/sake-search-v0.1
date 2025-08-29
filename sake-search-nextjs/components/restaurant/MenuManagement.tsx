@@ -10,6 +10,8 @@ import {
   isRestaurantMenu
 } from '@/types/restaurant';
 import { useRestaurantService } from '@/providers/ServiceProvider';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface MenuManagementProps {
   restaurantMenuSakeData: SakeData[];
@@ -27,6 +29,8 @@ export const MenuManagement = ({
   const [loading, setLoading] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<string>('');
   const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   
   const restaurantService = useRestaurantService();
 
@@ -54,9 +58,35 @@ export const MenuManagement = ({
     }
   }, [restaurantService]);
 
+  // 認証状態を取得
   useEffect(() => {
-    fetchRestaurants();
-  }, [fetchRestaurants]);
+    const getUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error getting user:', error);
+      } finally {
+        setIsAuthLoading(false);
+      }
+    };
+
+    getUser();
+
+    // 認証状態の変更を監視
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // ユーザーがログインしている場合のみ飲食店データを取得
+    if (user) {
+      fetchRestaurants();
+    }
+  }, [user, fetchRestaurants]);
 
   useEffect(() => {
     if (selectedRestaurant) {
@@ -160,10 +190,28 @@ export const MenuManagement = ({
     return acc;
   }, {} as { [key: string]: RestaurantMenuWithSakes });
 
-  if (loading) {
+  if (loading || isAuthLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
+
+  // 未ログイン時の表示
+  if (!user) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-xl font-bold mb-4">🍽️ メニュー管理</h2>
+        <div className="text-center py-8">
+          <p className="text-gray-600 mb-4">メニュー管理機能を利用するにはログインが必要です</p>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            ログインページへ
+          </button>
+        </div>
       </div>
     );
   }
