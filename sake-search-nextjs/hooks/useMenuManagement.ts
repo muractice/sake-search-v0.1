@@ -9,14 +9,25 @@ export const useMenuManagement = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [restaurants, setRestaurants] = useState<RestaurantMenu[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<string>(() => {
+  // 初期表示判定用フラグ
+  const [hasUserSelected, setHasUserSelected] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('hasUserSelected') === 'true';
+    }
+    return false;
+  });
+  
+  const [selectedRestaurant, setSelectedRestaurant] = useState<string>(() => {
+    // ユーザーが選択したことがある場合のみsessionStorageから復元
+    if (typeof window !== 'undefined' && sessionStorage.getItem('hasUserSelected') === 'true') {
       return sessionStorage.getItem('selectedRestaurant') || '';
     }
     return '';
   });
+  
   const [selectedSavedMenu, setSelectedSavedMenu] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
+    // ユーザーが選択したことがある場合のみsessionStorageから復元
+    if (typeof window !== 'undefined' && sessionStorage.getItem('hasUserSelected') === 'true') {
       return sessionStorage.getItem('selectedSavedMenu') || '';
     }
     return '';
@@ -32,6 +43,15 @@ export const useMenuManagement = () => {
   }>>({});
 
   const restaurantService = useRestaurantService();
+
+  // カスタムセッター関数（ユーザーの選択を記録）
+  const updateSelectedSavedMenu = useCallback((menuId: string) => {
+    setSelectedSavedMenu(menuId);
+    setHasUserSelected(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('hasUserSelected', 'true');
+    }
+  }, []);
 
   // 認証状態を取得
   useEffect(() => {
@@ -62,19 +82,20 @@ export const useMenuManagement = () => {
       const data = await restaurantService.getRestaurants();
       setRestaurants(data || []);
       
-      if (data && data.length > 0) {
+      // ユーザーが明示的に選択した場合のみ、選択状態を検証
+      if (hasUserSelected && data && data.length > 0) {
         const savedRestaurantExists = selectedRestaurant && data.some(r => r.id === selectedRestaurant);
         if (!savedRestaurantExists) {
-          setSelectedRestaurant(data[0].id);
-          if (!selectedSavedMenu || !data.some(r => r.id === selectedSavedMenu)) {
-            setSelectedSavedMenu(data[0].id);
-          }
+          // 選択していたメニューが削除された場合は「新しいメニュー」に戻す
+          setSelectedRestaurant('');
+          setSelectedSavedMenu('');
         }
       }
+      // 初期表示または未選択の場合は「新しいメニュー」のまま
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  }, [restaurantService, selectedRestaurant, selectedSavedMenu]);
+  }, [restaurantService, selectedRestaurant, selectedSavedMenu, hasUserSelected]);
 
   // 保存済みメニュー一覧を取得
   const fetchSavedMenus = useCallback(async () => {
@@ -145,7 +166,7 @@ export const useMenuManagement = () => {
         
         if (existingRestaurant) {
           setSelectedRestaurant(existingRestaurant.id);
-          setSelectedSavedMenu(existingRestaurant.id);
+          updateSelectedSavedMenu(existingRestaurant.id);  // カスタムセッターを使用
         }
         
         alert(data.message);
@@ -157,7 +178,7 @@ export const useMenuManagement = () => {
         await fetchRestaurants();
         await fetchSavedMenus();
         setSelectedRestaurant(data.id);
-        setSelectedSavedMenu(data.id);
+        updateSelectedSavedMenu(data.id);  // カスタムセッターを使用
         
         // メニューデータがある場合は自動で保存
         if (menuSakeData.length > 0) {
@@ -233,14 +254,14 @@ export const useMenuManagement = () => {
     try {
       const sakeNames = await restaurantService.getMenuItemNames(restaurantMenuId);
       onMenuItemsChange(sakeNames);
-      setSelectedSavedMenu(restaurantMenuId);
+      updateSelectedSavedMenu(restaurantMenuId);  // カスタムセッターを使用
     } catch (error) {
       console.error('Error loading saved menu:', error);
       alert('保存済みメニューの読み込みに失敗しました');
     } finally {
       setLoadingMenu(false);
     }
-  }, [restaurantService]);
+  }, [restaurantService, updateSelectedSavedMenu]);
 
   return {
     user,
@@ -249,7 +270,7 @@ export const useMenuManagement = () => {
     selectedRestaurant,
     setSelectedRestaurant,
     selectedSavedMenu,
-    setSelectedSavedMenu,
+    setSelectedSavedMenu: updateSelectedSavedMenu,  // カスタムセッターを使用
     savingToMenu,
     loadingMenu,
     groupedSavedMenusData,
