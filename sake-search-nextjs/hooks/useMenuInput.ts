@@ -103,68 +103,65 @@ export const useMenuInput = () => {
 
   // OCR処理
   const handleProcessImage = useCallback(async (imageData: string) => {
+    console.log('=== useMenuInput: OCR処理開始 ===');
+    console.log('useMenuInput: 画像データサイズ:', imageData.length);
+    console.log('useMenuInput: 画像データ先頭100文字:', imageData.substring(0, 100));
+    
     setIsProcessing(true);
     setProcessingStatus('画像を解析中...');
 
     try {
-      // OCR APIを呼び出し
-      const response = await fetch('/api/ocr', {
+      console.log('useMenuInput: Gemini Vision APIを呼び出します...');
+      
+      // Gemini Vision APIを呼び出し
+      const response = await fetch('/api/gemini-vision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imageData })
       });
 
+      console.log('useMenuInput: OCR APIレスポンスステータス:', response.status);
+      console.log('useMenuInput: OCR APIレスポンスOK:', response.ok);
+
       if (!response.ok) {
+        console.error('useMenuInput: OCR APIエラー:', response.status, response.statusText);
         throw new Error('OCR処理に失敗しました');
       }
 
-      const { text } = await response.json();
+      const result = await response.json();
+      console.log('useMenuInput: Gemini Vision APIレスポンス全体:', result);
+      console.log('useMenuInput: result.sake_names:', result.sake_names);
+      console.log('useMenuInput: result.confidence:', result.confidence);
       
-      console.log('OCR結果のテキスト:', text);
+      const { sake_names, text, notes } = result;
       
-      if (text) {
-        // テキストから日本酒名を抽出（改行で分割、スペースや句読点は保持）
-        const lines = text
-          .split(/[\n\r]+/)
-          .map((line: string) => line.trim())
-          .filter((line: string) => line.length > 0);
-        
-        console.log('分割後の行:', lines);
-        
-        // 日本酒っぽい名前をフィルタリング（シンプルな条件に変更）
-        const sakeNames = lines.filter((line: string) => {
-          // 極端に短い行を除外（1文字以下）
-          if (line.length < 2) return false;
-          // 極端に長い行を除外（50文字以上）
-          if (line.length > 50) return false;
-          // 数字のみの行を除外
-          if (/^\d+$/.test(line)) return false;
-          // 価格っぽい行を除外（円、¥、価格、税が含まれる）
-          if (/[\d,]+円|¥[\d,]+|税込|税抜|価格|料金|ml|ML|合計|小計/.test(line)) return false;
-          // 明らかにメニューのヘッダー/フッター（完全一致のみ）
-          if (/^(メニュー|MENU|一覧|リスト|本日のおすすめ|限定)$/.test(line)) return false;
-          // 日本語（ひらがな、カタカナ、漢字）が含まれていることを確認
-          if (!/[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(line)) return false;
-          
-          return true;
-        });
-        
-        console.log('フィルタリング後の日本酒名:', sakeNames);
+      console.log('抽出された日本酒名:', sake_names);
+      console.log('信頼度:', result.confidence);
+      console.log('備考:', notes);
+      
+      if (sake_names && sake_names.length > 0) {
+        // Gemini APIから直接日本酒名が返ってくる
+        const sakeNames = sake_names;
         
         if (sakeNames.length > 0) {
           setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
           await handleMenuItemsAdd(sakeNames);
         } else {
-          console.warn('日本酒が検出されませんでした。元のテキスト:', text);
+          console.warn('日本酒が検出されませんでした。');
+          console.warn('備考:', notes);
           setProcessingStatus('日本酒が検出されませんでした');
         }
       } else {
-        setProcessingStatus('テキストが検出されませんでした');
+        console.warn('Gemini Vision APIから日本酒名が返されませんでした');
+        console.warn('APIレスポンス:', result);
+        setProcessingStatus('日本酒が検出されませんでした');
       }
     } catch (error) {
-      console.error('OCR processing error:', error);
+      console.error('=== OCR処理エラー ===');
+      console.error('エラー詳細:', error);
       setProcessingStatus('画像の処理に失敗しました');
     } finally {
+      console.log('=== OCR処理終了 ===');
       setTimeout(() => {
         setIsProcessing(false);
         setProcessingStatus('');

@@ -40,16 +40,35 @@ export const MenuInputSection = ({
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('=== 画像選択 ===');
     const file = event.target.files?.[0];
+    console.log('選択されたファイル:', file);
+    
     if (file) {
+      console.log('ファイル名:', file.name);
+      console.log('ファイルサイズ:', file.size);
+      console.log('ファイルタイプ:', file.type);
+      
       // FileをBase64データURLに変換
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target?.result as string;
+        console.log('MenuInputSection: Base64変換完了。データサイズ:', dataUrl.length);
+        console.log('MenuInputSection: データ先頭100文字:', dataUrl.substring(0, 100));
+        console.log('MenuInputSection: onProcessImage関数の型:', typeof onProcessImage);
+        
         // 親コンポーネントにOCR処理を委譲
+        console.log('MenuInputSection: onProcessImageを呼び出します...');
         onProcessImage(dataUrl);
+        console.log('MenuInputSection: onProcessImage呼び出し完了');
       };
+      reader.onerror = (error) => {
+        console.error('ファイル読み込みエラー:', error);
+      };
+      console.log('FileReaderで読み込み開始...');
       reader.readAsDataURL(file);
+    } else {
+      console.warn('ファイルが選択されませんでした');
     }
   };
 

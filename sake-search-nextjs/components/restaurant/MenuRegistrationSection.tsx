@@ -28,6 +28,8 @@ export const MenuRegistrationSection = ({
   // カスタムフックを使用してロジックを分離
   const menuInput = useMenuInput();
   const menuManagement = useMenuManagement();
+  
+  console.log('MenuRegistrationSection: handleProcessImage関数の型:', typeof menuInput.handleProcessImage);
 
   const handleAddRestaurant = async (name: string, location: string) => {
     await menuManagement.handleAddRestaurant(name, location, menuInput.menuSakeData);
