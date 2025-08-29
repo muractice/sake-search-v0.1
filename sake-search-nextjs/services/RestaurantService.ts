@@ -75,7 +75,7 @@ export interface RestaurantStatistics {
 
 export interface RecommendationOptions {
   type: 'similarity' | 'pairing' | 'random';
-  restaurantId?: string;
+  menuId?: string;
   dishType?: string;
   limit?: number;
   excludeSakeIds?: string[];
@@ -126,9 +126,24 @@ export class RestaurantService {
     try {
       this.validateRestaurantInput(input);
 
-      const response = await this.apiClient.post<RestaurantMenu>('/api/v1/restaurants', input);
-      return response.data;
+      console.log('[RestaurantService] createRestaurant - 送信データ:', input);
+      const response = await this.apiClient.post<RestaurantMenu>('/api/restaurant/menus', input);
+      console.log('[RestaurantService] createRestaurant - APIレスポンス:', response);
+      
+      // conflictフラグがある場合は特別な処理
+      if (response.conflict) {
+        console.log('[RestaurantService] createRestaurant - 重複検出:', response.message);
+        // conflictの場合も正常なレスポンスとして扱う
+        return {
+          conflict: true,
+          message: response.message
+        } as any;
+      }
+      
+      console.log('[RestaurantService] createRestaurant - response.restaurant:', response.restaurant);
+      return response.restaurant;
     } catch (error) {
+      console.error('[RestaurantService] createRestaurant - エラー:', error);
       this.handleError('飲食店の作成に失敗しました', error);
     }
   }
@@ -136,17 +151,17 @@ export class RestaurantService {
   /**
    * 飲食店メニューを更新
    */
-  async updateRestaurant(restaurantId: string, input: Partial<RestaurantMenuFormData>): Promise<RestaurantMenu> {
+  async updateRestaurant(menuId: string, input: Partial<RestaurantMenuFormData>): Promise<RestaurantMenu> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       if (input.restaurant_name !== undefined) {
         this.validateRestaurantInput(input as RestaurantMenuFormData);
       }
 
-      const response = await this.apiClient.put<RestaurantMenu>(`/api/v1/restaurants/${restaurantId}`, input);
+      const response = await this.apiClient.put<RestaurantMenu>(`/api/restaurant/menus/${menuId}`, input);
       return response.data;
     } catch (error) {
       this.handleError('飲食店の更新に失敗しました', error);
@@ -156,13 +171,13 @@ export class RestaurantService {
   /**
    * 飲食店メニューを削除
    */
-  async deleteRestaurant(restaurantId: string): Promise<void> {
+  async deleteRestaurant(menuId: string): Promise<void> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
-      await this.apiClient.delete(`/api/v1/restaurants/${restaurantId}`);
+      await this.apiClient.delete(`/api/restaurant/menus/${menuId}`);
     } catch (error) {
       if (error instanceof ApiClientError && error.statusCode === 404) {
         return;
@@ -174,15 +189,15 @@ export class RestaurantService {
   /**
    * 飲食店のメニューに日本酒を追加
    */
-  async addSakeToMenu(restaurantId: string, input: RestaurantMenuSakeFormData): Promise<RestaurantMenuSake> {
+  async addSakeToMenu(menuId: string, input: RestaurantMenuSakeFormData): Promise<RestaurantMenuSake> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       this.validateMenuSakeInput(input);
 
-      const response = await this.apiClient.post<RestaurantMenuSake>(`/api/v1/restaurants/${restaurantId}/sakes`, input);
+      const response = await this.apiClient.post<RestaurantMenuSake>(`/api/restaurant/menus/${menuId}/sakes`, input);
       return response.data;
     } catch (error) {
       this.handleError('メニューへの日本酒追加に失敗しました', error);
@@ -192,10 +207,10 @@ export class RestaurantService {
   /**
    * 飲食店のメニューに複数の日本酒を一括追加
    */
-  async addMultipleSakesToMenu(restaurantId: string, sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]): Promise<RestaurantMenuSake[]> {
+  async addMultipleSakesToMenu(menuId: string, sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]): Promise<RestaurantMenuSake[]> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       if (!Array.isArray(sakes) || sakes.length === 0) {
@@ -203,7 +218,7 @@ export class RestaurantService {
       }
 
       const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
-        restaurant_menu_id: restaurantId,
+        restaurant_menu_id: menuId,
         sakes
       }) as unknown as { menuSakes: RestaurantMenuSake[] };
 
@@ -250,14 +265,14 @@ export class RestaurantService {
   /**
    * 単一の日本酒をメニューに追加
    */
-  async addSingleSakeToMenu(restaurantId: string, sakeData: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }): Promise<void> {
+  async addSingleSakeToMenu(menuId: string, sakeData: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }): Promise<void> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       await this.apiClient.post('/api/restaurant/menus/list', {
-        restaurant_menu_id: restaurantId,
+        restaurant_menu_id: menuId,
         sakes: [sakeData]
       });
     } catch (error) {
@@ -268,13 +283,13 @@ export class RestaurantService {
   /**
    * 保存済みメニューのアイテムを取得してメニュー名リストとして返す
    */
-  async getMenuItemNames(restaurantId: string): Promise<string[]> {
+  async getMenuItemNames(menuId: string): Promise<string[]> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
-      const menuWithSakes = await this.getRestaurantWithSakes(restaurantId);
+      const menuWithSakes = await this.getRestaurantWithSakes(menuId);
       const sakeNames: string[] = [];
       
       for (const item of menuWithSakes) {
@@ -294,12 +309,12 @@ export class RestaurantService {
   }
 
   /**
-   * 日本酒名に基づいてメニューから日本酒を削除
+   * 日本酒IDに基づいてメニューから日本酒を削除
    */
-  async removeSakeFromMenuByName(restaurantId: string, sakeName: string, sakeIds: string[]): Promise<void> {
+  async removeSakeFromMenuBySakeId(menuId: string, sakeName: string, sakeIds: string[]): Promise<void> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       if (!sakeName || sakeIds.length === 0) {
@@ -308,7 +323,7 @@ export class RestaurantService {
 
       // 複数の日本酒IDがある場合に対応するため、各IDで削除を実行
       const deletePromises = sakeIds.map(sakeId => 
-        this.apiClient.delete(`/api/restaurant/menus/list?id=${sakeId}`)
+        this.apiClient.delete(`/api/restaurant/${menuId}/menus/${sakeId}`)
       );
 
       await Promise.allSettled(deletePromises);
@@ -320,14 +335,14 @@ export class RestaurantService {
   /**
    * 飲食店の詳細情報（日本酒メニュー含む）を取得（/api/restaurant/menus/list エンドポイントを使用）
    */
-  async getRestaurantWithSakes(restaurantId: string): Promise<RestaurantMenuWithSakes[]> {
+  async getRestaurantWithSakes(menuId: string): Promise<RestaurantMenuWithSakes[]> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
-      console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', restaurantId);
-      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${restaurantId}`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
+      console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', menuId);
+      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${menuId}`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
       console.log('RestaurantService.getRestaurantWithSakes: 取得結果', data);
       return data.menuWithSakes || [];
     } catch (error) {
@@ -452,14 +467,14 @@ export class RestaurantService {
   /**
    * 特定飲食店の記録を取得
    */
-  async getRecordsByRestaurant(restaurantId: string): Promise<RestaurantDrinkingRecordDetail[]> {
+  async getRecordsByRestaurant(menuId: string): Promise<RestaurantDrinkingRecordDetail[]> {
     try {
-      if (!restaurantId) {
-        throw new RestaurantServiceError('飲食店IDが指定されていません');
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
       const result = await this.getRecords({
-        filters: { restaurantName: restaurantId }, // TODO: 実装ではrestaurant_idでフィルター
+        filters: { restaurantName: menuId }, // TODO: 実装ではmenu_idでフィルター
         limit: 100,
       });
 
@@ -612,6 +627,10 @@ export class RestaurantService {
           throw new RestaurantServiceError('この操作の権限がありません');
         case 404:
           throw new RestaurantServiceError('指定された飲食店が見つかりません');
+        case 409:
+          // 409エラーは現在使用されていない（conflictフラグで処理）
+          const apiErrorMessage = error.response?.error || 'リソースが競合しています';
+          throw new RestaurantServiceError(apiErrorMessage);
         case 429:
           throw new RestaurantServiceError('リクエストが多すぎます。しばらく待ってから再試行してください');
         case 500:

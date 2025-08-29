@@ -23,7 +23,7 @@ export const RecordsTab = () => {
     if (newRecordType === 'sake') {
       setViewMode('map'); // 日本酒記録は「マップ」がデフォルト
     } else {
-      setViewMode('management'); // 飲食店記録は「メニュー管理」がデフォルト
+      setViewMode('management'); // 飲食店管理は「メニュー管理」がデフォルト
     }
   };
 
@@ -117,7 +117,7 @@ export const RecordsTab = () => {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                🍽️ 飲食店記録
+                🍽️ 飲食店管理
               </button>
             </div>
           </div>
@@ -159,7 +159,7 @@ export const RecordsTab = () => {
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                 >
-                  🍽️ メニュー管理
+                  🍽️ 飲食店管理
                 </button>
                 <button
                   onClick={() => setViewMode('timeline')}

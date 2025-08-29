@@ -105,112 +105,33 @@ export async function POST(request: NextRequest) {
       restaurant: data 
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating menu items:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: NextRequest) {
-  try {
-    const supabase = createRouteHandlerClient({ 
-      cookies
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user || authError) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    // 一意制約違反エラー（重複する飲食店名）- 正常なビジネスフローとして扱う
+    if (error?.code === '23505' && error?.message?.includes('restaurant_menus_user_id_restaurant_name_key')) {
+      return NextResponse.json({ 
+        success: true,
+        conflict: true,
+        message: 'この飲食店名は既に登録されています。'
+      });
     }
-
-    const body = await request.json();
-    const { id, restaurant_name, location, notes } = body;
-
-    if (!id) {
+    
+    // その他のPostgreSQLエラー
+    if (error?.code && typeof error.code === 'string') {
       return NextResponse.json(
-        { error: 'Restaurant ID is required' },
+        { error: 'データベースエラーが発生しました。' },
         { status: 400 }
       );
     }
-
-    const { data, error } = await supabase
-      .from('restaurant_menus')
-      .update({
-        restaurant_name,
-        location,
-        notes,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    return NextResponse.json({ 
-      message: 'Restaurant updated successfully',
-      restaurant: data 
-    });
-
-  } catch (error) {
-    console.error('Error updating:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = createRouteHandlerClient({ 
-      cookies
-    });
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!user || authError) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Restaurant ID is required' },
-        { status: 400 }
-      );
-    }
-
-    // 飲食店を削除（カスケードで関連データも削除される）
-    const { error } = await supabase
-      .from('restaurant_menus')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
-
-    if (error) throw error;
-
-    return NextResponse.json({ 
-      message: 'Restaurant deleted successfully'
-    });
-
-  } catch (error) {
-    console.error('Error deleting:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
 }
+
+// PUTメソッドは /api/restaurant/menus/[menu_id]/route.ts に移動しました
+
+// DELETEメソッドは /api/restaurant/menus/[menu_id]/route.ts に移動しました

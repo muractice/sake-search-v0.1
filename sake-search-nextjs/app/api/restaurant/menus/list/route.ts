@@ -67,14 +67,18 @@ export async function GET(request: NextRequest) {
  * 飲食店メニューに日本酒を追加
  */
 export async function POST(request: NextRequest) {
+  console.log('[API] POST /api/restaurant/menus/list - 開始');
+  
   try {
     const supabase = createRouteHandlerClient({ 
       cookies
     });
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
+    console.log('[API] 認証結果:', { user: user?.id, authError });
     
     if (!user || authError) {
+      console.log('[API] 認証エラー - 401を返却');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
@@ -82,9 +86,13 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('[API] リクエストボディ:', JSON.stringify(body, null, 2));
+    
     const { restaurant_menu_id, sakes } = body;
+    console.log('[API] パース結果:', { restaurant_menu_id, sakes });
 
     if (!restaurant_menu_id || !Array.isArray(sakes)) {
+      console.log('[API] バリデーションエラー - 400を返却:', { restaurant_menu_id, isArray: Array.isArray(sakes) });
       return NextResponse.json(
         { error: 'restaurant_menu_id and sakes array are required' },
         { status: 400 }
@@ -92,13 +100,17 @@ export async function POST(request: NextRequest) {
     }
 
     // 権限チェック：該当飲食店がユーザーのものか確認
+    console.log('[API] 権限チェック開始 - restaurant_menu_id:', restaurant_menu_id);
     const { data: restaurant, error: checkError } = await supabase
       .from('restaurant_menus')
       .select('user_id')
       .eq('id', restaurant_menu_id)
       .single();
 
+    console.log('[API] 権限チェック結果:', { restaurant, checkError });
+
     if (checkError || !restaurant || restaurant.user_id !== user.id) {
+      console.log('[API] 権限エラー - 403を返却:', { checkError, restaurant, userId: user.id });
       return NextResponse.json(
         { error: 'Restaurant not found or unauthorized' },
         { status: 403 }
@@ -112,18 +124,27 @@ export async function POST(request: NextRequest) {
       is_available: sake.is_available !== false,
       menu_notes: sake.menu_notes || null
     }));
+    console.log('[API] Supabaseに挿入するデータ:', JSON.stringify(sakesWithRestaurantId, null, 2));
 
     const { data, error } = await supabase
       .from('restaurant_menu_sakes')
       .insert(sakesWithRestaurantId)
       .select();
 
-    if (error) throw error;
+    console.log('[API] Supabase挿入結果:', { data, error });
 
-    return NextResponse.json({ 
+    if (error) {
+      console.log('[API] Supabaseエラー - throwします:', error);
+      throw error;
+    }
+
+    const result = { 
       message: 'Sakes added to menu successfully',
       menuSakes: data 
-    });
+    };
+    console.log('[API] レスポンス:', JSON.stringify(result, null, 2));
+
+    return NextResponse.json(result);
 
   } catch (error) {
     console.error('Error adding sakes to menu:', error);

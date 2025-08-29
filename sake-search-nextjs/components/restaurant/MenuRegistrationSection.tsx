@@ -184,13 +184,13 @@ export const MenuRegistrationSection = ({
     onMenuItemsChange(menuItems.filter(menuItem => menuItem !== item));
   };
 
-  // 飲食店一覧を取得
+  // メニュー一覧を取得
   const fetchRestaurants = async () => {
     try {
       const data = await restaurantService.getRestaurants();
       setRestaurants(data || []);
       
-      // 保存された選択状態が有効かチェックし、無効なら最初の飲食店を選択
+      // 保存された選択状態が有効かチェックし、無効なら最初のメニューを選択
       if (data && data.length > 0) {
         const savedRestaurantExists = selectedRestaurant && data.some(r => r.id === selectedRestaurant);
         if (!savedRestaurantExists) {
@@ -262,7 +262,7 @@ export const MenuRegistrationSection = ({
     }
   };
 
-  // 新しい飲食店を追加
+  // 新しいメニューを追加
   const handleAddRestaurant = async () => {
     if (!newRestaurantName.trim()) {
       alert('飲食店名を入力してください');
@@ -270,11 +270,42 @@ export const MenuRegistrationSection = ({
     }
 
     try {
-      const data = await restaurantService.createRestaurant({
+      console.log('[MenuRegistration] handleAddRestaurant - 開始');
+      const restaurantData = {
         restaurant_name: newRestaurantName.trim(),
         location: newRestaurantLocation.trim() || undefined
-      });
-
+      };
+      console.log('[MenuRegistration] handleAddRestaurant - 送信データ:', restaurantData);
+      
+      const data = await restaurantService.createRestaurant(restaurantData);
+      console.log('[MenuRegistration] handleAddRestaurant - 作成結果:', data);
+      
+      // conflict（重複）の場合の処理
+      if (data.conflict) {
+        console.log('[MenuRegistration] handleAddRestaurant - 重複検出:', data.message);
+        await fetchRestaurants();
+        await fetchSavedMenus();
+        
+        // 既存のメニューを探して選択
+        const existingRestaurant = restaurants.find(r => 
+          r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
+        );
+        
+        if (existingRestaurant) {
+          setSelectedRestaurant(existingRestaurant.id);
+          setSelectedSavedMenu(existingRestaurant.id);
+        }
+        
+        setShowAddRestaurantForm(false);
+        setNewRestaurantName('');
+        setNewRestaurantLocation('');
+        
+        alert(data.message);
+        return;
+      }
+      
+      // 正常作成の場合
+      console.log('[MenuRegistration] handleAddRestaurant - data.id:', data?.id);
       await fetchRestaurants();
       await fetchSavedMenus();
       setSelectedRestaurant(data.id);
@@ -296,70 +327,37 @@ export const MenuRegistrationSection = ({
           await restaurantService.addMultipleSakesToMenu(data.id, sakes);
 
           await fetchSavedMenus();
-          alert(`飲食店「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒をメニューに保存しました。`);
+          alert(`メニュー「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒を保存しました。`);
         } catch (saveError) {
           console.error('Error saving menu to new restaurant:', saveError);
-          alert(`飲食店「${newRestaurantName}」は作成されましたが、メニューの保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
+          alert(`メニュー「${newRestaurantName}」は作成されましたが、日本酒の保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
         }
       } else {
-        alert(`飲食店「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
+        alert(`メニュー「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
       }
     } catch (error: unknown) {
-      console.error('Error adding restaurant:', error);
+      console.error('[MenuRegistration] handleAddRestaurant - エラー:', error);
       
-      // RestaurantServiceのエラーハンドリング
+      // RestaurantServiceErrorの場合、メッセージを直接使用
+      if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+        alert(error.message);
+        return;
+      }
+      
+      // その他のエラーハンドリング
       const errorWithStatus = error as { statusCode?: number; response?: { error?: string } };
-      if (errorWithStatus.statusCode === 409 || (errorWithStatus.response && errorWithStatus.response.error === 'Restaurant already exists')) {
-        // 既存の飲食店を探して自動選択
-        const existingRestaurant = restaurants.find(r => 
-          r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
-        );
-        
-        if (existingRestaurant) {
-          setSelectedRestaurant(existingRestaurant.id);
-          setSelectedSavedMenu(existingRestaurant.id);
-          setShowAddRestaurantForm(false);
-          setNewRestaurantName('');
-          setNewRestaurantLocation('');
-          
-          // メニューデータがある場合は自動で保存
-          if (menuSakeData.length > 0) {
-            try {
-              const sakes = menuSakeData.map(sake => ({
-                sake_id: sake.id,
-                brand_id: sake.brandId || null,
-                is_available: true,
-                menu_notes: null
-              }));
-
-              await restaurantService.addMultipleSakesToMenu(existingRestaurant.id, sakes);
-
-              await fetchSavedMenus();
-              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店にメニューを保存しました。`);
-            } catch (saveError) {
-              console.error('Error saving to existing restaurant:', saveError);
-              alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しましたが、メニューの保存に失敗しました。`);
-            }
-          } else {
-            alert(`「${newRestaurantName}」は既に登録されています。\nこの飲食店を選択しました。`);
-          }
-        } else {
-          await fetchRestaurants();
-          await fetchSavedMenus();
-          alert(`「${newRestaurantName}」という名前の飲食店は既に登録されています。\n別の名前を入力するか、既存のメニューを選択してください。`);
-        }
-      } else if (errorWithStatus.statusCode === 401) {
+      if (errorWithStatus.statusCode === 401) {
         alert('認証エラーが発生しました。ページを再読み込みしてください。');
       } else {
-        alert('飲食店の追加に失敗しました。しばらく経ってから再度お試しください。');
+        alert('メニューの追加に失敗しました。しばらく経ってから再度お試しください。');
       }
     }
   };
 
-  // メニューを飲食店に保存
+  // 日本酒をメニューに保存
   const handleSaveToRestaurant = async () => {
     if (!selectedRestaurant) {
-      alert('飲食店を選択してください');
+      alert('メニューを選択してください');
       return;
     }
 
@@ -379,7 +377,7 @@ export const MenuRegistrationSection = ({
 
       await restaurantService.addMultipleSakesToMenu(selectedRestaurant, sakes);
 
-      alert(`${sakes.length}件の日本酒を飲食店メニューに保存しました`);
+      alert(`${sakes.length}件の日本酒をメニューに保存しました`);
       await fetchSavedMenus(); // 保存済みメニューを更新
     } catch (error) {
       console.error('Error saving to restaurant menu:', error);
@@ -435,7 +433,7 @@ export const MenuRegistrationSection = ({
 
     try {
       const sakeIds = menuSakeData.filter(sake => sake.name === sakeName).map(sake => sake.id);
-      await restaurantService.removeSakeFromMenuByName(selectedSavedMenu, sakeName, sakeIds);
+      await restaurantService.removeSakeFromMenuBySakeId(selectedSavedMenu, sakeName, sakeIds);
       await fetchSavedMenus();
     } catch (error) {
       console.error('Error removing item from saved menu:', error);
@@ -536,18 +534,18 @@ export const MenuRegistrationSection = ({
         </div>
       </div>
 
-      {/* 飲食店のメニュー */}
+      {/* メニュー管理 */}
       <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
             <span className="mr-2">🍽️</span>
-            飲食店のメニュー
+            メニュー管理
           </h2>
 
-          {/* 飲食店選択セクション */}
+          {/* メニュー選択セクション */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="mb-3">
               <label className="text-sm font-medium text-gray-700 block mb-2">
-                メニューを保存する飲食店:
+                保存するメニュー:
               </label>
             </div>
             
@@ -647,7 +645,7 @@ export const MenuRegistrationSection = ({
                     onClick={handleAddRestaurant}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
                   >
-                    作成
+                    追加
                   </button>
                   <button
                     onClick={() => {

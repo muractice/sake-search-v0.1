@@ -72,14 +72,14 @@ export const MenuManagement = ({
       onMenuUpdate?.();
     } catch (error) {
       console.error('Error adding restaurant:', error);
-      alert('飲食店の追加に失敗しました');
+      alert('メニューの追加に失敗しました');
     }
   };
 
   // スキャン結果から一括で日本酒をメニューに追加
   const handleBulkAddSakes = async () => {
     if (!selectedRestaurant || restaurantMenuSakeData.length === 0) {
-      alert('飲食店を選択し、追加する日本酒があることを確認してください');
+      alert('メニューを選択し、追加する日本酒があることを確認してください');
       return;
     }
 
@@ -162,7 +162,7 @@ export const MenuManagement = ({
             onClick={() => setShowAddRestaurantForm(!showAddRestaurantForm)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
-            ➕ 飲食店を追加
+            ➕ 追加
           </button>
         </div>
 
@@ -179,7 +179,7 @@ export const MenuManagement = ({
         {restaurants.length > 0 && (
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              飲食店を選択:
+              メニューを選択:
             </label>
             <select
               value={selectedRestaurant}
@@ -241,7 +241,7 @@ export const MenuManagement = ({
           </div>
         ) : (
           <p className="text-gray-500 text-center py-8">
-            飲食店を選択または追加してください
+            メニューを選択または追加してください
           </p>
         )}
       </div>
