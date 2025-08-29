@@ -107,7 +107,7 @@ export const useMenuInput = () => {
     setProcessingStatus('画像を解析中...');
 
     try {
-      // OCR APIを呼び出し（実装は別途必要）
+      // OCR APIを呼び出し
       const response = await fetch('/api/ocr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,13 +118,33 @@ export const useMenuInput = () => {
         throw new Error('OCR処理に失敗しました');
       }
 
-      const { sakeNames } = await response.json();
+      const { text } = await response.json();
       
-      if (sakeNames && sakeNames.length > 0) {
-        setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
-        await handleMenuItemsAdd(sakeNames);
+      if (text) {
+        // テキストから日本酒名を抽出（改行で分割）
+        const lines = text.split('\n')
+          .map((line: string) => line.trim())
+          .filter((line: string) => line.length > 0);
+        
+        // 日本酒っぽい名前をフィルタリング（簡易的な実装）
+        const sakeNames = lines.filter((line: string) => {
+          // 数字だけ、記号だけ、極端に短い/長い行を除外
+          if (line.length < 2 || line.length > 30) return false;
+          if (/^\d+$/.test(line)) return false;
+          if (/^[!-\/:-@\[-`{-~]+$/.test(line)) return false;
+          // 価格っぽい行を除外
+          if (/¥|円|税/.test(line)) return false;
+          return true;
+        });
+        
+        if (sakeNames.length > 0) {
+          setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
+          await handleMenuItemsAdd(sakeNames);
+        } else {
+          setProcessingStatus('日本酒が検出されませんでした');
+        }
       } else {
-        setProcessingStatus('日本酒が検出されませんでした');
+        setProcessingStatus('テキストが検出されませんでした');
       }
     } catch (error) {
       console.error('OCR processing error:', error);

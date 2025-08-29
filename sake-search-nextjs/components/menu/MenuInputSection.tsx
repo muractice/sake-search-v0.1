@@ -4,12 +4,14 @@ import { useState, useRef } from 'react';
 
 interface MenuInputSectionProps {
   onMenuItemsAdd: (items: string[]) => void;
+  onProcessImage: (imageData: string) => void;
   isProcessing: boolean;
   processingStatus?: string;
 }
 
 export const MenuInputSection = ({
   onMenuItemsAdd,
+  onProcessImage,
   isProcessing,
   processingStatus
 }: MenuInputSectionProps) => {
@@ -40,9 +42,14 @@ export const MenuInputSection = ({
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // OCR処理は親コンポーネントに委譲
-      // TODO: OCR処理を実装する場合は、onProcessImage propsを追加
-      console.log('File selected:', file.name);
+      // FileをBase64データURLに変換
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        // 親コンポーネントにOCR処理を委譲
+        onProcessImage(dataUrl);
+      };
+      reader.readAsDataURL(file);
     }
   };
 

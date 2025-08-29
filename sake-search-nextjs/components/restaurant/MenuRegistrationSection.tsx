@@ -46,6 +46,7 @@ export const MenuRegistrationSection = ({
       {/* メニュー登録セクション */}
       <MenuInputSection 
         onMenuItemsAdd={menuInput.handleMenuItemsAdd}
+        onProcessImage={menuInput.handleProcessImage}
         isProcessing={menuInput.isProcessing}
         processingStatus={menuInput.processingStatus}
       />
