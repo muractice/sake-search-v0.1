@@ -281,8 +281,8 @@ export const MenuRegistrationSection = ({
       console.log('[MenuRegistration] handleAddRestaurant - 作成結果:', data);
       
       // conflict（重複）の場合の処理
-      if (data.conflict) {
-        console.log('[MenuRegistration] handleAddRestaurant - 重複検出:', data.message);
+      if ((data as any).conflict) {
+        console.log('[MenuRegistration] handleAddRestaurant - 重複検出:', (data as any).message);
         await fetchRestaurants();
         await fetchSavedMenus();
         
@@ -300,7 +300,7 @@ export const MenuRegistrationSection = ({
         setNewRestaurantName('');
         setNewRestaurantLocation('');
         
-        alert(data.message);
+        alert((data as any).message);
         return;
       }
       
