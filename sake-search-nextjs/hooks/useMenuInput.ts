@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react';
-import { searchSake } from '@/lib/sake-api';
 import { SakeData } from '@/types/sake';
+
+interface SearchResult {
+  success: boolean;
+  results: SakeData[];
+}
 
 export const useMenuInput = () => {
   const [menuItems, setMenuItems] = useState<string[]>([]);
@@ -8,6 +12,25 @@ export const useMenuInput = () => {
   const [notFoundItems, setNotFoundItems] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>('');
+
+  // 日本酒を検索する関数（useSearchフックと同じロジック）
+  const searchSake = useCallback(async (query: string): Promise<SakeData | null> => {
+    if (!query.trim()) return null;
+
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+      const data: SearchResult = await response.json();
+      
+      if (data.success && data.results.length > 0) {
+        return data.results[0];
+      } else {
+        return null;
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      return null;
+    }
+  }, []);
 
   // メニューアイテムを追加
   const handleMenuItemsAdd = useCallback(async (items: string[]) => {
@@ -32,11 +55,11 @@ export const useMenuInput = () => {
       const notFound: string[] = [];
 
       results.forEach(({ item, data }) => {
-        if (data && data.length > 0) {
+        if (data) {
           // 既に追加済みでないか確認
-          const existingSake = menuSakeData.find(s => s.id === data[0].id);
+          const existingSake = menuSakeData.find(s => s.id === data.id);
           if (!existingSake) {
-            foundSakes.push(data[0]);
+            foundSakes.push(data);
           }
         } else {
           // 既にnotFoundに追加済みでないか確認
@@ -76,7 +99,7 @@ export const useMenuInput = () => {
         setProcessingStatus('');
       }, 2000);
     }
-  }, [menuSakeData, menuItems, notFoundItems]);
+  }, [menuSakeData, menuItems, notFoundItems, searchSake]);
 
   // OCR処理
   const handleProcessImage = useCallback(async (imageData: string) => {
