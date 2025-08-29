@@ -37,6 +37,10 @@ export const MenuRegistrationSection = ({
     await menuManagement.handleLoadSavedMenu(menuId, menuInput.handleMenuItemsChange);
   };
 
+  const handleSaveToRestaurant = async () => {
+    await menuManagement.handleSaveToRestaurant(menuInput.menuSakeData);
+  };
+
   return (
     <div className="space-y-6">
       {/* メニュー登録セクション */}
@@ -52,13 +56,11 @@ export const MenuRegistrationSection = ({
         isAuthLoading={menuManagement.isAuthLoading}
         menuItems={menuInput.menuItems}
         menuSakeData={menuInput.menuSakeData}
-        notFoundItems={menuInput.notFoundItems}
         selectedSavedMenu={menuManagement.selectedSavedMenu}
         setSelectedSavedMenu={menuManagement.setSelectedSavedMenu}
         selectedRestaurant={menuManagement.selectedRestaurant}
         setSelectedRestaurant={menuManagement.setSelectedRestaurant}
-        restaurants={menuManagement.restaurants}
-        onSaveToRestaurant={menuManagement.handleSaveToRestaurant}
+        onSaveToRestaurant={handleSaveToRestaurant}
         onAddRestaurant={handleAddRestaurant}
         onLoadSavedMenu={handleLoadSavedMenu}
         onMenuItemsChange={menuInput.handleMenuItemsChange}

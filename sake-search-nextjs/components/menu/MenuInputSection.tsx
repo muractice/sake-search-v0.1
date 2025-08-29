@@ -14,8 +14,6 @@ export const MenuInputSection = ({
   processingStatus
 }: MenuInputSectionProps) => {
   const [textInput, setTextInput] = useState('');
-  const [photoResults, setPhotoResults] = useState<string[]>([]);
-  const [noSakeDetected, setNoSakeDetected] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -43,13 +41,8 @@ export const MenuInputSection = ({
     const file = event.target.files?.[0];
     if (file) {
       // OCR処理は親コンポーネントに委譲
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        // 親コンポーネントでOCR処理を実行
-        // onProcessImage(dataUrl);
-      };
-      reader.readAsDataURL(file);
+      // TODO: OCR処理を実装する場合は、onProcessImage propsを追加
+      console.log('File selected:', file.name);
     }
   };
 
@@ -122,22 +115,6 @@ export const MenuInputSection = ({
           </div>
         )}
 
-        {/* 結果表示 */}
-        {photoResults.length > 0 && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p className="text-green-700 font-semibold">
-              {photoResults.length}件の日本酒を検出しました！
-            </p>
-          </div>
-        )}
-
-        {noSakeDetected && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-700">
-              日本酒が検出されませんでした。もう一度お試しください。
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

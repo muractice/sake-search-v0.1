@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
-import { RestaurantMenu } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
 
 interface MenuManagementSectionProps {
@@ -10,12 +9,10 @@ interface MenuManagementSectionProps {
   isAuthLoading: boolean;
   menuItems: string[];
   menuSakeData: SakeData[];
-  notFoundItems: string[];
   selectedSavedMenu: string;
   setSelectedSavedMenu: (id: string) => void;
   selectedRestaurant: string;
   setSelectedRestaurant: (id: string) => void;
-  restaurants: RestaurantMenu[];
   onSaveToRestaurant: () => Promise<void>;
   onAddRestaurant: (name: string, location: string) => Promise<void>;
   onLoadSavedMenu: (menuId: string) => Promise<void>;
@@ -36,12 +33,10 @@ export const MenuManagementSection = ({
   isAuthLoading,
   menuItems,
   menuSakeData,
-  notFoundItems,
   selectedSavedMenu,
   setSelectedSavedMenu,
   selectedRestaurant,
   setSelectedRestaurant,
-  restaurants,
   onSaveToRestaurant,
   onAddRestaurant,
   onLoadSavedMenu,

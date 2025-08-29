@@ -115,17 +115,12 @@ export const RestaurantTab = ({
       {/* コンテンツ表示 */}
       {activeSegment === 'menu' ? (
         <MenuRegistrationSection
-          menuItems={restaurantMenuItems}
-          onMenuItemsChange={onRestaurantMenuItemsChange}
-          menuSakeData={restaurantMenuSakeData}
-          notFoundItems={menuItemsNotFound}
           comparisonList={comparisonList}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onClearComparison={onClearComparison}
           onSelectSake={onSelectSake}
           onChartClick={onChartClick}
-          onSearch={onSearch}
         />
       ) : (
         <RestaurantRecommendations
