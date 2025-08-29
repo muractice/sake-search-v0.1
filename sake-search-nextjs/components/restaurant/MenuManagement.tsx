@@ -5,7 +5,9 @@ import { SakeData } from '@/types/sake';
 import { 
   RestaurantMenu, 
   RestaurantMenuWithSakes,
-  RestaurantMenuFormData 
+  RestaurantMenuFormData,
+  isConflictResponse,
+  isRestaurantMenu
 } from '@/types/restaurant';
 import { useRestaurantService } from '@/providers/ServiceProvider';
 
@@ -67,7 +69,21 @@ export const MenuManagement = ({
     try {
       const data = await restaurantService.createRestaurant(formData);
       await fetchRestaurants();
-      setSelectedRestaurant(data.id);
+      
+      // 正常に作成された場合のみidを参照
+      if (isRestaurantMenu(data)) {
+        setSelectedRestaurant(data.id);
+      } else if (isConflictResponse(data)) {
+        // 重複の場合は既存メニューを探して選択
+        const existingRestaurant = restaurants.find(r => 
+          r.restaurant_name.toLowerCase() === formData.restaurant_name.toLowerCase()
+        );
+        if (existingRestaurant) {
+          setSelectedRestaurant(existingRestaurant.id);
+        }
+        alert(data.message);
+      }
+      
       setShowAddRestaurantForm(false);
       onMenuUpdate?.();
     } catch (error) {

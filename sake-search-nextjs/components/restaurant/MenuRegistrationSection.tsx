@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { SakeData } from '@/types/sake';
-import { RestaurantMenu } from '@/types/restaurant';
+import { RestaurantMenu, isConflictResponse, isRestaurantMenu } from '@/types/restaurant';
 import ComparisonPanel from '@/components/ComparisonPanel';
 import TasteChart from '@/components/TasteChart';
 import SakeRadarChartSection from '@/components/SakeRadarChartSection';
@@ -281,8 +281,8 @@ export const MenuRegistrationSection = ({
       console.log('[MenuRegistration] handleAddRestaurant - 作成結果:', data);
       
       // conflict（重複）の場合の処理
-      if ((data as any).conflict) {
-        console.log('[MenuRegistration] handleAddRestaurant - 重複検出:', (data as any).message);
+      if (isConflictResponse(data)) {
+        console.log('[MenuRegistration] handleAddRestaurant - 重複検出:', data.message);
         await fetchRestaurants();
         await fetchSavedMenus();
         
@@ -300,40 +300,42 @@ export const MenuRegistrationSection = ({
         setNewRestaurantName('');
         setNewRestaurantLocation('');
         
-        alert((data as any).message);
+        alert(data.message);
         return;
       }
       
-      // 正常作成の場合
-      console.log('[MenuRegistration] handleAddRestaurant - data.id:', data?.id);
-      await fetchRestaurants();
-      await fetchSavedMenus();
-      setSelectedRestaurant(data.id);
-      setSelectedSavedMenu(data.id);
-      setShowAddRestaurantForm(false);
-      setNewRestaurantName('');
-      setNewRestaurantLocation('');
-      
-      // メニューデータがある場合は自動で保存
-      if (menuSakeData.length > 0) {
-        try {
-          const sakes = menuSakeData.map(sake => ({
-            sake_id: sake.id,
-            brand_id: sake.brandId || null,
-            is_available: true,
-            menu_notes: null
-          }));
+      // 正常作成の場合 - type guardを使用してRestaurantMenuであることを確認
+      if (isRestaurantMenu(data)) {
+        console.log('[MenuRegistration] handleAddRestaurant - data.id:', data.id);
+        await fetchRestaurants();
+        await fetchSavedMenus();
+        setSelectedRestaurant(data.id);
+        setSelectedSavedMenu(data.id);
+        setShowAddRestaurantForm(false);
+        setNewRestaurantName('');
+        setNewRestaurantLocation('');
+        
+        // メニューデータがある場合は自動で保存
+        if (menuSakeData.length > 0) {
+          try {
+            const sakes = menuSakeData.map(sake => ({
+              sake_id: sake.id,
+              brand_id: sake.brandId || null,
+              is_available: true,
+              menu_notes: null
+            }));
 
-          await restaurantService.addMultipleSakesToMenu(data.id, sakes);
+            await restaurantService.addMultipleSakesToMenu(data.id, sakes);
 
-          await fetchSavedMenus();
-          alert(`メニュー「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒を保存しました。`);
-        } catch (saveError) {
-          console.error('Error saving menu to new restaurant:', saveError);
-          alert(`メニュー「${newRestaurantName}」は作成されましたが、日本酒の保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
+            await fetchSavedMenus();
+            alert(`メニュー「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒を保存しました。`);
+          } catch (saveError) {
+            console.error('Error saving menu to new restaurant:', saveError);
+            alert(`メニュー「${newRestaurantName}」は作成されましたが、日本酒の保存に失敗しました。\n再度保存ボタンをクリックしてください。`);
+          }
+        } else {
+          alert(`メニュー「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
         }
-      } else {
-        alert(`メニュー「${newRestaurantName}」を作成しました。\n日本酒を追加してから保存ボタンをクリックしてください。`);
       }
     } catch (error: unknown) {
       console.error('[MenuRegistration] handleAddRestaurant - エラー:', error);

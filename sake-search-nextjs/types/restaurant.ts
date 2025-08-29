@@ -104,3 +104,26 @@ export interface RestaurantDrinkingRecordFormData {
   price_paid?: number;
   glass_ml?: number;
 }
+
+// API レスポンス用の型定義
+export interface RestaurantCreationSuccessResponse {
+  message: string;
+  restaurant: RestaurantMenu;
+}
+
+export interface RestaurantCreationConflictResponse {
+  success: true;
+  conflict: true;
+  message: string;
+}
+
+export type RestaurantCreationResponse = RestaurantMenu | RestaurantCreationConflictResponse;
+
+// Type guards for response types
+export function isConflictResponse(response: RestaurantCreationResponse): response is RestaurantCreationConflictResponse {
+  return 'conflict' in response && response.conflict === true;
+}
+
+export function isRestaurantMenu(response: RestaurantCreationResponse): response is RestaurantMenu {
+  return 'id' in response;
+}

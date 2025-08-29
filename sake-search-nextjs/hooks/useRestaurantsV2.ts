@@ -12,7 +12,10 @@ import {
   RestaurantMenuSakeFormData,
   RestaurantDrinkingRecord,
   RestaurantDrinkingRecordFormData,
-  RestaurantDrinkingRecordDetail
+  RestaurantDrinkingRecordDetail,
+  isConflictResponse,
+  isRestaurantMenu,
+  RestaurantCreationResponse
 } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
 import { useRestaurantService } from '@/providers/ServiceProvider';
@@ -107,15 +110,38 @@ export const useRestaurantsV2 = (): UseRestaurantsReturn => {
     updateState({ error: null });
 
     try {
-      const newRestaurant = await restaurantService.createRestaurant(input);
+      const response = await restaurantService.createRestaurant(input);
       
-      // 既存のリストに新しい飲食店を追加
-      updateState({
-        restaurants: [newRestaurant, ...state.restaurants],
-        total: state.total + 1,
-      });
+      // 成功レスポンスの場合のみリストに追加
+      if (isRestaurantMenu(response)) {
+        // 既存のリストに新しい飲食店を追加
+        updateState({
+          restaurants: [response, ...state.restaurants],
+          total: state.total + 1,
+        });
 
-      return newRestaurant;
+        return response;
+      } else if (isConflictResponse(response)) {
+        // 重複の場合は既存の飲食店を探して返す
+        const existingRestaurant = state.restaurants.find(r => 
+          r.restaurant_name.toLowerCase() === input.restaurant_name.toLowerCase()
+        );
+        
+        if (existingRestaurant) {
+          return existingRestaurant;
+        } else {
+          // リストにない場合はリロード
+          await searchRestaurants();
+          const updatedRestaurant = state.restaurants.find(r => 
+            r.restaurant_name.toLowerCase() === input.restaurant_name.toLowerCase()
+          );
+          if (updatedRestaurant) {
+            return updatedRestaurant;
+          }
+        }
+      }
+      
+      throw new Error('Unexpected response type');
     } catch (error) {
       const errorMessage = error instanceof RestaurantServiceError 
         ? error.message 

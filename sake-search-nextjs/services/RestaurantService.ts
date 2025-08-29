@@ -11,7 +11,12 @@ import {
   RestaurantMenuSakeFormData,
   RestaurantDrinkingRecord,
   RestaurantDrinkingRecordFormData,
-  RestaurantDrinkingRecordDetail
+  RestaurantDrinkingRecordDetail,
+  RestaurantCreationResponse,
+  RestaurantCreationSuccessResponse,
+  RestaurantCreationConflictResponse,
+  isConflictResponse,
+  isRestaurantMenu
 } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
 import { ApiClient, ApiClientError } from './core/ApiClient';
@@ -122,26 +127,37 @@ export class RestaurantService {
   /**
    * 飲食店メニューを作成
    */
-  async createRestaurant(input: RestaurantMenuFormData): Promise<RestaurantMenu> {
+  async createRestaurant(input: RestaurantMenuFormData): Promise<RestaurantCreationResponse> {
     try {
       this.validateRestaurantInput(input);
 
       console.log('[RestaurantService] createRestaurant - 送信データ:', input);
-      const response = await this.apiClient.post<RestaurantMenu>('/api/restaurant/menus', input);
-      console.log('[RestaurantService] createRestaurant - APIレスポンス:', response);
+      const apiResponse = await this.apiClient.post<RestaurantCreationSuccessResponse | RestaurantCreationConflictResponse>('/api/restaurant/menus', input);
+      console.log('[RestaurantService] createRestaurant - APIレスポンス:', apiResponse);
+      
+      // ApiResponse構造からdataを取得
+      const response = (apiResponse.data || apiResponse) as RestaurantCreationResponse;
       
       // conflictフラグがある場合は特別な処理
-      if (response.conflict) {
+      if (isConflictResponse(response)) {
         console.log('[RestaurantService] createRestaurant - 重複検出:', response.message);
-        // conflictの場合も正常なレスポンスとして扱う
-        return {
-          conflict: true,
-          message: response.message
-        } as any;
+        return response;
       }
       
-      console.log('[RestaurantService] createRestaurant - response.restaurant:', response.restaurant);
-      return response.restaurant;
+      // 成功レスポンスの場合 - type guardを使用
+      if (isRestaurantMenu(response)) {
+        console.log('[RestaurantService] createRestaurant - response.id:', response.id);
+        return response;
+      }
+      
+      // 成功レスポンスでrestaurantプロパティを持つ場合
+      const successResponse = response as RestaurantCreationSuccessResponse;
+      if (successResponse.restaurant) {
+        console.log('[RestaurantService] createRestaurant - response.restaurant:', successResponse.restaurant);
+        return successResponse.restaurant;
+      }
+      
+      throw new Error('Unexpected response format');
     } catch (error) {
       console.error('[RestaurantService] createRestaurant - エラー:', error);
       this.handleError('飲食店の作成に失敗しました', error);
