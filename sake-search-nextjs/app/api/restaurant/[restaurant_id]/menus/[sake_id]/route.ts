@@ -8,15 +8,19 @@ import { cookies } from 'next/headers';
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { restaurant_id: string; sake_id: string } }
+  context: { params: Promise<{ restaurant_id: string; sake_id: string }> }
 ) {
   console.log('[API] DELETE /api/restaurant/[restaurant_id]/menus/[sake_id] - 開始');
-  console.log('[API] パラメータ:', { 
-    restaurant_id: params.restaurant_id, 
-    sake_id: params.sake_id 
-  });
 
   try {
+    const params = await context.params;
+    const { restaurant_id, sake_id } = params;
+    
+    console.log('[API] パラメータ:', { 
+      restaurant_id, 
+      sake_id 
+    });
+
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -31,8 +35,6 @@ export async function DELETE(
         { status: 401 }
       );
     }
-
-    const { restaurant_id, sake_id } = params;
 
     if (!restaurant_id || !sake_id) {
       return NextResponse.json(
@@ -104,11 +106,14 @@ export async function DELETE(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { restaurant_id: string; sake_id: string } }
+  context: { params: Promise<{ restaurant_id: string; sake_id: string }> }
 ) {
   console.log('[API] GET /api/restaurant/[restaurant_id]/menus/[sake_id] - 開始');
 
   try {
+    const params = await context.params;
+    const { restaurant_id, sake_id } = params;
+
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -121,8 +126,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const { restaurant_id, sake_id } = params;
 
     // 特定の日本酒情報を取得
     const { data: menuSake, error } = await supabase
@@ -161,11 +164,14 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { restaurant_id: string; sake_id: string } }
+  context: { params: Promise<{ restaurant_id: string; sake_id: string }> }
 ) {
   console.log('[API] PUT /api/restaurant/[restaurant_id]/menus/[sake_id] - 開始');
 
   try {
+    const params = await context.params;
+    const { restaurant_id, sake_id } = params;
+
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -178,8 +184,6 @@ export async function PUT(
         { status: 401 }
       );
     }
-
-    const { restaurant_id, sake_id } = params;
     const body = await request.json();
     const { is_available, menu_notes } = body;
 

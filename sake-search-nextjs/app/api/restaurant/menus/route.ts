@@ -105,11 +105,12 @@ export async function POST(request: NextRequest) {
       restaurant: data 
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating menu items:', error);
     
     // 一意制約違反エラー（重複する飲食店名）- 正常なビジネスフローとして扱う
-    if (error?.code === '23505' && error?.message?.includes('restaurant_menus_user_id_restaurant_name_key')) {
+    const dbError = error as { code?: string; message?: string };
+    if (dbError?.code === '23505' && dbError?.message?.includes('restaurant_menus_user_id_restaurant_name_key')) {
       return NextResponse.json({ 
         success: true,
         conflict: true,
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
     }
     
     // その他のPostgreSQLエラー
-    if (error?.code && typeof error.code === 'string') {
+    if (dbError?.code && typeof dbError.code === 'string') {
       return NextResponse.json(
         { error: 'データベースエラーが発生しました。' },
         { status: 400 }

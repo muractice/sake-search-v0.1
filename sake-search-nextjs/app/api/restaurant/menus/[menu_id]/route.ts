@@ -8,12 +8,15 @@ import { cookies } from 'next/headers';
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { menu_id: string } }
+  context: { params: Promise<{ menu_id: string }> }
 ) {
   console.log('[API] PUT /api/restaurant/menus/[menu_id] - 開始');
-  console.log('[API] パラメータ:', { menu_id: params.menu_id });
 
   try {
+    const params = await context.params;
+    const { menu_id } = params;
+    console.log('[API] パラメータ:', { menu_id });
+
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -27,8 +30,6 @@ export async function PUT(
         { status: 401 }
       );
     }
-
-    const { menu_id } = params;
     const body = await request.json();
     const { restaurant_name, location, notes } = body;
 
@@ -81,12 +82,14 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { menu_id: string } }
+  context: { params: Promise<{ menu_id: string }> }
 ) {
   console.log('[API] DELETE /api/restaurant/menus/[menu_id] - 開始');
-  console.log('[API] パラメータ:', { menu_id: params.menu_id });
 
   try {
+    const params = await context.params;
+    const { menu_id } = params;
+    console.log('[API] パラメータ:', { menu_id });
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -100,8 +103,6 @@ export async function DELETE(
         { status: 401 }
       );
     }
-
-    const { menu_id } = params;
 
     if (!menu_id) {
       return NextResponse.json(
@@ -145,12 +146,14 @@ export async function DELETE(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { menu_id: string } }
+  context: { params: Promise<{ menu_id: string }> }
 ) {
   console.log('[API] GET /api/restaurant/menus/[menu_id] - 開始');
-  console.log('[API] パラメータ:', { menu_id: params.menu_id });
 
   try {
+    const params = await context.params;
+    const { menu_id } = params;
+    console.log('[API] パラメータ:', { menu_id });
     const supabase = createRouteHandlerClient({ 
       cookies
     });
@@ -163,8 +166,6 @@ export async function GET(
         { status: 401 }
       );
     }
-
-    const { menu_id } = params;
 
     if (!menu_id) {
       return NextResponse.json(
