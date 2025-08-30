@@ -36,10 +36,13 @@ export const useMenuInput = () => {
   const handleMenuItemsAdd = useCallback(async (items: string[], fromImageProcessing: boolean = false) => {
     if (items.length === 0) return;
 
-    // 画像処理からの呼び出しの場合のみ処理状態を表示
+    // 新しい処理開始時に前のメッセージをクリア
     if (fromImageProcessing) {
       setIsProcessing(true);
       setProcessingStatus(`${items.length}件の日本酒を検索中...`);
+    } else {
+      // テキスト検索の場合もエラーメッセージをクリア
+      setProcessingStatus('');
     }
 
     try {
@@ -92,6 +95,10 @@ export const useMenuInput = () => {
       
       if (message.length > 0 && fromImageProcessing) {
         setProcessingStatus(message.join('、'));
+        // 成功メッセージは2秒後に消去
+        setTimeout(() => {
+          setProcessingStatus('');
+        }, 2000);
       }
     } catch (error) {
       console.error('Error processing menu items:', error);
@@ -100,10 +107,7 @@ export const useMenuInput = () => {
       }
     } finally {
       if (fromImageProcessing) {
-        setTimeout(() => {
-          setIsProcessing(false);
-          setProcessingStatus('');
-        }, 2000);
+        setIsProcessing(false);
       }
     }
   }, [menuSakeData, menuItems, notFoundItems, searchSake]);
@@ -114,6 +118,7 @@ export const useMenuInput = () => {
     console.log('useMenuInput: 画像データサイズ:', imageData.length);
     console.log('useMenuInput: 画像データ先頭100文字:', imageData.substring(0, 100));
     
+    // 新しい処理開始時に前のメッセージをクリア
     setIsProcessing(true);
     setProcessingStatus('画像を解析中...');
 
@@ -127,12 +132,21 @@ export const useMenuInput = () => {
         body: JSON.stringify({ image: imageData })
       });
 
-      console.log('useMenuInput: OCR APIレスポンスステータス:', response.status);
-      console.log('useMenuInput: OCR APIレスポンスOK:', response.ok);
+      console.log('useMenuInput: Gemini Vision APIレスポンスステータス:', response.status);
+      console.log('useMenuInput: Gemini Vision APIレスポンスOK:', response.ok);
 
       if (!response.ok) {
-        console.error('useMenuInput: OCR APIエラー:', response.status, response.statusText);
-        throw new Error('OCR処理に失敗しました');
+        console.error('useMenuInput: Gemini Vision APIエラー:', response.status, response.statusText);
+        
+        // エラーレスポンスの詳細を取得
+        try {
+          const errorResponse = await response.json();
+          console.error('useMenuInput: エラーレスポンス詳細:', errorResponse);
+        } catch (e) {
+          console.error('useMenuInput: エラーレスポンスの解析に失敗:', e);
+        }
+        
+        throw new Error(`Gemini Vision API エラー (${response.status}): ${response.statusText}`);
       }
 
       const result = await response.json();
@@ -140,39 +154,75 @@ export const useMenuInput = () => {
       console.log('useMenuInput: result.sake_names:', result.sake_names);
       console.log('useMenuInput: result.confidence:', result.confidence);
       
-      const { sake_names, text, notes } = result;
+      const { sake_names, text, notes, error } = result;
       
       console.log('抽出された日本酒名:', sake_names);
       console.log('信頼度:', result.confidence);
       console.log('備考:', notes);
+      console.log('エラー:', error);
+      
+      // エラーがある場合の処理
+      if (error) {
+        let errorMessage = '画像の処理に失敗しました';
+        
+        if (error.includes('too large') || error.includes('2MB')) {
+          errorMessage = '画像サイズが大きすぎます（2MB以下にしてください）';
+        } else if (error.includes('timeout')) {
+          errorMessage = 'タイムアウトしました（画像が複雑すぎる可能性があります）';
+        } else if (error.includes('API key')) {
+          errorMessage = 'APIキーの設定に問題があります';
+        } else if (error.includes('rate limit')) {
+          errorMessage = 'API利用制限に達しました。しばらく待ってから再試行してください';
+        } else {
+          errorMessage = `エラー: ${error}`;
+        }
+        
+        setProcessingStatus(errorMessage);
+        return;
+      }
       
       if (sake_names && sake_names.length > 0) {
         // Gemini APIから直接日本酒名が返ってくる
         const sakeNames = sake_names;
         
-        if (sakeNames.length > 0) {
-          setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
-          await handleMenuItemsAdd(sakeNames, true);
-        } else {
-          console.warn('日本酒が検出されませんでした。');
-          console.warn('備考:', notes);
-          setProcessingStatus('日本酒が検出されませんでした');
-        }
+        setProcessingStatus(`${sakeNames.length}件の日本酒を検出しました`);
+        await handleMenuItemsAdd(sakeNames, true);
       } else {
-        console.warn('Gemini Vision APIから日本酒名が返されませんでした');
+        // 日本酒が検出されなかった場合
+        let message = '日本酒が検出されませんでした';
+        
+        if (notes) {
+          if (notes.includes('不鮮明') || notes.includes('解像度')) {
+            message = '画像が不鮮明で読み取れませんでした';
+          } else if (notes.includes('フィルタリング') || notes.includes('safety')) {
+            message = '画像の内容が制限により処理できませんでした';
+          }
+        }
+        
+        console.warn('日本酒が検出されませんでした。');
+        console.warn('備考:', notes);
         console.warn('APIレスポンス:', result);
-        setProcessingStatus('日本酒が検出されませんでした');
+        setProcessingStatus(message);
       }
     } catch (error) {
       console.error('=== OCR処理エラー ===');
       console.error('エラー詳細:', error);
-      setProcessingStatus('画像の処理に失敗しました');
+      // 詳細なエラー情報を表示
+      let detailedError = '画像の処理に失敗しました';
+      if (error instanceof Error) {
+        if (error.message.includes('fetch')) {
+          detailedError = 'ネットワークエラーが発生しました';
+        } else if (error.message.includes('timeout')) {
+          detailedError = 'タイムアウトしました（画像が複雑すぎる可能性があります）';
+        } else {
+          detailedError = `エラー: ${error.message}`;
+        }
+      }
+      setProcessingStatus(detailedError);
     } finally {
       console.log('=== OCR処理終了 ===');
-      setTimeout(() => {
-        setIsProcessing(false);
-        setProcessingStatus('');
-      }, 2000);
+      // 処理中状態のみ解除（エラーメッセージは次の処理まで保持）
+      setIsProcessing(false);
     }
   }, [handleMenuItemsAdd]);
 

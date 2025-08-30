@@ -151,6 +151,9 @@ export const MenuManagementSection = ({
                   onLoadSavedMenu(newValue);
                   setSelectedRestaurant(newValue);
                   setShowAddRestaurantForm(false);
+                  // フォームをクリア
+                  setNewRestaurantName('');
+                  setNewRestaurantLocation('');
                 } else {
                   // 「新しいメニュー」を選択した場合
                   if (selectedSavedMenu && menuItems.length > 0) {
@@ -167,7 +170,11 @@ export const MenuManagementSection = ({
                   
                   setSelectedSavedMenu('');
                   setSelectedRestaurant('');
-                  setShowAddRestaurantForm(false);
+                  // 新しいメニュー選択時は自動でフォームを表示
+                  setShowAddRestaurantForm(true);
+                  // フォームをクリア
+                  setNewRestaurantName('');
+                  setNewRestaurantLocation('');
                 }
               }}
               disabled={loadingMenu}
@@ -182,23 +189,6 @@ export const MenuManagementSection = ({
                 </option>
               ))}
             </select>
-            <button
-              onClick={() => {
-                if (!selectedSavedMenu) {
-                  if (showAddRestaurantForm && selectedRestaurant && menuSakeData.length > 0) {
-                    handleSaveToRestaurant();
-                  } else {
-                    setShowAddRestaurantForm(true);
-                  }
-                } else if (menuSakeData.length > 0) {
-                  handleSaveToRestaurant();
-                }
-              }}
-              disabled={savingToMenu || (!selectedSavedMenu && !showAddRestaurantForm && menuSakeData.length === 0)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap sm:min-w-[80px]"
-            >
-              {savingToMenu ? '保存中...' : '保存'}
-            </button>
           </div>
           {loadingMenu && (
             <div className="text-blue-600 text-sm flex items-center gap-2">
@@ -208,31 +198,43 @@ export const MenuManagementSection = ({
           )}
         </div>
         
-        {showAddRestaurantForm && (
-          <div className="space-y-2 mt-3 p-3 bg-white rounded-lg border border-gray-200">
+        {/* 新しいメニューが選択されている時にフォームを表示 */}
+        {selectedSavedMenu === '' && showAddRestaurantForm && (
+          <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="text-sm text-gray-700 mb-2">
+              新しいメニューを保存するには、飲食店情報を入力してください
+            </div>
             <input
               type="text"
               value={newRestaurantName}
               onChange={(e) => setNewRestaurantName(e.target.value)}
               placeholder="飲食店名 *"
-              className="w-full px-3 py-2 border rounded-lg text-gray-900"
+              className="w-full px-3 py-2 border rounded-lg text-gray-900 bg-white"
             />
             <input
               type="text"
               value={newRestaurantLocation}
               onChange={(e) => setNewRestaurantLocation(e.target.value)}
               placeholder="場所・住所（任意）"
-              className="w-full px-3 py-2 border rounded-lg text-gray-900"
+              className="w-full px-3 py-2 border rounded-lg text-gray-900 bg-white"
             />
             <div className="flex gap-2">
               <button
                 onClick={handleAddRestaurant}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                disabled={!newRestaurantName.trim() || menuSakeData.length === 0}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                追加
+                追加して保存
               </button>
               <button
                 onClick={() => {
+                  // キャンセル時は既存メニューの最初のものを選択
+                  if (groupedSavedMenus && groupedSavedMenus.length > 0) {
+                    const firstMenu = groupedSavedMenus[0];
+                    setSelectedSavedMenu(firstMenu.id);
+                    setSelectedRestaurant(firstMenu.id);
+                    onLoadSavedMenu(firstMenu.id);
+                  }
                   setShowAddRestaurantForm(false);
                   setNewRestaurantName('');
                   setNewRestaurantLocation('');

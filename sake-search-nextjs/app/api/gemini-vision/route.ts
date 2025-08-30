@@ -113,8 +113,7 @@ export async function POST(request: NextRequest) {
 {
   "sake_names": ["読み取れた銘柄名1", "銘柄名2"],
   "confidence": 0.0-1.0の信頼度,
-  "notes": "画像の品質や認識に関する補足",
-  "raw_text": "画像から読み取った生のテキスト（デバッグ用）"
+  "notes": "画像の品質や認識に関する簡潔な補足"
 }
 
 JSONのみを返し、他の説明文は含めないでください。`
@@ -126,7 +125,7 @@ JSONのみを返し、他の説明文は含めないでください。`
         temperature: 0.2,
         topK: 2,
         topP: 0.9,
-        maxOutputTokens: 1024,  // Vercel用に短縮
+        maxOutputTokens: 2048,  // 増やして完全なJSONを取得
       },
       safetySettings: [
         {
@@ -206,13 +205,36 @@ JSONのみを返し、他の説明文は含めないでください。`
       
       // JSONレスポンスをパース
       try {
-        const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          parsedResult = JSON.parse(jsonMatch[0]);
-          console.log('DEBUG: JSON parsed successfully');
+        console.log('DEBUG: Starting JSON parse...');
+        console.log('DEBUG: Text starts with:', extractedText.substring(0, 50));
+        
+        // ```json...```コードブロック全体を抽出
+        const codeBlockMatch = extractedText.match(/```json\s*([\s\S]*?)\s*```/i);
+        console.log('DEBUG: Code block found:', !!codeBlockMatch);
+        
+        if (codeBlockMatch) {
+          // コードブロック内のJSONのみを取得
+          const jsonString = codeBlockMatch[1].trim();
+          console.log('DEBUG: Extracted JSON from code block, length:', jsonString.length);
+          console.log('DEBUG: JSON first 100 chars:', jsonString.substring(0, 100));
+          console.log('DEBUG: JSON last 100 chars:', jsonString.substring(jsonString.length - 100));
+          
+          parsedResult = JSON.parse(jsonString);
+          console.log('DEBUG: JSON parsed successfully from code block');
+          console.log('DEBUG: Parsed sake_names:', parsedResult.sake_names);
+        } else {
+          // コードブロックがない場合は従来通り
+          const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            parsedResult = JSON.parse(jsonMatch[0]);
+            console.log('DEBUG: JSON parsed successfully without code block');
+            console.log('DEBUG: Parsed sake_names:', parsedResult.sake_names);
+          }
         }
-      } catch {
-        console.log('DEBUG: JSON parse failed, fallback to text extraction');
+      } catch (error) {
+        console.error('DEBUG: JSON parse failed:', error);
+        console.error('DEBUG: Error message:', error instanceof Error ? error.message : String(error));
+        console.error('DEBUG: Raw text for debugging:', extractedText.substring(0, 500));
         // JSONパースに失敗した場合、テキストから銘柄名を抽出
         const sakeNames = extractedText
           .split(/[、。\n,]/)

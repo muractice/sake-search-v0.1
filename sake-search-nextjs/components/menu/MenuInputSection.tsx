@@ -1,12 +1,18 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { optimizeImageForScan } from '@/lib/scanImageOptimizer';
 
 interface MenuInputSectionProps {
   onMenuItemsAdd: (items: string[], fromImageProcessing?: boolean) => void;
   onProcessImage: (imageData: string) => void;
   isProcessing: boolean;
   processingStatus?: string;
+}
+
+interface ImageSize {
+  width: number;
+  height: number;
 }
 
 export const MenuInputSection = ({
@@ -16,6 +22,7 @@ export const MenuInputSection = ({
   processingStatus
 }: MenuInputSectionProps) => {
   const [textInput, setTextInput] = useState('');
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,24 +57,35 @@ export const MenuInputSection = ({
       console.log('ファイルサイズ:', file.size);
       console.log('ファイルタイプ:', file.type);
       
-      // FileをBase64データURLに変換
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        console.log('MenuInputSection: Base64変換完了。データサイズ:', dataUrl.length);
-        console.log('MenuInputSection: データ先頭100文字:', dataUrl.substring(0, 100));
-        console.log('MenuInputSection: onProcessImage関数の型:', typeof onProcessImage);
+      try {
+        setIsOptimizing(true);
+        console.log('MenuInputSection: 画像最適化を開始...');
+        
+        // FileをBase64データURLに変換
+        const reader = new FileReader();
+        const originalDataUrl = await new Promise<string>((resolve, reject) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+        
+        console.log('MenuInputSection: Base64変換完了。元画像サイズ:', originalDataUrl.length);
+        
+        // 画像最適化を実行
+        const optimizedDataUrl = await optimizeImageForScan(originalDataUrl);
+        console.log('MenuInputSection: 画像最適化完了。最適化後サイズ:', optimizedDataUrl.length);
         
         // 親コンポーネントにOCR処理を委譲
         console.log('MenuInputSection: onProcessImageを呼び出します...');
-        onProcessImage(dataUrl);
+        onProcessImage(optimizedDataUrl);
         console.log('MenuInputSection: onProcessImage呼び出し完了');
-      };
-      reader.onerror = (error) => {
-        console.error('ファイル読み込みエラー:', error);
-      };
-      console.log('FileReaderで読み込み開始...');
-      reader.readAsDataURL(file);
+        
+      } catch (error) {
+        console.error('MenuInputSection: 画像処理エラー:', error);
+        alert('画像の処理に失敗しました。別の画像を試してください。');
+      } finally {
+        setIsOptimizing(false);
+      }
     } else {
       console.warn('ファイルが選択されませんでした');
     }
@@ -86,14 +104,16 @@ export const MenuInputSection = ({
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={handleCameraCapture}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+              disabled={isOptimizing || isProcessing}
+              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               title="カメラで撮影"
             >
               <span className="text-2xl">📷</span>
             </button>
             <button
               onClick={handleGallerySelect}
-              className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center"
+              disabled={isOptimizing || isProcessing}
+              className="px-6 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               title="ギャラリーから選択"
             >
               <span className="text-2xl">🖼️</span>
@@ -132,8 +152,18 @@ export const MenuInputSection = ({
           className="hidden"
         />
 
+        {/* 画像最適化状態の表示 */}
+        {isOptimizing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              <span className="text-blue-700">画像を最適化中...</span>
+            </div>
+          </div>
+        )}
+
         {/* OCR処理状態の表示 */}
-        {isProcessing && (
+        {!isOptimizing && isProcessing && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-yellow-600"></div>
