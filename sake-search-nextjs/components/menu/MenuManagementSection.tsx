@@ -229,11 +229,12 @@ export const MenuManagementSection = ({
               <button
                 onClick={() => {
                   // キャンセル時は既存メニューの最初のものを選択
-                  if (groupedSavedMenus && groupedSavedMenus.length > 0) {
-                    const firstMenu = groupedSavedMenus[0];
-                    setSelectedSavedMenu(firstMenu.id);
-                    setSelectedRestaurant(firstMenu.id);
-                    onLoadSavedMenu(firstMenu.id);
+                  const menuValues = Object.values(groupedSavedMenus);
+                  if (menuValues && menuValues.length > 0) {
+                    const firstMenu = menuValues[0];
+                    setSelectedSavedMenu(firstMenu.restaurant_menu_id);
+                    setSelectedRestaurant(firstMenu.restaurant_menu_id);
+                    onLoadSavedMenu(firstMenu.restaurant_menu_id);
                   }
                   setShowAddRestaurantForm(false);
                   setNewRestaurantName('');
