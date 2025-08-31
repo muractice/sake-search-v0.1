@@ -179,6 +179,24 @@ export const MenuManagement = ({
     }
   };
 
+  // 選択中のメニュー（飲食店）を削除
+  const handleDeleteRestaurant = async () => {
+    if (!selectedRestaurant || !currentRestaurant) return;
+
+    const confirmMessage = `「${currentRestaurant.restaurant_name}」のメニューを完全に削除しますか？\n\nこの操作は取り消せません。`;
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      await restaurantService.deleteRestaurant(selectedRestaurant);
+      await fetchRestaurants();
+      onMenuUpdate?.();
+      alert('メニューを削除しました');
+    } catch (error) {
+      console.error('Error deleting restaurant:', error);
+      alert('メニューの削除に失敗しました');
+    }
+  };
+
   // 現在選択されている飲食店の情報
   const currentRestaurant = restaurants.find(r => r.id === selectedRestaurant);
   
@@ -245,18 +263,29 @@ export const MenuManagement = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               メニューを選択:
             </label>
-            <select
-              value={selectedRestaurant}
-              onChange={(e) => setSelectedRestaurant(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              {restaurants.map((restaurant) => (
-                <option key={restaurant.id} value={restaurant.id}>
-                  {restaurant.restaurant_name}
-                  {restaurant.location && ` - ${restaurant.location}`}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                value={selectedRestaurant}
+                onChange={(e) => setSelectedRestaurant(e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                {restaurants.map((restaurant) => (
+                  <option key={restaurant.id} value={restaurant.id}>
+                    {restaurant.restaurant_name}
+                    {restaurant.location && ` - ${restaurant.location}`}
+                  </option>
+                ))}
+              </select>
+              {selectedRestaurant && (
+                <button
+                  onClick={handleDeleteRestaurant}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm flex items-center gap-1"
+                  title="選択中のメニューを削除"
+                >
+                  🗑️ 削除
+                </button>
+              )}
+            </div>
           </div>
         )}
 
