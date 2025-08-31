@@ -39,14 +39,12 @@ export const MenuManagement = ({
     try {
       const restaurants = await restaurantService.getRestaurants();
       setRestaurants(restaurants || []);
-      
-      if (restaurants && restaurants.length > 0 && !selectedRestaurant) {
-        setSelectedRestaurant(restaurants[0].id);
-      }
+      // デフォルトは「メニューを選択」状態（空文字）にする
+      // 自動選択はしない
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  }, [restaurantService, selectedRestaurant]);
+  }, [restaurantService]);
 
   // 選択した飲食店のメニューと日本酒情報を取得
   const fetchMenuWithSakes = useCallback(async (restaurantId: string) => {
@@ -189,6 +187,8 @@ export const MenuManagement = ({
     try {
       await restaurantService.deleteRestaurant(selectedRestaurant);
       await fetchRestaurants();
+      // 削除後は「メニューを選択」状態に戻す
+      setSelectedRestaurant('');
       onMenuUpdate?.();
       alert('メニューを削除しました');
     } catch (error) {
@@ -269,6 +269,7 @@ export const MenuManagement = ({
                 onChange={(e) => setSelectedRestaurant(e.target.value)}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
+                <option value="">メニューを選択</option>
                 {restaurants.map((restaurant) => (
                   <option key={restaurant.id} value={restaurant.id}>
                     {restaurant.restaurant_name}
