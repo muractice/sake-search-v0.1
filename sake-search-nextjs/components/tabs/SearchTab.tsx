@@ -1,9 +1,9 @@
 'use client';
 
-import SearchSection from '@/components/SearchSection';
-import TasteChart from '@/components/TasteChart';
-import SakeRadarChartSection from '@/components/SakeRadarChartSection';
-import ComparisonPanel from '@/components/ComparisonPanel';
+import SearchSection from '@/components/search/SearchSection';
+import TasteChart from '@/components/charts/TasteChart';
+import SakeRadarChartSection from '@/components/charts/SakeRadarChartSection';
+import ComparisonPanel from '@/components/user/ComparisonPanel';
 import { SakeData } from '@/types/sake';
 
 interface SearchTabProps {

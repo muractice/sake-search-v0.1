@@ -1,11 +1,11 @@
 'use client';
 
-import { PreferenceMap } from '@/components/PreferenceMap';
-import { RecommendationDisplay } from '@/components/RecommendationDisplay';
+import { PreferenceMap } from '@/components/geography/PreferenceMap';
+import { RecommendationDisplay } from '@/components/recommendations/RecommendationDisplay';
 import { useFavoritesContext } from '@/contexts/FavoritesContext';
 import { SakeData } from '@/types/sake';
-import TasteChart from '@/components/TasteChart';
-import SakeRadarChartSection from '@/components/SakeRadarChartSection';
+import TasteChart from '@/components/charts/TasteChart';
+import SakeRadarChartSection from '@/components/charts/SakeRadarChartSection';
 
 interface FavoritesTabProps {
   onSelectSake: (sake: SakeData) => void;

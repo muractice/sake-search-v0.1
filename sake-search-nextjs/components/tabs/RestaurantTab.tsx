@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MenuRegistrationSection } from '@/components/restaurant/MenuRegistrationSection';
-import { RestaurantRecommendations } from '@/components/restaurant/RestaurantRecommendations';
+import { RestaurantRecommendations } from '@/components/recommendations/RestaurantRecommendations';
 import { SakeData } from '@/types/sake';
 
 interface RestaurantTabProps {

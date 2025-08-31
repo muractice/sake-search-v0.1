@@ -1,4 +1,4 @@
-import MenuScannerMain from './MenuScanner/MenuScannerMain';
+import MenuScannerMain from './MenuScannerMain';
 
 interface MenuScannerProps {
   onSakeFound: (sakeName: string) => Promise<{success: boolean, message: string}>;

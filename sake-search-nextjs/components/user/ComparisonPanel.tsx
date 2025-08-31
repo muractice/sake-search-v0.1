@@ -1,8 +1,8 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import { FavoriteButton } from './FavoriteButton';
-import { RecordButton } from './RecordButton';
+import { FavoriteButton } from '../common/FavoriteButton';
+import { RecordButton } from '../common/RecordButton';
 
 interface ComparisonPanelProps {
   comparisonList: SakeData[];

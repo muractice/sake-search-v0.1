@@ -1,9 +1,9 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import ComparisonPanel from '@/components/ComparisonPanel';
-import TasteChart from '@/components/TasteChart';
-import SakeRadarChartSection from '@/components/SakeRadarChartSection';
+import ComparisonPanel from '@/components/user/ComparisonPanel';
+import TasteChart from '@/components/charts/TasteChart';
+import SakeRadarChartSection from '@/components/charts/SakeRadarChartSection';
 
 interface ComparisonChartSectionProps {
   comparisonList: SakeData[];

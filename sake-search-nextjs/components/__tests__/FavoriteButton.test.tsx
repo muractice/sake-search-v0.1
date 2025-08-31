@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { FavoriteButton } from '../FavoriteButton';
+import { FavoriteButton } from '../common/FavoriteButton';
 import { SakeData } from '@/types/sake';
 
 // FavoritesContextのモック

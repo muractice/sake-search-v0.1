@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRecords } from '@/hooks/useRecords';
 import { DrinkingRecord } from '@/types/record';
-import { PrefectureMap } from '@/components/PrefectureMap';
+import { PrefectureMap } from '@/components/geography/PrefectureMap';
 import { MenuManagement } from '@/components/restaurant/MenuManagement';
 import { RestaurantRecords } from '@/components/restaurant/RestaurantRecords';
 

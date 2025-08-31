@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { TabNavigation } from '@/components/TabNavigation';
+import { TabNavigation } from '@/components/common/TabNavigation';
 import { SearchTab } from '@/components/tabs/SearchTab';
 import { RestaurantTab } from '@/components/tabs/RestaurantTab';
 import { FavoritesTab } from '@/components/tabs/FavoritesTab';
 import { RecordsTab } from '@/components/tabs/RecordsTab';
-import { UserProfile } from '@/components/UserProfile';
-import { AuthForm } from '@/components/AuthForm';
-import CustomDialog from '@/components/CustomDialog';
+import { UserProfile } from '@/components/user/UserProfile';
+import { AuthForm } from '@/components/common/AuthForm';
+import CustomDialog from '@/components/common/CustomDialog';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { useComparison } from '@/hooks/useComparison';
 import { useSearch } from '@/hooks/useSearch';
