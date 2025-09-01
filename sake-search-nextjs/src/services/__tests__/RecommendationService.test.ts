@@ -9,15 +9,15 @@ import { SakeData } from '@/types/sake';
 
 // ApiClientのモック
 class MockApiClient extends ApiClient {
-  private mockResponses: Map<string, any> = new Map();
+  private mockResponses: Map<string, unknown> = new Map();
   private shouldThrowError = false;
-  private errorToThrow: any = null;
+  private errorToThrow: unknown = null;
 
-  setMockResponse(endpoint: string, response: any) {
+  setMockResponse(endpoint: string, response: unknown) {
     this.mockResponses.set(endpoint, response);
   }
 
-  setError(error: any) {
+  setError(error: unknown) {
     this.shouldThrowError = true;
     this.errorToThrow = error;
   }
@@ -27,7 +27,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -142,7 +142,7 @@ describe('RecommendationService', () => {
     it('should validate invalid recommendation type', async () => {
       await expect(
         recommendationService.getRestaurantRecommendations({
-          type: 'invalid' as any,
+          type: 'invalid' as never,
           menuItems: ['test'],
           count: 5
         })
@@ -151,7 +151,7 @@ describe('RecommendationService', () => {
 
     it.skip('should validate count range', () => {
       // バリデーションエラーはvalidateRestaurantOptions内で直接発生する
-      const service = recommendationService as any;
+      const service = recommendationService as { validateRestaurantOptions: (options: unknown) => void };
       
       // count: 0 のテスト
       expect(() => {
@@ -261,7 +261,7 @@ describe('RecommendationService', () => {
       ).rejects.toThrow('比較する日本酒が指定されていません');
 
       await expect(
-        recommendationService.getSimilarityRecommendations(null as any)
+        recommendationService.getSimilarityRecommendations(null as unknown as string[])
       ).rejects.toThrow('比較する日本酒が指定されていません');
     });
   });

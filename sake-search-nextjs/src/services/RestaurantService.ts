@@ -96,7 +96,7 @@ export interface RecommendationResult {
 }
 
 export class RestaurantServiceError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'RestaurantServiceError';
   }
@@ -628,7 +628,7 @@ export class RestaurantService {
   /**
    * プライベートメソッド: エラーハンドリング
    */
-  private handleError(message: string, error: any): never {
+  private handleError(message: string, error: unknown): never {
     if (error instanceof RestaurantServiceError) {
       throw error;
     }
@@ -645,7 +645,7 @@ export class RestaurantService {
           throw new RestaurantServiceError('指定された飲食店が見つかりません');
         case 409:
           // 409エラーは現在使用されていない（conflictフラグで処理）
-          const apiErrorMessage = error.response?.error || 'リソースが競合しています';
+          const apiErrorMessage = (error as { response?: { error?: string } }).response?.error || 'リソースが競合しています';
           throw new RestaurantServiceError(apiErrorMessage);
         case 429:
           throw new RestaurantServiceError('リクエストが多すぎます。しばらく待ってから再試行してください');

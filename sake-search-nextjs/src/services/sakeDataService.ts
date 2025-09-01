@@ -260,24 +260,24 @@ export class SakeDataService {
   /**
    * 日本酒データのフォーマット
    */
-  private formatSakeData(sake: any): SakeData {
+  private formatSakeData(sake: Record<string, unknown>): SakeData {
     return {
-      id: sake.id,
-      brandId: sake.brand_id,
-      name: sake.brand_name,
-      brewery: sake.brewery_name,
-      breweryId: sake.brewery_id,
-      sweetness: sake.sweetness || 0,
-      richness: sake.richness || 0,
-      description: sake.description || '',
+      id: sake.id as string,
+      brandId: (sake.brand_id as number) || 1,
+      name: (sake.brand_name as string) || 'Unknown',
+      brewery: (sake.brewery_name as string) || 'Unknown',
+      breweryId: (sake.brewery_id as number) || 1,
+      sweetness: (sake.sweetness as number) || 0,
+      richness: (sake.richness as number) || 0,
+      description: (sake.description as string) || '',
       flavorChart: {
-        brandId: sake.brand_id,
-        f1: sake.f1_floral || 0.5,
-        f2: sake.f2_mellow || 0.5,
-        f3: sake.f3_heavy || 0.5,
-        f4: sake.f4_mild || 0.5,
-        f5: sake.f5_dry || 0.5,
-        f6: sake.f6_light || 0.5,
+        brandId: (sake.brand_id as number) || 1,
+        f1: (sake.f1_floral as number) || 0.5,
+        f2: (sake.f2_mellow as number) || 0.5,
+        f3: (sake.f3_heavy as number) || 0.5,
+        f4: (sake.f4_mild as number) || 0.5,
+        f5: (sake.f5_dry as number) || 0.5,
+        f6: (sake.f6_light as number) || 0.5,
       }
     };
   }

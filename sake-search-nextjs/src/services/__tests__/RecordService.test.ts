@@ -9,15 +9,15 @@ import { DrinkingRecord, CreateRecordInput, UpdateRecordInput } from '@/types/re
 
 // ApiClientのモック（SakeService.test.tsから流用）
 class MockApiClient extends ApiClient {
-  private mockResponses: Map<string, any> = new Map();
+  private mockResponses: Map<string, unknown> = new Map();
   private shouldThrowError = false;
-  private errorToThrow: any = null;
+  private errorToThrow: unknown = null;
 
-  setMockResponse(endpoint: string, response: any) {
+  setMockResponse(endpoint: string, response: unknown) {
     this.mockResponses.set(endpoint, response);
   }
 
-  setError(error: any) {
+  setError(error: unknown) {
     this.shouldThrowError = true;
     this.errorToThrow = error;
   }
@@ -27,7 +27,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -59,7 +59,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async put<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -148,12 +148,12 @@ describe('RecordService', () => {
     it('should validate required fields', async () => {
       const invalidInputs = [
         { ...validInput, sakeId: '' },
-        { ...validInput, sakeId: undefined as any },
+        { ...validInput, sakeId: undefined as unknown as string },
         { ...validInput, sakeName: '' },
         { ...validInput, sakeName: '   ' },
         { ...validInput, rating: 0 },
         { ...validInput, rating: 6 },
-        { ...validInput, rating: 'invalid' as any },
+        { ...validInput, rating: 'invalid' as unknown as number },
       ];
 
       for (const input of invalidInputs) {

@@ -46,7 +46,7 @@ export interface RecommendationResponse {
 }
 
 export class RecommendationServiceError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'RecommendationServiceError';
   }
@@ -240,7 +240,7 @@ export class RecommendationService {
   /**
    * プライベートメソッド: エラーハンドリング
    */
-  private handleError(message: string, error: any): never {
+  private handleError(message: string, error: unknown): never {
     if (error instanceof RecommendationServiceError) {
       throw error;
     }

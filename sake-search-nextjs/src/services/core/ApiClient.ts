@@ -14,7 +14,7 @@ export interface ApiError {
   error: {
     code: string;
     message: string;
-    details?: any;
+    details?: unknown;
   };
   requestId?: string;
   timestamp: string;
@@ -24,7 +24,7 @@ export class ApiClientError extends Error {
   constructor(
     message: string,
     public statusCode: number,
-    public response?: any
+    public response?: unknown
   ) {
     super(message);
     this.name = 'ApiClientError';
@@ -52,7 +52,7 @@ export class ApiClient {
     options: {
       method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
       headers?: Record<string, string>;
-      body?: any;
+      body?: unknown;
       query?: Record<string, string>;
     } = {}
   ): Promise<ApiResponse<T>> {
@@ -102,11 +102,11 @@ export class ApiClient {
     return this.request<T>(endpoint, { method: 'GET', query });
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'POST', body });
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, { method: 'PUT', body });
   }
 

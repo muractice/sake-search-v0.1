@@ -42,7 +42,7 @@ export function useRecommendations(options?: RecommendOptions) {
     try {
       // キャッシュチェック
       const cached = await getCachedRecommendations(user.id);
-      if (cached && !isExpired(cached)) {
+      if (cached && cached.length > 0) {
         setRecommendations(cached);
         setLoading(false);
         return;
@@ -198,12 +198,5 @@ async function clearCachedRecommendations(userId: string): Promise<void> {
   } catch (err) {
     console.error('Error clearing cached recommendations:', err);
   }
-}
-
-function isExpired(recommendations: any[]): boolean {
-  if (recommendations.length === 0) return true;
-  
-  const firstExpiry = new Date(recommendations[0].expires_at);
-  return firstExpiry < new Date();
 }
 

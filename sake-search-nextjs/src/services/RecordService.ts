@@ -49,7 +49,7 @@ export interface RecordStatistics {
 }
 
 export class RecordServiceError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'RecordServiceError';
   }
@@ -316,7 +316,7 @@ export class RecordService {
   /**
    * プライベートメソッド: エラーハンドリング
    */
-  private handleError(message: string, error: any): never {
+  private handleError(message: string, error: unknown): never {
     if (error instanceof RecordServiceError) {
       throw error;
     }

@@ -1,8 +1,8 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import { FavoriteButton } from '../common/FavoriteButton';
-import { RecordButton } from '../common/RecordButton';
+import { FavoriteButton } from '@/components/buttons/FavoriteButton';
+import { RecordButton } from '@/components/buttons/RecordButton';
 
 interface SakeDetailProps {
   sake: SakeData;

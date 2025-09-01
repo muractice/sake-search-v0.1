@@ -17,15 +17,15 @@ import { SakeData } from '@/types/sake';
 
 // ApiClientのモック（RecordService.test.tsから流用・拡張）
 class MockApiClient extends ApiClient {
-  private mockResponses: Map<string, any> = new Map();
+  private mockResponses: Map<string, unknown> = new Map();
   private shouldThrowError = false;
-  private errorToThrow: any = null;
+  private errorToThrow: unknown = null;
 
-  setMockResponse(endpoint: string, response: any) {
+  setMockResponse(endpoint: string, response: unknown) {
     this.mockResponses.set(endpoint, response);
   }
 
-  setError(error: any) {
+  setError(error: unknown) {
     this.shouldThrowError = true;
     this.errorToThrow = error;
   }
@@ -35,7 +35,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -67,7 +67,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async put<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -192,7 +192,7 @@ describe('RestaurantService', () => {
       const invalidInputs = [
         { ...validInput, restaurant_name: '' },
         { ...validInput, restaurant_name: '   ' },
-        { ...validInput, restaurant_name: undefined as any },
+        { ...validInput, restaurant_name: undefined as unknown as string },
       ];
 
       for (const input of invalidInputs) {
@@ -304,8 +304,8 @@ describe('RestaurantService', () => {
     it('should validate required fields', async () => {
       const invalidInputs = [
         { ...validInput, sake_id: '' },
-        { ...validInput, sake_id: undefined as any },
-        { ...validInput, is_available: undefined as any },
+        { ...validInput, sake_id: undefined as unknown as string },
+        { ...validInput, is_available: undefined as unknown as boolean },
       ];
 
       for (const input of invalidInputs) {
@@ -498,7 +498,7 @@ describe('RestaurantService', () => {
 
     it('should validate recommendation options', async () => {
       const invalidOptions = [
-        { type: 'invalid' as any },
+        { type: 'invalid' as never },
         { type: 'similarity', limit: 0 },
         { type: 'similarity', limit: 101 },
       ];

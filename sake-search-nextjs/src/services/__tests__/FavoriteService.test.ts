@@ -9,15 +9,15 @@ import { SakeData } from '@/types/sake';
 
 // ApiClientのモック
 class MockApiClient extends ApiClient {
-  private mockResponses: Map<string, any> = new Map();
+  private mockResponses: Map<string, unknown> = new Map();
   private shouldThrowError = false;
-  private errorToThrow: any = null;
+  private errorToThrow: unknown = null;
 
-  setMockResponse(endpoint: string, response: any) {
+  setMockResponse(endpoint: string, response: unknown) {
     this.mockResponses.set(endpoint, response);
   }
 
-  setError(error: any) {
+  setError(error: unknown) {
     this.shouldThrowError = true;
     this.errorToThrow = error;
   }
@@ -27,7 +27,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -59,7 +59,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async put<T>(endpoint: string, body?: any): Promise<{ data: T }> {
+  async put<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -149,7 +149,7 @@ describe('FavoriteService', () => {
     });
 
     it('should validate sake data', async () => {
-      await expect(favoriteService.addFavorite(null as any)).rejects.toThrow('日本酒データが無効です');
+      await expect(favoriteService.addFavorite(null as unknown as SakeData)).rejects.toThrow('日本酒データが無効です');
       await expect(favoriteService.addFavorite({ ...mockSake, id: '' })).rejects.toThrow('日本酒データが無効です');
     });
 

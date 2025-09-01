@@ -112,7 +112,7 @@ describe('useSearch', () => {
     });
 
     test('ローディング状態が正しく管理されること', async () => {
-      let resolvePromise: (value: any) => void;
+      let resolvePromise: (value: unknown) => void;
       const searchPromise = new Promise(resolve => {
         resolvePromise = resolve;
       });
@@ -131,7 +131,7 @@ describe('useSearch', () => {
       expect(result.current.isLoading).toBe(false);
 
       // 検索開始（ローディング状態の変更を含む）
-      let searchCall: Promise<any>;
+      let searchCall: Promise<unknown>;
       await act(async () => {
         searchCall = result.current.search('テスト検索');
         // 次のティックでローディング状態を確認

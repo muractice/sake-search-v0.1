@@ -40,7 +40,7 @@ export interface SakeSearchResult {
 }
 
 export class SakeSearchError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'SakeSearchError';
   }
@@ -169,7 +169,7 @@ export class SakeService {
   /**
    * プライベートメソッド: エラーハンドリング
    */
-  private handleSearchError(error: any): never {
+  private handleSearchError(error: unknown): never {
     if (error instanceof SakeSearchError) {
       throw error;
     }

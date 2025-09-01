@@ -259,7 +259,7 @@ describe('useFavorites', () => {
       const { result } = renderHook(() => useFavorites());
 
       act(() => {
-        result.current.user = mockUser as any;
+        result.current.user = mockUser as unknown as typeof result.current.user;
       });
 
       const initialShowFavorites = result.current.showFavorites;
@@ -293,7 +293,7 @@ describe('useFavorites', () => {
       const { result } = renderHook(() => useFavorites());
 
       act(() => {
-        result.current.user = mockUser as any;
+        result.current.user = mockUser as unknown as typeof result.current.user;
       });
 
       const initialFavoritesLength = result.current.favorites.length;

@@ -38,7 +38,7 @@ export interface AuthSession {
 }
 
 export class FavoriteServiceError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'FavoriteServiceError';
   }
@@ -274,7 +274,17 @@ export class FavoriteService {
     }[];
   }> {
     try {
-      const response = await this.apiClient.get<any>('/api/v1/favorites/statistics');
+      const response = await this.apiClient.get<{
+        totalFavorites: number;
+        mostFavoritedBrewery?: string;
+        mostFavoritedPrefecture?: string;
+        averageSweetness?: number;
+        averageRichness?: number;
+        flavorDistribution: {
+          type: string;
+          count: number;
+        }[];
+      }>('/api/v1/favorites/statistics');
       return response.data;
     } catch (error) {
       this.handleError('お気に入り統計の取得に失敗しました', error);
@@ -319,7 +329,7 @@ export class FavoriteService {
   /**
    * プライベートメソッド: エラーハンドリング
    */
-  private handleError(message: string, error: any): never {
+  private handleError(message: string, error: unknown): never {
     if (error instanceof FavoriteServiceError) {
       throw error;
     }
