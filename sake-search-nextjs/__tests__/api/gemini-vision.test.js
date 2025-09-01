@@ -50,7 +50,7 @@ describe('Gemini Vision API Tests', () => {
   test('APIキーが設定されていない場合はエラーを返す', async () => {
     delete process.env.GEMINI_API_KEY;
     
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {
@@ -76,7 +76,7 @@ describe('Gemini Vision API Tests', () => {
   });
 
   test('画像データが提供されていない場合はエラーを返す', async () => {
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {
@@ -107,7 +107,7 @@ describe('Gemini Vision API Tests', () => {
 
     global.fetch.mockResolvedValue(mockGeminiResponse);
 
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {
@@ -143,7 +143,7 @@ describe('Gemini Vision API Tests', () => {
     abortError.name = 'AbortError';
     global.fetch.mockRejectedValue(abortError);
 
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {
@@ -168,7 +168,7 @@ describe('Gemini Vision API Tests', () => {
     const genericError = new Error('Network error');
     global.fetch.mockRejectedValue(genericError);
 
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {
@@ -203,7 +203,7 @@ describe('Gemini Vision API Tests', () => {
 
     global.fetch.mockResolvedValue(mockGeminiResponse);
 
-    const { POST } = require('../../app/api/gemini-vision/route');
+    const { POST } = require('../../src/app/api/gemini-vision/route');
     const { NextResponse } = require('next/server');
     
     const mockRequest = {

@@ -115,9 +115,15 @@ export class RestaurantService {
   async getRestaurants(): Promise<RestaurantMenu[]> {
     try {
       console.log('RestaurantService.getRestaurants: APIを呼び出します');
-      const data = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus') as unknown as { restaurants: RestaurantMenu[] };
-      console.log('RestaurantService.getRestaurants: レスポンス取得成功', data);
-      return data.restaurants || [];
+      const response = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus');
+      console.log('RestaurantService.getRestaurants: レスポンス取得成功', response);
+      console.log('RestaurantService.getRestaurants: response.data:', response.data);
+      console.log('RestaurantService.getRestaurants: response.restaurants:', (response as any).restaurants);
+      
+      // APIは直接 { restaurants: [...] } を返すので response.restaurants にアクセス
+      const restaurants = (response as any).restaurants || [];
+      console.log('RestaurantService.getRestaurants: 最終的なrestaurants:', restaurants);
+      return restaurants;
     } catch (error) {
       console.error('RestaurantService.getRestaurants: エラー詳細', error);
       this.handleError('飲食店の取得に失敗しました', error);
@@ -213,7 +219,7 @@ export class RestaurantService {
 
       this.validateMenuSakeInput(input);
 
-      const response = await this.apiClient.post<RestaurantMenuSake>(`/api/restaurant/menus/${menuId}/sakes`, input);
+      const response = await this.apiClient.post<RestaurantMenuSake>(`/api/restaurant/${menuId}/menus/${input.sake_id}`, input);
       return response.data;
     } catch (error) {
       this.handleError('メニューへの日本酒追加に失敗しました', error);
@@ -236,9 +242,10 @@ export class RestaurantService {
       const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
         restaurant_menu_id: menuId,
         sakes
-      }) as unknown as { menuSakes: RestaurantMenuSake[] };
+      });
 
-      return response.menuSakes || [];
+      // APIは直接 { menuSakes: [...] } を返すので response.menuSakes にアクセス
+      return (response as any).menuSakes || [];
     } catch (error) {
       this.handleError('メニューへの日本酒一括追加に失敗しました', error);
     }
@@ -358,9 +365,14 @@ export class RestaurantService {
       }
 
       console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', menuId);
-      const data = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${menuId}`) as unknown as { menuWithSakes: RestaurantMenuWithSakes[] };
-      console.log('RestaurantService.getRestaurantWithSakes: 取得結果', data);
-      return data.menuWithSakes || [];
+      const response = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${menuId}`);
+      console.log('RestaurantService.getRestaurantWithSakes: 取得結果', response);
+      console.log('RestaurantService.getRestaurantWithSakes: response.menuWithSakes:', (response as any).menuWithSakes);
+      
+      // APIは直接 { menuWithSakes: [...] } を返すので response.menuWithSakes にアクセス
+      const menuWithSakes = (response as any).menuWithSakes || [];
+      console.log('RestaurantService.getRestaurantWithSakes: 最終的なmenuWithSakes:', menuWithSakes);
+      return menuWithSakes;
     } catch (error) {
       console.error('RestaurantService.getRestaurantWithSakes: エラー', error);
       this.handleError('飲食店詳細の取得に失敗しました', error);
@@ -374,7 +386,7 @@ export class RestaurantService {
     try {
       this.validateRecordInput(input);
 
-      const response = await this.apiClient.post<RestaurantDrinkingRecord>('/api/v1/restaurants/records', {
+      const response = await this.apiClient.post<RestaurantDrinkingRecord>('/api/restaurant/records', {
         ...input,
         date: input.date || new Date().toISOString().split('T')[0],
       });
@@ -424,10 +436,10 @@ export class RestaurantService {
    */
   async getRecords(options: RestaurantSearchOptions = {}): Promise<RestaurantRecordSearchResult> {
     try {
-      const response = await this.apiClient.post<RestaurantRecordSearchResult>('/api/v1/restaurants/records/search', {
+      const response = await this.apiClient.get<RestaurantRecordSearchResult>('/api/restaurant/records', {
         ...options,
-        limit: options.limit || 50,
-        offset: options.offset || 0,
+        limit: String(options.limit || 50),
+        offset: String(options.offset || 0),
         sortBy: options.sortBy || 'created_at',
         sortOrder: options.sortOrder || 'desc',
       });
@@ -443,7 +455,7 @@ export class RestaurantService {
    */
   async getStatistics(): Promise<RestaurantStatistics> {
     try {
-      const response = await this.apiClient.get<RestaurantStatistics>('/api/v1/restaurants/statistics');
+      const response = await this.apiClient.get<RestaurantStatistics>('/api/restaurant/records');
       return response.data;
     } catch (error) {
       this.handleError('飲食店記録統計の取得に失敗しました', error);
@@ -457,7 +469,7 @@ export class RestaurantService {
     try {
       this.validateRecommendationOptions(options);
 
-      const response = await this.apiClient.post<RecommendationResult[]>('/api/v1/restaurants/recommendations', {
+      const response = await this.apiClient.post<RecommendationResult[]>('/api/recommendations/restaurant', {
         ...options,
         limit: options.limit || 10,
       });
@@ -473,8 +485,9 @@ export class RestaurantService {
    */
   async getRecentRecords(limit: number = 10): Promise<RestaurantDrinkingRecordDetail[]> {
     try {
-      const data = await this.apiClient.get<{ records: RestaurantDrinkingRecordDetail[] }>(`/api/restaurant/records?limit=${limit}`) as unknown as { records: RestaurantDrinkingRecordDetail[] };
-      return data.records || [];
+      const response = await this.apiClient.get<{ records: RestaurantDrinkingRecordDetail[] }>(`/api/restaurant/records?limit=${limit}`);
+      // APIは直接 { records: [...] } を返すので response.records にアクセス
+      return (response as any).records || [];
     } catch (error) {
       this.handleError('最近の飲食店記録取得に失敗しました', error);
     }

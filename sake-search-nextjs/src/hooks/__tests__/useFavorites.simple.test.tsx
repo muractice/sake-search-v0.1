@@ -57,7 +57,7 @@ describe('useFavorites (Simple Tests)', () => {
     }));
   });
 
-  it('初期状態を確認', () => {
+  it('初期状態を確認', async () => {
     const { result } = renderHook(() => useFavorites());
 
     expect(result.current.favorites).toEqual([]);
@@ -68,6 +68,11 @@ describe('useFavorites (Simple Tests)', () => {
     
     // 初期状態ではisLoadingはtrueであることを確認
     expect(result.current.isLoading).toBe(true);
+
+    // 非同期処理の完了を待つ
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   it('isFavorite関数の基本動作', () => {

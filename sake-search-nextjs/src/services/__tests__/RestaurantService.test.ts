@@ -159,11 +159,11 @@ describe('RestaurantService', () => {
         timestamp: '2024-01-15T10:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/search', mockResult);
+      mockApiClient.setMockResponse('/api/restaurant/menus', mockResult);
 
       const result = await restaurantService.getRestaurants();
 
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual([mockRestaurant]);
     });
 
     it('should handle API errors', async () => {
@@ -181,7 +181,7 @@ describe('RestaurantService', () => {
     };
 
     it('should create restaurant successfully', async () => {
-      mockApiClient.setMockResponse('/api/v1/restaurants', mockRestaurant);
+      mockApiClient.setMockResponse('/api/restaurant/menus', mockRestaurant);
 
       const result = await restaurantService.createRestaurant(validInput);
 
@@ -221,7 +221,7 @@ describe('RestaurantService', () => {
 
     it('should update restaurant successfully', async () => {
       const updatedRestaurant = { ...mockRestaurant, ...validUpdate };
-      mockApiClient.setMockResponse('/api/v1/restaurants/restaurant-1', updatedRestaurant);
+      mockApiClient.setMockResponse('/api/restaurant/menus/restaurant-1', updatedRestaurant);
 
       const result = await restaurantService.updateRestaurant('restaurant-1', validUpdate);
 
@@ -231,7 +231,7 @@ describe('RestaurantService', () => {
     it('should validate restaurant ID', async () => {
       await expect(
         restaurantService.updateRestaurant('', validUpdate)
-      ).rejects.toThrow('飲食店IDが指定されていません');
+      ).rejects.toThrow('メニューIDが指定されていません');
     });
 
     it('should validate updated fields', async () => {
@@ -251,7 +251,7 @@ describe('RestaurantService', () => {
     it('should validate restaurant ID', async () => {
       await expect(
         restaurantService.deleteRestaurant('')
-      ).rejects.toThrow('飲食店IDが指定されていません');
+      ).rejects.toThrow('メニューIDが指定されていません');
     });
 
     it('should handle 404 errors gracefully', async () => {
@@ -263,17 +263,17 @@ describe('RestaurantService', () => {
 
   describe('getRestaurantWithSakes', () => {
     it('should get restaurant with sakes successfully', async () => {
-      mockApiClient.setMockResponse('/api/v1/restaurants/restaurant-1/with-sakes', mockRestaurantWithSakes);
+      mockApiClient.setMockResponse('/api/restaurant/menus/list?restaurant_id=restaurant-1', { menuWithSakes: [mockRestaurantWithSakes] });
 
       const result = await restaurantService.getRestaurantWithSakes('restaurant-1');
 
-      expect(result).toEqual(mockRestaurantWithSakes);
+      expect(result).toEqual([mockRestaurantWithSakes]);
     });
 
     it('should validate restaurant ID', async () => {
       await expect(
         restaurantService.getRestaurantWithSakes('')
-      ).rejects.toThrow('飲食店IDが指定されていません');
+      ).rejects.toThrow('メニューIDが指定されていません');
     });
   });
 
@@ -294,7 +294,7 @@ describe('RestaurantService', () => {
         updated_at: '2024-01-15T11:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/restaurant-1/sakes', mockMenuSake);
+      mockApiClient.setMockResponse('/api/restaurant/restaurant-1/menus/sake-1', mockMenuSake);
 
       const result = await restaurantService.addSakeToMenu('restaurant-1', validInput);
 
@@ -346,7 +346,7 @@ describe('RestaurantService', () => {
         updated_at: '2024-01-15T12:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/records', mockNewRecord);
+      mockApiClient.setMockResponse('/api/restaurant/records', mockNewRecord);
 
       const result = await restaurantService.createRecord(validInput);
 
@@ -408,7 +408,7 @@ describe('RestaurantService', () => {
         updated_at: '2024-01-15T12:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/records', mockNewRecord);
+      mockApiClient.setMockResponse('/api/restaurant/records', mockNewRecord);
 
       const result = await restaurantService.createRecord(inputWithoutDate);
 
@@ -425,7 +425,7 @@ describe('RestaurantService', () => {
         timestamp: '2024-01-15T12:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/records/search', mockResult);
+      mockApiClient.setMockResponse('/api/restaurant/records', mockResult);
 
       const result = await restaurantService.getRecords();
 
@@ -459,7 +459,7 @@ describe('RestaurantService', () => {
         ],
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/statistics', mockStats);
+      mockApiClient.setMockResponse('/api/restaurant/records', mockStats);
 
       const result = await restaurantService.getStatistics();
 
@@ -489,7 +489,7 @@ describe('RestaurantService', () => {
         },
       ];
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/recommendations', mockRecommendations);
+      mockApiClient.setMockResponse('/api/recommendations/restaurant', mockRecommendations);
 
       const result = await restaurantService.getRecommendations({ type: 'similarity' });
 
@@ -518,7 +518,7 @@ describe('RestaurantService', () => {
         timestamp: '2024-01-15T12:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/records/search', mockResult);
+      mockApiClient.setMockResponse('/api/restaurant/records?limit=5', mockResult);
 
       const result = await restaurantService.getRecentRecords(5);
 
@@ -535,7 +535,7 @@ describe('RestaurantService', () => {
         timestamp: '2024-01-15T12:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/v1/restaurants/records/search', mockResult);
+      mockApiClient.setMockResponse('/api/restaurant/records', mockResult);
 
       const result = await restaurantService.getHighRatedRecords(4);
 

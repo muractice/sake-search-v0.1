@@ -61,7 +61,7 @@ describe('useFavorites', () => {
     });
   });
 
-  it('初期状態が正しく設定される', () => {
+  it('初期状態が正しく設定される', async () => {
     const { result } = renderHook(() => useFavorites());
 
     // 初期状態の確認
@@ -70,6 +70,11 @@ describe('useFavorites', () => {
     expect(result.current.showFavorites).toBe(true);
     // 初期状態ではローディング中
     expect(result.current.isLoading).toBe(true);
+
+    // 非同期処理の完了を待つ
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
   });
 
   describe('お気に入り機能', () => {
