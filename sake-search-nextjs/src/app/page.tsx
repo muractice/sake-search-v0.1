@@ -18,7 +18,6 @@ import { SakeData } from '@/types/sake';
 export default function Home() {
   const [activeTab, setActiveTab] = useState('search');
   const [showAuthForm, setShowAuthForm] = useState(false);
-  const [menuItems, setMenuItems] = useState<string[]>([]);
   const [dialogState, setDialogState] = useState({
     isOpen: false,
     title: '酒サーチ',
@@ -139,8 +138,6 @@ export default function Home() {
               onSelectSake={selectSake}
               onChartClick={handleChartClick}
               onSearch={search}
-              restaurantMenuItems={menuItems}
-              onRestaurantMenuItemsChange={setMenuItems}
               onTabChange={setActiveTab}
             />
           )}

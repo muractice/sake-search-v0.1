@@ -14,8 +14,6 @@ interface RestaurantTabProps {
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
   onSearch: (query: string) => Promise<SakeData | null>;
-  restaurantMenuItems: string[];
-  onRestaurantMenuItemsChange: (items: string[]) => void;
   onTabChange?: (tabId: string) => void;
 }
 
@@ -29,17 +27,13 @@ export const RestaurantTab = ({
   onSelectSake,
   onChartClick,
   onSearch,
-  restaurantMenuItems, // 互換性のために残すが使用しない
-  onRestaurantMenuItemsChange, // 互換性のために残すが使用しない
   onTabChange,
 }: RestaurantTabProps) => {
   const [activeSegment, setActiveSegment] = useState<SegmentType>('menu');
   
-  // useMenuRegistrationフックから実際のメニューアイテムを取得
-  const { inputState } = useMenuRegistration();
-  const actualMenuItems = inputState.menuItems;
-  const actualMenuSakeData = inputState.menuSakeData;
-
+  // RestaurantTab内でメニューデータを管理
+  const menuRegistration = useMenuRegistration();
+  const { inputState, inputActions, managementState, managementActions, actions } = menuRegistration;
 
   return (
     <div className="space-y-6">
@@ -84,11 +78,16 @@ export const RestaurantTab = ({
           onClearComparison={onClearComparison}
           onSelectSake={onSelectSake}
           onChartClick={onChartClick}
+          inputState={inputState}
+          inputActions={inputActions}
+          managementState={managementState}
+          managementActions={managementActions}
+          actions={actions}
         />
       ) : (
         <RestaurantRecommendations
-          restaurantMenuItems={actualMenuItems}
-          restaurantMenuSakeData={actualMenuSakeData}
+          restaurantMenuItems={inputState.menuItems}
+          restaurantMenuSakeData={inputState.menuSakeData}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}

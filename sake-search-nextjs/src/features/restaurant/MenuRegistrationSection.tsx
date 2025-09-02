@@ -14,6 +14,12 @@ interface MenuRegistrationSectionProps {
   onClearComparison: () => void;
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
+  // メニュー管理用のprops
+  inputState: ReturnType<typeof useMenuRegistration>['inputState'];
+  inputActions: ReturnType<typeof useMenuRegistration>['inputActions'];
+  managementState: ReturnType<typeof useMenuRegistration>['managementState'];
+  managementActions: ReturnType<typeof useMenuRegistration>['managementActions'];
+  actions: ReturnType<typeof useMenuRegistration>['actions'];
 }
 
 export const MenuRegistrationSection = ({
@@ -23,18 +29,12 @@ export const MenuRegistrationSection = ({
   onClearComparison,
   onSelectSake,
   onChartClick,
+  inputState,
+  inputActions,
+  managementState,
+  managementActions,
+  actions,
 }: MenuRegistrationSectionProps) => {
-  // 統合フックを使用
-  const {
-    inputState,
-    inputActions,
-    managementState,
-    managementActions,
-    actions,
-  } = useMenuRegistration();
-  
-  console.log('MenuRegistrationSection: handleProcessImage関数の型:', typeof inputActions.handleProcessImage);
-
   return (
     <div className="space-y-6">
       {/* メニュー登録セクション */}
