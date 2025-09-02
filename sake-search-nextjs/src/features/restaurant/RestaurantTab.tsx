@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MenuRegistrationSection } from '@/features/restaurant/MenuRegistrationSection';
 import { RestaurantRecommendations } from '@/features/recommendations/RestaurantRecommendations';
+import { useMenuRegistration } from '@/features/menu/hooks/useMenuRegistration';
 import { SakeData } from '@/types/sake';
 
 interface RestaurantTabProps {
@@ -28,54 +29,16 @@ export const RestaurantTab = ({
   onSelectSake,
   onChartClick,
   onSearch,
-  restaurantMenuItems,
-  onRestaurantMenuItemsChange,
+  restaurantMenuItems, // 互換性のために残すが使用しない
+  onRestaurantMenuItemsChange, // 互換性のために残すが使用しない
   onTabChange,
 }: RestaurantTabProps) => {
   const [activeSegment, setActiveSegment] = useState<SegmentType>('menu');
-  const [restaurantMenuSakeData, setRestaurantMenuSakeData] = useState<SakeData[]>([]);
-  const [menuItemsNotFound, setMenuItemsNotFound] = useState<string[]>([]);
-
-  // 飲食店のメニューアイテムが変更されたら日本酒データを取得
-  useEffect(() => {
-    const fetchRestaurantMenuSakeData = async () => {
-      if (restaurantMenuItems.length === 0) {
-        setRestaurantMenuSakeData([]);
-        setMenuItemsNotFound([]);
-        return;
-      }
-      const sakeDataList: SakeData[] = [];
-      const notFoundList: string[] = [];
-      
-      // 短時間で処理を完了させるため、並列処理に変更
-      const promises = restaurantMenuItems.map(async (sakeName) => {
-        try {
-          const sakeData = await onSearch(sakeName);
-          return { sakeName, sakeData };
-        } catch (error) {
-          console.log(`日本酒「${sakeName}」のデータ取得に失敗:`, error);
-          return { sakeName, sakeData: null };
-        }
-      });
-      
-      const results = await Promise.all(promises);
-      
-      for (const { sakeName, sakeData } of results) {
-        if (sakeData) {
-          sakeDataList.push(sakeData);
-        } else {
-          notFoundList.push(sakeName);
-        }
-      }
-      
-      setRestaurantMenuSakeData(sakeDataList);
-      setMenuItemsNotFound(notFoundList);
-    };
-
-    // debounce効果を付与して、連続更新を回避
-    const timer = setTimeout(fetchRestaurantMenuSakeData, 300);
-    return () => clearTimeout(timer);
-  }, [restaurantMenuItems, onSearch]);
+  
+  // useMenuRegistrationフックから実際のメニューアイテムを取得
+  const { inputState } = useMenuRegistration();
+  const actualMenuItems = inputState.menuItems;
+  const actualMenuSakeData = inputState.menuSakeData;
 
 
   return (
@@ -124,8 +87,8 @@ export const RestaurantTab = ({
         />
       ) : (
         <RestaurantRecommendations
-          restaurantMenuItems={restaurantMenuItems}
-          restaurantMenuSakeData={restaurantMenuSakeData}
+          restaurantMenuItems={actualMenuItems}
+          restaurantMenuSakeData={actualMenuSakeData}
           onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}
