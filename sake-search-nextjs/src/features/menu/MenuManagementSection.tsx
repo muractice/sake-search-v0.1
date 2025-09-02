@@ -83,6 +83,56 @@ export const MenuManagementSection = ({
     }
   };
 
+  const handleMenuSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newValue = e.target.value;
+    
+    // 新しいメニューから切り替える場合の確認
+    if (!selectedSavedMenu && menuItems.length > 0 && newValue) {
+      const shouldProceed = confirm(
+        '現在の新しいメニューは保存されていません。\n' +
+        '切り替えると入力した内容が失われます。\n\n' +
+        '続行しますか？'
+      );
+      
+      if (!shouldProceed) {
+        // キャンセルされた場合は元に戻す
+        e.target.value = selectedSavedMenu;
+        return;
+      }
+    }
+    
+    if (newValue) {
+      // 既存メニューを選択した場合
+      onLoadSavedMenu(newValue);
+      setSelectedRestaurant(newValue);
+      setShowAddRestaurantForm(false);
+      // フォームをクリア
+      setNewRestaurantName('');
+      setNewRestaurantLocation('');
+    } else {
+      // 「新しいメニュー」を選択した場合
+      if (selectedSavedMenu && menuItems.length > 0) {
+        const shouldClear = confirm(
+          '現在のメニューをどうしますか？\n\n' +
+          '「OK」: クリア\n' +
+          '「キャンセル」: そのまま'
+        );
+        
+        if (shouldClear) {
+          onMenuItemsChange([]);
+        }
+      }
+      
+      setSelectedSavedMenu('');
+      setSelectedRestaurant('');
+      // 新しいメニュー選択時は自動でフォームを表示
+      setShowAddRestaurantForm(true);
+      // フォームをクリア
+      setNewRestaurantName('');
+      setNewRestaurantLocation('');
+    }
+  };
+
   // 認証チェック
   if (isAuthLoading) {
     return (
@@ -128,55 +178,7 @@ export const MenuManagementSection = ({
           <div className="flex flex-col sm:flex-row gap-2">
             <select
               value={selectedSavedMenu}
-              onChange={(e) => {
-                const newValue = e.target.value;
-                
-                // 新しいメニューから切り替える場合の確認
-                if (!selectedSavedMenu && menuItems.length > 0 && newValue) {
-                  const shouldProceed = confirm(
-                    '現在の新しいメニューは保存されていません。\n' +
-                    '切り替えると入力した内容が失われます。\n\n' +
-                    '続行しますか？'
-                  );
-                  
-                  if (!shouldProceed) {
-                    // キャンセルされた場合は元に戻す
-                    e.target.value = selectedSavedMenu;
-                    return;
-                  }
-                }
-                
-                if (newValue) {
-                  // 既存メニューを選択した場合
-                  onLoadSavedMenu(newValue);
-                  setSelectedRestaurant(newValue);
-                  setShowAddRestaurantForm(false);
-                  // フォームをクリア
-                  setNewRestaurantName('');
-                  setNewRestaurantLocation('');
-                } else {
-                  // 「新しいメニュー」を選択した場合
-                  if (selectedSavedMenu && menuItems.length > 0) {
-                    const shouldClear = confirm(
-                      '現在のメニューをどうしますか？\n\n' +
-                      '「OK」: クリア\n' +
-                      '「キャンセル」: そのまま'
-                    );
-                    
-                    if (shouldClear) {
-                      onMenuItemsChange([]);
-                    }
-                  }
-                  
-                  setSelectedSavedMenu('');
-                  setSelectedRestaurant('');
-                  // 新しいメニュー選択時は自動でフォームを表示
-                  setShowAddRestaurantForm(true);
-                  // フォームをクリア
-                  setNewRestaurantName('');
-                  setNewRestaurantLocation('');
-                }
-              }}
+              onChange={handleMenuSelectionChange}
               disabled={loadingMenu}
               className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
             >
