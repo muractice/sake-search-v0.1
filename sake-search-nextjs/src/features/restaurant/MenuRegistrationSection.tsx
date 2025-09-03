@@ -7,34 +7,30 @@ import { MenuManagementSection } from '@/features/menu/MenuManagementSection';
 import { MenuSakeListDisplay } from '@/features/menu/MenuSakeListDisplay';
 import { ComparisonChartSection } from '@/features/comparison/ComparisonChartSection';
 
-interface MenuRegistrationSectionProps {
-  comparisonList: SakeData[];
-  onToggleComparison: (sake: SakeData) => void;
-  isInComparison: (sakeId: string) => boolean;
-  onClearComparison: () => void;
+interface ComparisonProps {
+  list: SakeData[];
+  onToggle: (sake: SakeData) => void;
+  isInList: (sakeId: string) => boolean;
+  onClear: () => void;
+}
+
+interface SelectionProps {
   onSelectSake: (sake: SakeData) => void;
   onChartClick: (sake: SakeData) => void;
-  // メニュー管理用のprops
-  inputState: ReturnType<typeof useMenuRegistration>['inputState'];
-  inputActions: ReturnType<typeof useMenuRegistration>['inputActions'];
-  managementState: ReturnType<typeof useMenuRegistration>['managementState'];
-  managementActions: ReturnType<typeof useMenuRegistration>['managementActions'];
-  actions: ReturnType<typeof useMenuRegistration>['actions'];
+}
+
+interface MenuRegistrationSectionProps {
+  comparison: ComparisonProps;
+  selection: SelectionProps;
+  menuRegistration: ReturnType<typeof useMenuRegistration>;
 }
 
 export const MenuRegistrationSection = ({
-  comparisonList,
-  onToggleComparison,
-  isInComparison,
-  onClearComparison,
-  onSelectSake,
-  onChartClick,
-  inputState,
-  inputActions,
-  managementState,
-  managementActions,
-  actions,
+  comparison,
+  selection,
+  menuRegistration,
 }: MenuRegistrationSectionProps) => {
+  const { inputState, inputActions, managementState, managementActions, actions } = menuRegistration;
   return (
     <div className="space-y-6">
       {/* メニュー登録セクション */}
@@ -70,20 +66,20 @@ export const MenuRegistrationSection = ({
           menuSakeData={inputState.menuSakeData}
           notFoundItems={inputState.notFoundItems}
           selectedSavedMenu={managementState.selectedSavedMenu}
-          isInComparison={isInComparison}
-          onToggleComparison={onToggleComparison}
+          isInComparison={comparison.isInList}
+          onToggleComparison={comparison.onToggle}
           onRemoveItem={inputActions.handleRemoveItem}
-          comparisonList={comparisonList}
+          comparisonList={comparison.list}
         />
       )}
 
       {/* 比較チャートセクション */}
       <ComparisonChartSection
-        comparisonList={comparisonList}
-        onToggleComparison={onToggleComparison}
-        onClearComparison={onClearComparison}
-        onSelectSake={onSelectSake}
-        onChartClick={onChartClick}
+        comparisonList={comparison.list}
+        onToggleComparison={comparison.onToggle}
+        onClearComparison={comparison.onClear}
+        onSelectSake={selection.onSelectSake}
+        onChartClick={selection.onChartClick}
       />
     </div>
   );

@@ -32,7 +32,7 @@ export const RestaurantTab = ({
   } = useSelection();
   
   const menuRegistration = useMenuRegistration();
-  const { inputState, inputActions, managementState, managementActions, actions } = menuRegistration;
+  const { inputState } = menuRegistration;
 
   return (
     <div className="space-y-6">
@@ -71,17 +71,17 @@ export const RestaurantTab = ({
       {/* コンテンツ表示 */}
       {activeSegment === 'menu' ? (
         <MenuRegistrationSection
-          comparisonList={comparisonList}
-          onToggleComparison={toggleComparison}
-          isInComparison={isInComparison}
-          onClearComparison={clearComparison}
-          onSelectSake={selectSake}
-          onChartClick={handleChartClick}
-          inputState={inputState}
-          inputActions={inputActions}
-          managementState={managementState}
-          managementActions={managementActions}
-          actions={actions}
+          comparison={{
+            list: comparisonList,
+            onToggle: toggleComparison,
+            isInList: isInComparison,
+            onClear: clearComparison,
+          }}
+          selection={{
+            onSelectSake: selectSake,
+            onChartClick: handleChartClick,
+          }}
+          menuRegistration={menuRegistration}
         />
       ) : (
         <RestaurantRecommendations
