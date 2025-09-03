@@ -31,14 +31,6 @@ export default function Home() {
     isInComparison,
     clearComparison,
   } = useComparison();
-  
-  // 飲食店タブ用の独立した比較リスト
-  const {
-    comparisonList: restaurantComparisonList,
-    toggleComparison: toggleRestaurantComparison,
-    isInComparison: isInRestaurantComparison,
-    clearComparison: clearRestaurantComparison,
-  } = useComparison();
 
   const {
     isLoading,
@@ -131,13 +123,6 @@ export default function Home() {
 
           {activeTab === 'restaurant' && (
             <RestaurantTab
-              comparisonList={restaurantComparisonList}
-              onToggleComparison={toggleRestaurantComparison}
-              isInComparison={isInRestaurantComparison}
-              onClearComparison={clearRestaurantComparison}
-              onSelectSake={selectSake}
-              onChartClick={handleChartClick}
-              onSearch={search}
               onTabChange={setActiveTab}
             />
           )}

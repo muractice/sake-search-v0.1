@@ -4,34 +4,33 @@ import { useState } from 'react';
 import { MenuRegistrationSection } from '@/features/restaurant/MenuRegistrationSection';
 import { RestaurantRecommendations } from '@/features/recommendations/RestaurantRecommendations';
 import { useMenuRegistration } from '@/features/menu/hooks/useMenuRegistration';
-import { SakeData } from '@/types/sake';
+import { useComparison } from '@/features/comparison/hooks/useComparison';
+import { useSelection } from '@/features/search/hooks/useSelection';
 
 interface RestaurantTabProps {
-  comparisonList: SakeData[];
-  onToggleComparison: (sake: SakeData) => void;
-  isInComparison: (sakeId: string) => boolean;
-  onClearComparison: () => void;
-  onSelectSake: (sake: SakeData) => void;
-  onChartClick: (sake: SakeData) => void;
-  onSearch: (query: string) => Promise<SakeData | null>;
   onTabChange?: (tabId: string) => void;
 }
 
 type SegmentType = 'menu' | 'recommendations';
 
 export const RestaurantTab = ({
-  comparisonList,
-  onToggleComparison,
-  isInComparison,
-  onClearComparison,
-  onSelectSake,
-  onChartClick,
-  onSearch,
   onTabChange,
 }: RestaurantTabProps) => {
   const [activeSegment, setActiveSegment] = useState<SegmentType>('menu');
   
-  // RestaurantTab内でメニューデータを管理
+  // RestaurantTab内で全て管理
+  const {
+    comparisonList,
+    toggleComparison,
+    isInComparison,
+    clearComparison,
+  } = useComparison();
+  
+  const {
+    selectSake,
+    handleChartClick,
+  } = useSelection();
+  
   const menuRegistration = useMenuRegistration();
   const { inputState, inputActions, managementState, managementActions, actions } = menuRegistration;
 
@@ -73,11 +72,11 @@ export const RestaurantTab = ({
       {activeSegment === 'menu' ? (
         <MenuRegistrationSection
           comparisonList={comparisonList}
-          onToggleComparison={onToggleComparison}
+          onToggleComparison={toggleComparison}
           isInComparison={isInComparison}
-          onClearComparison={onClearComparison}
-          onSelectSake={onSelectSake}
-          onChartClick={onChartClick}
+          onClearComparison={clearComparison}
+          onSelectSake={selectSake}
+          onChartClick={handleChartClick}
           inputState={inputState}
           inputActions={inputActions}
           managementState={managementState}
@@ -88,7 +87,7 @@ export const RestaurantTab = ({
         <RestaurantRecommendations
           restaurantMenuItems={inputState.menuItems}
           restaurantMenuSakeData={inputState.menuSakeData}
-          onToggleComparison={onToggleComparison}
+          onToggleComparison={toggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}
         />
