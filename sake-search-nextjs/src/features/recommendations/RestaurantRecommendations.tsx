@@ -1,8 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GachaSlotAnimation } from './RestaurantRecommendations/components/GachaSlotAnimation';
-import { GachaResult } from './RestaurantRecommendations/components/GachaResult';
+import { GachaSection } from './RestaurantRecommendations/components/GachaSection';
 import { RecommendationTypeSelector } from './RestaurantRecommendations/components/RecommendationTypeSelector';
 import { EmptyState } from './RestaurantRecommendations/components/EmptyState';
 import { RecommendationList } from './RestaurantRecommendations/components/RecommendationList';
@@ -88,41 +87,22 @@ export const RestaurantRecommendations = ({
           />
         </div>
         
-        {/* ガチャスロット演出 */}
-        <GachaSlotAnimation 
+        {/* ガチャ関連の全ての表示 */}
+        <GachaSection
+          recommendationType={recommendationType}
+          showRecommendations={showRecommendations}
           isSlotAnimating={isSlotAnimating}
           slotItems={slotItems}
           slotRef={slotRef}
+          selectedGachaItem={selectedGachaItem}
+          isInComparison={isInComparison}
+          onToggleComparison={onToggleComparison}
+          onPlayAgain={() => {
+            resetGacha();
+            fetchRecommendations('random');
+          }}
+          onStartGacha={() => fetchRecommendations('random')}
         />
-        
-        {/* ガチャ結果表示 */}
-        {recommendationType === 'random' && selectedGachaItem && !isSlotAnimating && (
-          <GachaResult
-            selectedGachaItem={selectedGachaItem}
-            isInComparison={isInComparison}
-            onToggleComparison={onToggleComparison}
-            onPlayAgain={() => {
-              resetGacha();
-              fetchRecommendations('random');
-            }}
-          />
-        )}
-        
-        {/* ガチャのデフォルト表示（何も表示していない状態） */}
-        {recommendationType === 'random' && !selectedGachaItem && !isSlotAnimating && showRecommendations && (
-          <div className="mt-4 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-400">
-            <div className="text-center">
-              <p className="text-gray-500 mb-4">🎲 おすすめガチャをお楽しみください！</p>
-              <p className="text-sm text-gray-400 mb-4">メニューからランダムに日本酒を選択します</p>
-              <button
-                onClick={() => fetchRecommendations('random')}
-                className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 font-bold text-lg"
-              >
-                🎰 ガチャを回す！
-              </button>
-            </div>
-          </div>
-        )}
         
         {/* レコメンド結果表示 */}
         {showRecommendations && recommendationType !== 'random' && (
