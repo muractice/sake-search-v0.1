@@ -1,26 +1,15 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { SakeData } from '@/types/sake';
-
-export type RestaurantRecommendationType = 'similarity' | 'pairing' | 'random';
-
-interface RecommendationResult {
-  sake: SakeData;
-  score: number;
-  type: string;
-  reason: string;
-  similarityScore: number;
-  predictedRating: number;
-}
-
-interface RestaurantRecommendationsProps {
-  restaurantMenuItems: string[];
-  restaurantMenuSakeData: SakeData[];
-  onToggleComparison: (sake: SakeData) => void;
-  isInComparison: (sakeId: string) => boolean;
-  onTabChange?: (tabId: string) => void;
-}
+import { GachaSlotAnimation } from './RestaurantRecommendations/components/GachaSlotAnimation';
+import { GachaResult } from './RestaurantRecommendations/components/GachaResult';
+import { useGachaAnimation } from './RestaurantRecommendations/hooks/useGachaAnimation';
+import { 
+  RestaurantRecommendationType, 
+  RecommendationResult, 
+  RestaurantRecommendationsProps 
+} from './RestaurantRecommendations/types';
 
 export const RestaurantRecommendations = ({
   restaurantMenuItems,
@@ -36,72 +25,17 @@ export const RestaurantRecommendations = ({
   const [pairingDishType] = useState('');
   const [requiresMoreFavorites, setRequiresMoreFavorites] = useState(false);
   const [favoritesMessage, setFavoritesMessage] = useState('');
-  const [isSlotAnimating, setIsSlotAnimating] = useState(false);
-  const [slotItems, setSlotItems] = useState<SakeData[]>([]);
-  const [selectedGachaItem, setSelectedGachaItem] = useState<RecommendationResult | null>(null);
-  const slotRef = useRef<HTMLDivElement>(null);
+  
+  // ガチャアニメーション関連は新しいカスタムフックに委譲
+  const {
+    isSlotAnimating,
+    slotItems,
+    selectedGachaItem,
+    slotRef,
+    startSlotAnimation,
+    resetGacha,
+  } = useGachaAnimation(restaurantMenuItems);
 
-  // スロットアニメーション開始
-  const startSlotAnimation = (result: RecommendationResult) => {
-    setSelectedGachaItem(null);
-    setIsSlotAnimating(true);
-    setRecommendations([]);
-    
-    // メニューアイテムからランダムに10個選んでスロットアイテムとする
-    const menuSakeData: SakeData[] = restaurantMenuItems.map((name, index) => ({
-      id: `temp-${index}`,
-      name,
-      brewery: '',
-      brandId: 0,
-      breweryId: 0,
-      sweetness: 0,
-      richness: 0,
-      description: ''
-    } as SakeData));
-    
-    // スロット用のアイテムを作成（結果を最後に配置）
-    const shuffled = [...menuSakeData].sort(() => Math.random() - 0.5).slice(0, 9);
-    shuffled.push(result.sake);
-    setSlotItems(shuffled);
-    
-    // DOM更新後にアニメーション実行
-    setTimeout(() => {
-      if (slotRef.current) {
-        const reel = slotRef.current.querySelector('.slot-reel') as HTMLElement;
-        if (reel) {
-          let position = 0;
-          const itemHeight = 128; // h-32 = 128px
-          const totalItems = shuffled.length;
-          const finalPosition = (totalItems - 1) * itemHeight;
-          
-          // 高速回転
-          const fastInterval = setInterval(() => {
-            position += itemHeight;
-            if (position >= totalItems * itemHeight) {
-              position = 0;
-            }
-            reel.style.transform = `translateY(-${position}px)`;
-          }, 50);
-          
-          // 3秒後に減速して停止
-          setTimeout(() => {
-            clearInterval(fastInterval);
-            
-            // 減速アニメーション
-            reel.style.transition = 'transform 1s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            reel.style.transform = `translateY(-${finalPosition}px)`;
-            
-            // アニメーション終了後
-            setTimeout(() => {
-              setIsSlotAnimating(false);
-              setSelectedGachaItem(result);
-              reel.style.transition = '';
-            }, 1000);
-          }, 3000);
-        }
-      }
-    }, 100); // 100ms待ってからDOM操作を実行
-  };
 
   // レコメンドを取得する関数
   const fetchRecommendations = async (type: RestaurantRecommendationType) => {
@@ -154,8 +88,7 @@ export const RestaurantRecommendations = ({
         setRequiresMoreFavorites(true);
         setFavoritesMessage(data.message || '');
         setRecommendations([]);
-        setSelectedGachaItem(null);
-        setIsSlotAnimating(false);
+        resetGacha();
       } else {
         setRequiresMoreFavorites(false);
         setFavoritesMessage('');
@@ -230,7 +163,7 @@ export const RestaurantRecommendations = ({
           <button
             onClick={() => {
               setRecommendationType('random');
-              setSelectedGachaItem(null);
+              resetGacha();
               setShowRecommendations(true);
             }}
             className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
@@ -244,65 +177,23 @@ export const RestaurantRecommendations = ({
         </div>
         
         {/* ガチャスロット演出 */}
-        {recommendationType === 'random' && isSlotAnimating && (
-          <div className="mt-4 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-400">
-            <h3 className="text-center text-xl font-bold mb-4">🎰 おすすめガチャ回転中！ 🎰</h3>
-            <div 
-              ref={slotRef}
-              className="relative h-32 overflow-hidden bg-white rounded-lg border-4 border-yellow-500 shadow-inner"
-            >
-              <div className="slot-reel absolute w-full">
-                {slotItems.map((sake, index) => (
-                  <div 
-                    key={index}
-                    className="h-32 flex items-center justify-center border-b border-gray-200"
-                  >
-                    <div className="text-center p-4">
-                      <p className="font-bold text-lg">{sake.name}</p>
-                      <p className="text-sm text-gray-600">{sake.brewery}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <GachaSlotAnimation 
+          isSlotAnimating={isSlotAnimating}
+          slotItems={slotItems}
+          slotRef={slotRef}
+        />
         
         {/* ガチャ結果表示 */}
         {recommendationType === 'random' && selectedGachaItem && !isSlotAnimating && (
-          <div className="mt-4 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border-2 border-yellow-400">
-            <div className="bg-white rounded-lg p-4 shadow-md">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">{selectedGachaItem.sake.name}</p>
-                <p className="text-lg text-gray-600 mt-2">{selectedGachaItem.sake.brewery}</p>
-                <p className="text-sm text-gray-500 mt-3">{selectedGachaItem.reason}</p>
-                <button
-                  onClick={() => {
-                    if (!isInComparison(selectedGachaItem.sake.id)) {
-                      onToggleComparison(selectedGachaItem.sake);
-                    }
-                  }}
-                  disabled={isInComparison(selectedGachaItem.sake.id)}
-                  className={`mt-4 px-6 py-2 rounded-lg text-sm font-bold ${
-                    isInComparison(selectedGachaItem.sake.id)
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-yellow-500 text-white hover:bg-yellow-600'
-                  }`}
-                >
-                  {isInComparison(selectedGachaItem.sake.id) ? '追加済み' : '比較に追加'}
-                </button>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setSelectedGachaItem(null);
-                fetchRecommendations('random');
-              }}
-              className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg hover:from-yellow-600 hover:to-orange-600 font-bold"
-            >
-              🎲 もう一回ガチャを回す！
-            </button>
-          </div>
+          <GachaResult
+            selectedGachaItem={selectedGachaItem}
+            isInComparison={isInComparison}
+            onToggleComparison={onToggleComparison}
+            onPlayAgain={() => {
+              resetGacha();
+              fetchRecommendations('random');
+            }}
+          />
         )}
         
         {/* ガチャのデフォルト表示（何も表示していない状態） */}
