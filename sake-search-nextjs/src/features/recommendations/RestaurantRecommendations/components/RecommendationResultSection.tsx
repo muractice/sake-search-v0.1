@@ -6,7 +6,6 @@ import { RecommendationList } from './RecommendationList';
 import { SakeData } from '@/types/sake';
 
 interface RecommendationResultSectionProps {
-  showRecommendations: boolean;
   recommendationType: RestaurantRecommendationType;
   isLoadingRecommendations: boolean;
   requiresMoreFavorites: boolean;
@@ -18,7 +17,6 @@ interface RecommendationResultSectionProps {
 }
 
 export const RecommendationResultSection = ({
-  showRecommendations,
   recommendationType,
   isLoadingRecommendations,
   requiresMoreFavorites,
@@ -28,9 +26,6 @@ export const RecommendationResultSection = ({
   isInComparison,
   onTabChange,
 }: RecommendationResultSectionProps) => {
-  if (!showRecommendations || recommendationType === 'random') {
-    return null;
-  }
 
   return (
     <div className="mt-4 p-4 bg-blue-50 rounded-lg">

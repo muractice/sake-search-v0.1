@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { GachaSection } from './RestaurantRecommendations/components/GachaSection';
 import { RecommendationTypeSelector } from './RestaurantRecommendations/components/RecommendationTypeSelector';
 import { EmptyState } from './RestaurantRecommendations/components/EmptyState';
-import { RecommendationList } from './RestaurantRecommendations/components/RecommendationList';
 import { RecommendationResultSection } from './RestaurantRecommendations/components/RecommendationResultSection';
 import { useGachaAnimation } from './RestaurantRecommendations/hooks/useGachaAnimation';
 import { useRecommendationsFromRestaurant } from './RestaurantRecommendations/hooks/useRecommendationsFromRestaurant';
@@ -107,17 +106,18 @@ export const RestaurantRecommendations = ({
         )}
         
         {/* レコメンド結果表示 */}
-        <RecommendationResultSection
-          showRecommendations={showRecommendations}
-          recommendationType={recommendationType}
-          isLoadingRecommendations={isLoadingRecommendations}
-          requiresMoreFavorites={requiresMoreFavorites}
-          favoritesMessage={favoritesMessage}
-          recommendations={recommendations}
-          onToggleComparison={onToggleComparison}
-          isInComparison={isInComparison}
-          onTabChange={onTabChange}
-        />
+        {showRecommendations && recommendationType !== 'random' && (
+          <RecommendationResultSection
+            recommendationType={recommendationType}
+            isLoadingRecommendations={isLoadingRecommendations}
+            requiresMoreFavorites={requiresMoreFavorites}
+            favoritesMessage={favoritesMessage}
+            recommendations={recommendations}
+            onToggleComparison={onToggleComparison}
+            isInComparison={isInComparison}
+            onTabChange={onTabChange}
+          />
+        )}
       </div>
     </div>
   );
