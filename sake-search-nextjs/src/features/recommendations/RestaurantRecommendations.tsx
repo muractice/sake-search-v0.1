@@ -1,14 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { SakeData } from '@/types/sake';
 import { GachaSlotAnimation } from './RestaurantRecommendations/components/GachaSlotAnimation';
 import { GachaResult } from './RestaurantRecommendations/components/GachaResult';
+import { RecommendationTypeSelector } from './RestaurantRecommendations/components/RecommendationTypeSelector';
+import { EmptyState } from './RestaurantRecommendations/components/EmptyState';
+import { RecommendationList } from './RestaurantRecommendations/components/RecommendationList';
 import { useGachaAnimation } from './RestaurantRecommendations/hooks/useGachaAnimation';
 import { useRecommendationsFromRestaurant } from './RestaurantRecommendations/hooks/useRecommendationsFromRestaurant';
 import { 
   RestaurantRecommendationType, 
-  RecommendationResult, 
   RestaurantRecommendationsProps 
 } from './RestaurantRecommendations/types';
 
@@ -59,17 +60,7 @@ export const RestaurantRecommendations = ({
   };
 
   if (restaurantMenuItems.length === 0) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <span className="mr-2">💡</span>
-          飲食店向けレコメンド
-        </h2>
-        <p className="text-gray-500 text-center py-8">
-          メニューを登録すると、レコメンド機能が利用できます
-        </p>
-      </div>
-    );
+    return <EmptyState />;
   }
 
   return (
@@ -82,46 +73,19 @@ export const RestaurantRecommendations = ({
       <div className="space-y-4">
         {/* レコメンドタイプ選択 */}
         <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() => {
-              setRecommendationType('similarity');
-              fetchRecommendations('similarity');
+          <RecommendationTypeSelector
+            recommendationType={recommendationType}
+            showRecommendations={showRecommendations}
+            onTypeSelect={(type) => {
+              setRecommendationType(type);
+              if (type === 'random') {
+                resetGacha();
+                setShowRecommendations(true);
+              } else {
+                fetchRecommendations(type);
+              }
             }}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-              recommendationType === 'similarity' && showRecommendations
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🎯 お気に入りに近い順
-          </button>
-          <button
-            onClick={() => {
-              setRecommendationType('pairing');
-              fetchRecommendations('pairing');
-            }}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-              recommendationType === 'pairing' && showRecommendations
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🍴 料理に合わせる
-          </button>
-          <button
-            onClick={() => {
-              setRecommendationType('random');
-              resetGacha();
-              setShowRecommendations(true);
-            }}
-            className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-              recommendationType === 'random' && showRecommendations
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            🎲 おすすめガチャ
-          </button>
+          />
         </div>
         
         {/* ガチャスロット演出 */}
@@ -235,53 +199,5 @@ export const RestaurantRecommendations = ({
         )}
       </div>
     </div>
-  );
-};
-
-// レコメンドリストコンポーネント
-interface RecommendationListProps {
-  recommendations: RecommendationResult[];
-  onToggleComparison: (sake: SakeData) => void;
-  isInComparison: (sakeId: string) => boolean;
-}
-
-const RecommendationList = ({
-  recommendations,
-  onToggleComparison,
-  isInComparison,
-}: RecommendationListProps) => {
-  return (
-    <>
-      {recommendations.map((rec, index) => (
-        <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-gray-400">#{index + 1}</span>
-            <div>
-              <p className="font-semibold">{rec.sake.name}</p>
-              <p className="text-xs text-gray-500">{rec.sake.brewery}</p>
-              <p className="text-sm text-gray-600 mt-1">
-                {rec.reason}
-                {rec.similarityScore && ` (マッチ度: ${Math.round(rec.similarityScore * 100)}%)`}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => {
-              if (!isInComparison(rec.sake.id)) {
-                onToggleComparison(rec.sake);
-              }
-            }}
-            disabled={isInComparison(rec.sake.id)}
-            className={`px-3 py-1 rounded-lg text-sm ${
-              isInComparison(rec.sake.id)
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isInComparison(rec.sake.id) ? '追加済み' : '比較に追加'}
-          </button>
-        </div>
-      ))}
-    </>
   );
 };
