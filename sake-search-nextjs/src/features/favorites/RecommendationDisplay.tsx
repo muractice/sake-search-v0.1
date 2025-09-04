@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRecommendations } from '@/features/recommendations/hooks/useRecommendations';
+import { useRecommendationsFromFavorite } from './hooks/useRecommendationsFromFavorite';
 import { SakeRecommendation } from '@/services/recommendationEngine';
 import { RecommendOptions } from '@/types/preference';
 import { SakeData } from '@/types/sake';
@@ -38,7 +38,7 @@ export const RecommendationDisplay = ({
   isInComparison,
   className = ''
 }: RecommendationDisplayProps) => {
-  const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendations();
+  const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendationsFromFavorite();
   const [selectedMood, setSelectedMood] = useState<RecommendOptions['mood']>('usual');
   const [isActivated, setIsActivated] = useState(false);
 

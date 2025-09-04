@@ -5,6 +5,7 @@ import { SakeData } from '@/types/sake';
 import { GachaSlotAnimation } from './RestaurantRecommendations/components/GachaSlotAnimation';
 import { GachaResult } from './RestaurantRecommendations/components/GachaResult';
 import { useGachaAnimation } from './RestaurantRecommendations/hooks/useGachaAnimation';
+import { useRecommendationsFromRestaurant } from './RestaurantRecommendations/hooks/useRecommendationsFromRestaurant';
 import { 
   RestaurantRecommendationType, 
   RecommendationResult, 
@@ -19,12 +20,7 @@ export const RestaurantRecommendations = ({
   onTabChange,
 }: RestaurantRecommendationsProps) => {
   const [recommendationType, setRecommendationType] = useState<RestaurantRecommendationType>('similarity');
-  const [showRecommendations, setShowRecommendations] = useState(false);
-  const [recommendations, setRecommendations] = useState<RecommendationResult[]>([]);
-  const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(false);
   const [pairingDishType] = useState('');
-  const [requiresMoreFavorites, setRequiresMoreFavorites] = useState(false);
-  const [favoritesMessage, setFavoritesMessage] = useState('');
   
   // ガチャアニメーション関連は新しいカスタムフックに委譲
   const {
@@ -35,79 +31,31 @@ export const RestaurantRecommendations = ({
     startSlotAnimation,
     resetGacha,
   } = useGachaAnimation(restaurantMenuItems);
+  
+  // レコメンデーション関連のロジックをフックに委譲
+  const {
+    recommendations,
+    isLoadingRecommendations,
+    showRecommendations,
+    requiresMoreFavorites,
+    favoritesMessage,
+    fetchRecommendations: fetchRecommendationsBase,
+    setShowRecommendations,
+  } = useRecommendationsFromRestaurant({
+    restaurantMenuItems,
+    restaurantMenuSakeData,
+    onGachaResult: (result) => {
+      startSlotAnimation(result);
+    }
+  });
 
 
-  // レコメンドを取得する関数
+  // fetchRecommendations関数をラップ（ガチャのリセット処理を追加）
   const fetchRecommendations = async (type: RestaurantRecommendationType) => {
-    if (restaurantMenuItems.length === 0) {
-      alert('メニューアイテムを登録してください');
-      return;
+    if (type === 'random') {
+      resetGacha();
     }
-
-    if (restaurantMenuSakeData.length === 0) {
-      alert('メニューの日本酒データを取得してください');
-      return;
-    }
-
-    setIsLoadingRecommendations(true);
-    setShowRecommendations(true);
-
-    try {
-      const response = await fetch('/api/recommendations/restaurant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type,
-          menuItems: restaurantMenuItems,
-          restaurantMenuSakeData: restaurantMenuSakeData,
-          dishType: type === 'pairing' ? pairingDishType : undefined,
-          count: 10
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error ${response.status}: ${response.statusText}`, errorText);
-        throw new Error(`レコメンド取得エラー (${response.status}): ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log(`🔍 RestaurantRecommendations API Response (${type}):`, {
-        requiresMoreFavorites: data.requiresMoreFavorites,
-        favoritesCount: data.favoritesCount,
-        recommendationsCount: data.recommendations?.length || 0,
-        message: data.message,
-        totalFound: data.totalFound,
-        notFoundCount: data.notFound?.length || 0
-      });
-      
-      // お気に入り不足チェック（ガチャの場合は無視）
-      if (data.requiresMoreFavorites && type !== 'random') {
-        setRequiresMoreFavorites(true);
-        setFavoritesMessage(data.message || '');
-        setRecommendations([]);
-        resetGacha();
-      } else {
-        setRequiresMoreFavorites(false);
-        setFavoritesMessage('');
-        
-        // ガチャの場合はスロット演出
-        if (type === 'random' && data.recommendations.length > 0) {
-          startSlotAnimation(data.recommendations[0]);
-        } else {
-          setRecommendations(data.recommendations || []);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching recommendations:', error);
-      setRecommendations([]);
-      // エラーを詳細表示
-      alert(`レコメンド機能でエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setIsLoadingRecommendations(false);
-    }
+    await fetchRecommendationsBase(type, pairingDishType);
   };
 
   if (restaurantMenuItems.length === 0) {

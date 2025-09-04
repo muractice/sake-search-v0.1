@@ -9,7 +9,7 @@ import { RecommendOptions } from '@/types/preference';
 import { SakeData } from '@/types/sake';
 import { SakeDataService } from '@/services/sakeDataService';
 
-export function useRecommendations(options?: RecommendOptions) {
+export function useRecommendationsFromFavorite(options?: RecommendOptions) {
   const { preference, hasEnoughData } = usePreferenceAnalysis();
   const { user, favorites } = useFavoritesContext();
   

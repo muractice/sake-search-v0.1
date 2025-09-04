@@ -1,7 +1,7 @@
 'use client';
 
 import { PreferenceMap } from '@/features/favorites/PreferenceMap';
-import { RecommendationDisplay } from '@/features/recommendations/RecommendationDisplay';
+import { RecommendationDisplay } from '@/features/favorites/RecommendationDisplay';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { SakeData } from '@/types/sake';
 import TasteChart from '@/components/charts/TasteChart';
