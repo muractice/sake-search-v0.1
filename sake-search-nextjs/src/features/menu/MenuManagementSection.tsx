@@ -4,19 +4,19 @@ import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { SakeData } from '@/types/sake';
 
-interface MenuManagementSectionProps {
+interface AuthState {
   user: User | null;
   isAuthLoading: boolean;
-  menuItems: string[];
-  menuSakeData: SakeData[];
+}
+
+interface MenuData {
+  items: string[];
+  sakeData: SakeData[];
+}
+
+interface MenuManagementState {
   selectedSavedMenu: string;
-  setSelectedSavedMenu: (id: string) => void;
   selectedRestaurant: string;
-  setSelectedRestaurant: (id: string) => void;
-  onSaveToRestaurant: () => Promise<void>;
-  onAddRestaurant: (name: string, location: string) => Promise<void>;
-  onLoadSavedMenu: (menuId: string) => Promise<void>;
-  onMenuItemsChange: (items: string[]) => void;
   groupedSavedMenus: Record<string, {
     restaurant_menu_id: string;
     restaurant_name: string;
@@ -28,22 +28,27 @@ interface MenuManagementSectionProps {
   savingToMenu: boolean;
 }
 
+interface MenuManagementActions {
+  setSelectedSavedMenu: (id: string) => void;
+  setSelectedRestaurant: (id: string) => void;
+  onSaveToRestaurant: () => Promise<void>;
+  onAddRestaurant: (name: string, location: string) => Promise<void>;
+  onLoadSavedMenu: (menuId: string) => Promise<void>;
+  onMenuItemsChange: (items: string[]) => void;
+}
+
+interface MenuManagementSectionProps {
+  auth: AuthState;
+  menuData: MenuData;
+  state: MenuManagementState;
+  actions: MenuManagementActions;
+}
+
 export const MenuManagementSection = ({
-  user,
-  isAuthLoading,
-  menuItems,
-  menuSakeData,
-  selectedSavedMenu,
-  setSelectedSavedMenu,
-  selectedRestaurant,
-  setSelectedRestaurant,
-  onSaveToRestaurant,
-  onAddRestaurant,
-  onLoadSavedMenu,
-  onMenuItemsChange,
-  groupedSavedMenus,
-  loadingMenu,
-  savingToMenu
+  auth,
+  menuData,
+  state,
+  actions
 }: MenuManagementSectionProps) => {
   const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
   const [newRestaurantName, setNewRestaurantName] = useState('');
@@ -56,7 +61,7 @@ export const MenuManagementSection = ({
     }
 
     try {
-      await onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim());
+      await actions.onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim());
       setShowAddRestaurantForm(false);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -66,18 +71,18 @@ export const MenuManagementSection = ({
   };
 
   const handleSaveToRestaurant = async () => {
-    if (!selectedSavedMenu && !selectedRestaurant) {
+    if (!state.selectedSavedMenu && !state.selectedRestaurant) {
       alert('メニューを選択してください');
       return;
     }
 
-    if (menuSakeData.length === 0) {
+    if (menuData.sakeData.length === 0) {
       alert('保存する日本酒データがありません');
       return;
     }
 
     try {
-      await onSaveToRestaurant();
+      await actions.onSaveToRestaurant();
     } catch (error) {
       console.error('Error saving to restaurant:', error);
     }
@@ -87,7 +92,7 @@ export const MenuManagementSection = ({
     const newValue = e.target.value;
     
     // 新しいメニューから切り替える場合の確認
-    if (!selectedSavedMenu && menuItems.length > 0 && newValue) {
+    if (!state.selectedSavedMenu && menuData.items.length > 0 && newValue) {
       const shouldProceed = confirm(
         '現在の新しいメニューは保存されていません。\n' +
         '切り替えると入力した内容が失われます。\n\n' +
@@ -96,22 +101,22 @@ export const MenuManagementSection = ({
       
       if (!shouldProceed) {
         // キャンセルされた場合は元に戻す
-        e.target.value = selectedSavedMenu;
+        e.target.value = state.selectedSavedMenu;
         return;
       }
     }
     
     if (newValue) {
       // 既存メニューを選択した場合
-      onLoadSavedMenu(newValue);
-      setSelectedRestaurant(newValue);
+      actions.onLoadSavedMenu(newValue);
+      actions.setSelectedRestaurant(newValue);
       setShowAddRestaurantForm(false);
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
     } else {
       // 「新しいメニュー」を選択した場合
-      if (selectedSavedMenu && menuItems.length > 0) {
+      if (state.selectedSavedMenu && menuData.items.length > 0) {
         const shouldClear = confirm(
           '現在のメニューをどうしますか？\n\n' +
           '「OK」: クリア\n' +
@@ -119,12 +124,12 @@ export const MenuManagementSection = ({
         );
         
         if (shouldClear) {
-          onMenuItemsChange([]);
+          actions.onMenuItemsChange([]);
         }
       }
       
-      setSelectedSavedMenu('');
-      setSelectedRestaurant('');
+      actions.setSelectedSavedMenu('');
+      actions.setSelectedRestaurant('');
       // 新しいメニュー選択時は自動でフォームを表示
       setShowAddRestaurantForm(true);
       // フォームをクリア
@@ -134,7 +139,7 @@ export const MenuManagementSection = ({
   };
 
   // 認証チェック
-  if (isAuthLoading) {
+  if (auth.isAuthLoading) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-center items-center py-8">
@@ -144,7 +149,7 @@ export const MenuManagementSection = ({
     );
   }
 
-  if (!user) {
+  if (!auth.user) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
@@ -177,13 +182,13 @@ export const MenuManagementSection = ({
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <select
-              value={selectedSavedMenu}
+              value={state.selectedSavedMenu}
               onChange={handleMenuSelectionChange}
-              disabled={loadingMenu}
+              disabled={state.loadingMenu}
               className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
             >
               <option value="">新しいメニュー</option>
-              {Object.values(groupedSavedMenus).map((menu) => (
+              {Object.values(state.groupedSavedMenus).map((menu) => (
                 <option key={menu.restaurant_menu_id} value={menu.restaurant_menu_id}>
                   {menu.restaurant_name}
                   {menu.location && ` (${menu.location})`}
@@ -192,7 +197,7 @@ export const MenuManagementSection = ({
               ))}
             </select>
           </div>
-          {loadingMenu && (
+          {state.loadingMenu && (
             <div className="text-blue-600 text-sm flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               メニューを読み込み中...
@@ -201,7 +206,7 @@ export const MenuManagementSection = ({
         </div>
         
         {/* 新しいメニューが選択されている時にフォームを表示 */}
-        {selectedSavedMenu === '' && showAddRestaurantForm && (
+        {state.selectedSavedMenu === '' && showAddRestaurantForm && (
           <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <div className="text-sm text-gray-700 mb-2">
               新しいメニューを保存するには、飲食店情報を入力してください
@@ -223,7 +228,7 @@ export const MenuManagementSection = ({
             <div className="flex gap-2">
               <button
                 onClick={handleAddRestaurant}
-                disabled={!newRestaurantName.trim() || menuSakeData.length === 0}
+                disabled={!newRestaurantName.trim() || menuData.sakeData.length === 0}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 追加して保存
@@ -231,12 +236,12 @@ export const MenuManagementSection = ({
               <button
                 onClick={() => {
                   // キャンセル時は既存メニューの最初のものを選択
-                  const menuValues = Object.values(groupedSavedMenus);
+                  const menuValues = Object.values(state.groupedSavedMenus);
                   if (menuValues && menuValues.length > 0) {
                     const firstMenu = menuValues[0];
-                    setSelectedSavedMenu(firstMenu.restaurant_menu_id);
-                    setSelectedRestaurant(firstMenu.restaurant_menu_id);
-                    onLoadSavedMenu(firstMenu.restaurant_menu_id);
+                    actions.setSelectedSavedMenu(firstMenu.restaurant_menu_id);
+                    actions.setSelectedRestaurant(firstMenu.restaurant_menu_id);
+                    actions.onLoadSavedMenu(firstMenu.restaurant_menu_id);
                   }
                   setShowAddRestaurantForm(false);
                   setNewRestaurantName('');

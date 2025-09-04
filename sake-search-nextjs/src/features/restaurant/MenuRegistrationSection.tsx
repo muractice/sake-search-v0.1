@@ -30,56 +30,71 @@ export const MenuRegistrationSection = ({
   selection,
   menuRegistration,
 }: MenuRegistrationSectionProps) => {
-  const { inputState, inputActions, managementState, managementActions, actions } = menuRegistration;
   return (
     <div className="space-y-6">
       {/* メニュー登録セクション */}
       <MenuInputSection 
-        onMenuItemsAdd={inputActions.handleMenuItemsAdd}
-        onProcessImage={inputActions.handleProcessImage}
-        isProcessing={inputState.isProcessing}
-        processingStatus={inputState.processingStatus}
+        onMenuItemsAdd={menuRegistration.inputActions.handleMenuItemsAdd}
+        onProcessImage={menuRegistration.inputActions.handleProcessImage}
+        isProcessing={menuRegistration.inputState.isProcessing}
+        processingStatus={menuRegistration.inputState.processingStatus}
       />
 
       {/* メニュー管理セクション */}
       <MenuManagementSection
-        user={managementState.user}
-        isAuthLoading={managementState.isAuthLoading}
-        menuItems={inputState.menuItems}
-        menuSakeData={inputState.menuSakeData}
-        selectedSavedMenu={managementState.selectedSavedMenu}
-        setSelectedSavedMenu={managementActions.setSelectedSavedMenu}
-        selectedRestaurant={managementState.selectedRestaurant}
-        setSelectedRestaurant={managementActions.setSelectedRestaurant}
-        onSaveToRestaurant={actions.saveToRestaurant}
-        onAddRestaurant={actions.addRestaurant}
-        onLoadSavedMenu={actions.loadSavedMenu}
-        onMenuItemsChange={inputActions.handleMenuItemsChange}
-        groupedSavedMenus={managementState.groupedSavedMenusData}
-        loadingMenu={managementState.loadingMenu}
-        savingToMenu={managementState.savingToMenu}
+        auth={{
+          user: menuRegistration.managementState.user,
+          isAuthLoading: menuRegistration.managementState.isAuthLoading,
+        }}
+        menuData={{
+          items: menuRegistration.inputState.menuItems,
+          sakeData: menuRegistration.inputState.menuSakeData,
+        }}
+        state={{
+          selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
+          selectedRestaurant: menuRegistration.managementState.selectedRestaurant,
+          groupedSavedMenus: menuRegistration.managementState.groupedSavedMenusData,
+          loadingMenu: menuRegistration.managementState.loadingMenu,
+          savingToMenu: menuRegistration.managementState.savingToMenu,
+        }}
+        actions={{
+          setSelectedSavedMenu: menuRegistration.managementActions.setSelectedSavedMenu,
+          setSelectedRestaurant: menuRegistration.managementActions.setSelectedRestaurant,
+          onSaveToRestaurant: menuRegistration.actions.saveToRestaurant,
+          onAddRestaurant: menuRegistration.actions.addRestaurant,
+          onLoadSavedMenu: menuRegistration.actions.loadSavedMenu,
+          onMenuItemsChange: menuRegistration.inputActions.handleMenuItemsChange,
+        }}
       />
 
       {/* 登録済み日本酒リスト表示 */}
-      {(inputState.menuItems.length > 0) && (
+      {(menuRegistration.inputState.menuItems.length > 0) && (
         <MenuSakeListDisplay
-          menuSakeData={inputState.menuSakeData}
-          notFoundItems={inputState.notFoundItems}
-          selectedSavedMenu={managementState.selectedSavedMenu}
-          isInComparison={comparison.isInList}
-          onToggleComparison={comparison.onToggle}
-          onRemoveItem={inputActions.handleRemoveItem}
-          comparisonList={comparison.list}
+          menuData={{
+            menuSakeData: menuRegistration.inputState.menuSakeData,
+            notFoundItems: menuRegistration.inputState.notFoundItems,
+            selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
+            onRemoveItem: menuRegistration.inputActions.handleRemoveItem,
+          }}
+          comparison={{
+            list: comparison.list,
+            isInList: comparison.isInList,
+            onToggle: comparison.onToggle,
+          }}
         />
       )}
 
       {/* 比較チャートセクション */}
       <ComparisonChartSection
-        comparisonList={comparison.list}
-        onToggleComparison={comparison.onToggle}
-        onClearComparison={comparison.onClear}
-        onSelectSake={selection.onSelectSake}
-        onChartClick={selection.onChartClick}
+        comparison={{
+          list: comparison.list,
+          onToggle: comparison.onToggle,
+          onClear: comparison.onClear,
+        }}
+        selection={{
+          onSelectSake: selection.onSelectSake,
+          onChartClick: selection.onChartClick,
+        }}
       />
     </div>
   );

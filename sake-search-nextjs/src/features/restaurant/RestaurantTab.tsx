@@ -32,7 +32,6 @@ export const RestaurantTab = ({
   } = useSelection();
   
   const menuRegistration = useMenuRegistration();
-  const { inputState } = menuRegistration;
 
   return (
     <div className="space-y-6">
@@ -85,8 +84,8 @@ export const RestaurantTab = ({
         />
       ) : (
         <RestaurantRecommendations
-          restaurantMenuItems={inputState.menuItems}
-          restaurantMenuSakeData={inputState.menuSakeData}
+          restaurantMenuItems={menuRegistration.inputState.menuItems}
+          restaurantMenuSakeData={menuRegistration.inputState.menuSakeData}
           onToggleComparison={toggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}
