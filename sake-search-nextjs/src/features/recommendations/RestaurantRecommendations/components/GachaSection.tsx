@@ -2,12 +2,11 @@
 
 import { RefObject } from 'react';
 import { SakeData } from '@/types/sake';
-import { RestaurantRecommendationType, RecommendationResult } from '../types';
+import { RecommendationResult } from '../types';
 import { GachaSlotAnimation } from './GachaSlotAnimation';
 import { GachaResult } from './GachaResult';
 
 interface GachaSectionProps {
-  recommendationType: RestaurantRecommendationType;
   showRecommendations: boolean;
   isSlotAnimating: boolean;
   slotItems: SakeData[];
@@ -20,7 +19,6 @@ interface GachaSectionProps {
 }
 
 export const GachaSection = ({
-  recommendationType,
   showRecommendations,
   isSlotAnimating,
   slotItems,
@@ -31,10 +29,6 @@ export const GachaSection = ({
   onPlayAgain,
   onStartGacha,
 }: GachaSectionProps) => {
-  // ガチャモード以外は何も表示しない
-  if (recommendationType !== 'random') {
-    return null;
-  }
 
   return (
     <>
