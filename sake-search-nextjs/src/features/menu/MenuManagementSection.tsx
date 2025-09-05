@@ -70,23 +70,6 @@ export const MenuManagementSection = ({
     }
   };
 
-  const handleSaveToRestaurant = async () => {
-    if (!state.selectedSavedMenu && !state.selectedRestaurant) {
-      alert('メニューを選択してください');
-      return;
-    }
-
-    if (menuData.sakeData.length === 0) {
-      alert('保存する日本酒データがありません');
-      return;
-    }
-
-    try {
-      await actions.onSaveToRestaurant();
-    } catch (error) {
-      console.error('Error saving to restaurant:', error);
-    }
-  };
 
   const handleMenuSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newValue = e.target.value;

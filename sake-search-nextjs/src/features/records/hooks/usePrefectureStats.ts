@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useRecords } from './useRecords';
-import { fetchFromSakenowaAPI } from '@/lib/sakenowaApi';
-import { Prefecture, getPrefecture, getAllPrefectures } from '@/utils/prefectureMapping';
+import { Prefecture, getAllPrefectures } from '@/utils/prefectureMapping';
 
 export interface PrefectureStats {
   prefecture: Prefecture;
@@ -23,7 +22,7 @@ export interface PrefectureConquestStats {
 
 export const usePrefectureStats = () => {
   const { records, isLoading: recordsLoading } = useRecords();
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   // 都道府県別統計を計算
   const prefectureStats = useMemo((): PrefectureStats[] => {

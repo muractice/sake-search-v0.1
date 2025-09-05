@@ -8,10 +8,7 @@ import { SakeData } from '@/types/sake';
 import { useFavoriteService } from '@/providers/ServiceProvider';
 import { 
   FavoriteServiceError,
-  Favorite,
-  UserPreferences,
-  AuthUser,
-  AuthCredentials
+  AuthUser
 } from '@/services/FavoriteService';
 
 interface UseFavoritesState {

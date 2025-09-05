@@ -1,17 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { usePreferenceAnalysis } from '@/features/favorites/hooks/usePreferenceAnalysis';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { RecommendationEngine, SakeRecommendation } from '@/services/recommendationEngine';
 import { RecommendOptions } from '@/types/preference';
-import { SakeData } from '@/types/sake';
-import { SakeDataService } from '@/services/sakeDataService';
 
 export function useRecommendationsFromFavorite(options?: RecommendOptions) {
   const { preference, hasEnoughData } = usePreferenceAnalysis();
-  const { user, favorites } = useFavoritesContext();
+  const { user } = useFavoritesContext();
   
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,40 +29,8 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
   //   if (preference && user) {
   //     loadRecommendations();
   //   }
-  // }, [preference, user, favorites]);
+  // }, [preference, user]);
 
-  const loadRecommendations = async () => {
-    if (!preference || !user) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // キャッシュチェック
-      const cached = await getCachedRecommendations(user.id);
-      if (cached && cached.length > 0) {
-        setRecommendations(cached);
-        setLoading(false);
-        return;
-      }
-
-      // 新規生成
-      const engine = new RecommendationEngine();
-      const recs = await engine.generateRecommendations(
-        preference,
-        defaultOptions
-      );
-      
-      // キャッシュ保存
-      await cacheRecommendations(user.id, recs);
-      setRecommendations(recs);
-    } catch (err) {
-      console.error('Error loading recommendations:', err);
-      setError('レコメンドの読み込みに失敗しました');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const refreshRecommendations = async () => {
     if (!preference || !user) return;
@@ -122,44 +88,6 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
 }
 
 // キャッシュ関連のヘルパー関数
-async function getCachedRecommendations(userId: string): Promise<SakeRecommendation[] | null> {
-  try {
-    const { data, error } = await supabase
-      .from('recommendation_cache')
-      .select('*')
-      .eq('user_id', userId)
-      .gt('expires_at', new Date().toISOString())
-      .order('similarity_score', { ascending: false });
-
-    if (error) throw error;
-    if (!data || data.length === 0) return null;
-
-    // キャッシュデータをSakeRecommendation形式に変換
-    const sakeDataService = SakeDataService.getInstance();
-    const allSakes = await sakeDataService.getAllSakes();
-    const sakeMap = new Map(allSakes.map(s => [s.id, s]));
-    
-    const recommendations: SakeRecommendation[] = [];
-    for (const cache of data) {
-      const sake = sakeMap.get(cache.sake_id);
-      if (sake) {
-        recommendations.push({
-          sake,
-          score: cache.similarity_score,
-          type: cache.recommendation_type as 'similar' | 'explore' | 'trending',
-          reason: cache.recommendation_reason,
-          similarityScore: cache.similarity_score,
-          predictedRating: cache.predicted_rating
-        });
-      }
-    }
-    
-    return recommendations.length > 0 ? recommendations : null;
-  } catch (err) {
-    console.error('Error getting cached recommendations:', err);
-    return null;
-  }
-}
 
 async function cacheRecommendations(userId: string, recommendations: SakeRecommendation[]): Promise<void> {
   try {

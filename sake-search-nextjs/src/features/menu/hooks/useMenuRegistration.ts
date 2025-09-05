@@ -1,70 +1,70 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useMenuInput } from './useMenuInput';
+import { useMenuContext } from '../contexts/MenuContext';
 import { useMenuManagement } from './useMenuManagement';
 
 /**
  * メニュー登録機能の統合フック
- * useMenuInputとuseMenuManagementを統合し、相互依存を解決
+ * MenuContextとuseMenuManagementを統合し、相互依存を解決
  */
 export const useMenuRegistration = () => {
-  const menuInput = useMenuInput();
+  const menuContext = useMenuContext();
   const menuManagement = useMenuManagement();
 
   // 統合アクション（hook間でデータの受け渡しが必要な部分）
   const actions = {
     /**
-     * 飲食店を追加（menuInputのデータを使用）
+     * 飲食店を追加（menuContextのデータを使用）
      */
     addRestaurant: useCallback(
       async (name: string, location: string): Promise<void> => {
         await menuManagement.handleAddRestaurant(
           name,
           location,
-          menuInput.menuSakeData
+          menuContext.menuSakeData
         );
       },
-      [menuManagement, menuInput.menuSakeData]
+      [menuManagement, menuContext.menuSakeData]
     ),
 
     /**
-     * 保存済みメニューを読み込み（menuInputのコールバックを使用）
+     * 保存済みメニューを読み込み（menuContextのコールバックを使用）
      */
     loadSavedMenu: useCallback(
       async (menuId: string): Promise<void> => {
         await menuManagement.handleLoadSavedMenu(
           menuId,
-          menuInput.handleMenuItemsChange
+          menuContext.handleMenuItemsChange
         );
       },
-      [menuManagement, menuInput.handleMenuItemsChange]
+      [menuManagement, menuContext.handleMenuItemsChange]
     ),
 
     /**
-     * 飲食店にメニューを保存（menuInputのデータを使用）
+     * 飲食店にメニューを保存（menuContextのデータを使用）
      */
     saveToRestaurant: useCallback(async (): Promise<void> => {
       await menuManagement.handleSaveToRestaurant(
-        menuInput.menuSakeData
+        menuContext.menuSakeData
       );
-    }, [menuManagement, menuInput.menuSakeData]),
+    }, [menuManagement, menuContext.menuSakeData]),
   };
 
-  // メニュー入力関連の状態とアクション
+  // メニュー入力関連の状態とアクション（MenuContextから取得）
   const inputState = {
-    menuItems: menuInput.menuItems,
-    menuSakeData: menuInput.menuSakeData,
-    notFoundItems: menuInput.notFoundItems,
-    isProcessing: menuInput.isProcessing,
-    processingStatus: menuInput.processingStatus,
+    menuItems: menuContext.menuItems,
+    menuSakeData: menuContext.menuSakeData,
+    notFoundItems: menuContext.notFoundItems,
+    isProcessing: menuContext.isProcessing,
+    processingStatus: menuContext.processingStatus,
   };
 
   const inputActions = {
-    handleMenuItemsAdd: menuInput.handleMenuItemsAdd,
-    handleMenuItemsChange: menuInput.handleMenuItemsChange,
-    handleProcessImage: menuInput.handleProcessImage,
-    handleRemoveItem: menuInput.handleRemoveItem,
+    handleMenuItemsAdd: menuContext.handleMenuItemsAdd,
+    handleMenuItemsChange: menuContext.handleMenuItemsChange,
+    handleProcessImage: menuContext.handleProcessImage,
+    handleRemoveItem: menuContext.handleRemoveItem,
   };
 
   // メニュー管理関連の状態とアクション
@@ -97,7 +97,7 @@ export const useMenuRegistration = () => {
     
     // 後方互換性のため元のhookも公開（段階的移行用）
     _legacy: {
-      menuInput,
+      menuContext,
       menuManagement,
     },
   };

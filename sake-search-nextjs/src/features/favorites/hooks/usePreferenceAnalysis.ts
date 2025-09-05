@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
-import { UserPreference, PreferenceVector, TasteType } from '@/types/preference';
+import { UserPreference, TasteType } from '@/types/preference';
 
 export function usePreferenceAnalysis() {
   const { user } = useFavoritesContext();

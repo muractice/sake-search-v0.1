@@ -240,7 +240,7 @@ export class FavoriteService {
     try {
       const response = await this.apiClient.get<AuthSession>('/api/v1/auth/session');
       return response.data;
-    } catch (error) {
+    } catch {
       // セッション取得失敗は未ログインとして扱う
       return { user: null };
     }
@@ -253,7 +253,7 @@ export class FavoriteService {
     try {
       const response = await this.apiClient.post<AuthSession>('/api/v1/auth/refresh');
       return response.data;
-    } catch (error) {
+    } catch {
       // リフレッシュ失敗は未ログインとして扱う
       return { user: null };
     }

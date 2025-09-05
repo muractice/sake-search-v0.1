@@ -144,7 +144,7 @@ export class PreferenceAnalyzer {
     // 最も高いスコアのタイプを選択
     const maxScore = Math.max(...Object.values(scores));
     const dominantType = Object.entries(scores)
-      .find(([_, score]) => score === maxScore)?.[0] as TasteType;
+      .find(([, score]) => score === maxScore)?.[0] as TasteType;
 
     // バランス型の判定（標準偏差が小さい場合）
     const stdDev = this.calculateStandardDeviation(Object.values(scores));

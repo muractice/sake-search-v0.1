@@ -3,20 +3,10 @@
 import { useState, useEffect } from 'react';
 import { usePreferenceAnalysis } from '@/features/favorites/hooks/usePreferenceAnalysis';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
-import { SakeData } from '@/types/sake';
 import { SakeRecommendation } from '@/services/recommendationEngine';
 
-interface PersonalizedRecommendationsProps {
-  onSelectSake?: (sake: SakeData) => void;
-  onAddToComparison?: (sake: SakeData) => void;
-  isInComparison?: (sakeId: string) => boolean;
-}
 
-export const PersonalizedRecommendations = ({
-  onSelectSake,
-  onAddToComparison,
-  isInComparison
-}: PersonalizedRecommendationsProps) => {
+export const PersonalizedRecommendations = () => {
   const { hasEnoughData } = usePreferenceAnalysis();
   const { user, favorites } = useFavoritesContext();
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);

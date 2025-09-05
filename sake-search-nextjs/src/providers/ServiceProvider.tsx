@@ -167,13 +167,6 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
   };
 }
 
-/**
- * デフォルトのSakeServiceのみを作成（テスト用）
- */
-function createDefaultSakeService(apiConfig: ServiceProviderProps['apiConfig'] = {}): SakeService {
-  const apiClient = new ApiClient(apiConfig);
-  return new SakeService(apiClient);
-}
 
 /**
  * 環境変数から設定を取得するヘルパー

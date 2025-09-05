@@ -27,7 +27,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
+  async post<T>(endpoint: string): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }

@@ -27,7 +27,7 @@ class MockApiClient extends ApiClient {
     this.errorToThrow = null;
   }
 
-  async post<T>(endpoint: string, body?: unknown): Promise<{ data: T }> {
+  async post<T>(endpoint: string): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -40,7 +40,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async get<T>(endpoint: string, query?: Record<string, string>): Promise<{ data: T }> {
+  async get<T>(endpoint: string): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }
@@ -59,7 +59,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async delete<T>(endpoint: string): Promise<{ data: T }> {
+  async delete<T>(): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }

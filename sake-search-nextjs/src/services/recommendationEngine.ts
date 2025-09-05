@@ -1,5 +1,5 @@
 import { SakeData } from '@/types/sake';
-import { PreferenceVector, UserPreference, Recommendation, RecommendOptions } from '@/types/preference';
+import { PreferenceVector, UserPreference, RecommendOptions } from '@/types/preference';
 import { SakeDataService } from './sakeDataService';
 
 export class RecommendationEngine {
@@ -128,7 +128,7 @@ export class RecommendationEngine {
         sake,
         score: 0.8 + Math.random() * 0.2, // 0.8-1.0のスコア
         type: 'trending' as const,
-        reason: this.generateTrendingReason(sake),
+        reason: this.generateTrendingReason(),
         similarityScore: 0.5,
         predictedRating: this.predictRating(0.75)
       }))
@@ -332,7 +332,7 @@ export class RecommendationEngine {
   /**
    * トレンド理由の生成
    */
-  private generateTrendingReason(sake: SakeData): string {
+  private generateTrendingReason(): string {
     const reasons = [
       '今月の人気No.1銘柄',
       '話題の新作',

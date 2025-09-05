@@ -9,8 +9,7 @@ import { useSakeService } from '@/providers/ServiceProvider';
 import { 
   SakeSearchError, 
   SakeSearchOptions, 
-  SakeSearchResult,
-  SakeSearchFilters 
+  SakeSearchResult
 } from '@/services/SakeService';
 
 interface UseSearchState {

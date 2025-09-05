@@ -154,7 +154,7 @@ export const useMenuInput = () => {
       console.log('useMenuInput: result.sake_names:', result.sake_names);
       console.log('useMenuInput: result.confidence:', result.confidence);
       
-      const { sake_names, text, notes, error } = result;
+      const { sake_names, notes, error } = result;
       
       console.log('抽出された日本酒名:', sake_names);
       console.log('信頼度:', result.confidence);

@@ -3,7 +3,7 @@
  * 段階的移行のため、既存のuseRecommendationsと並行して提供
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
 import { useRecommendationService } from '@/providers/ServiceProvider';
 import { 

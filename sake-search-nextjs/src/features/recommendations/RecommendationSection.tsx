@@ -69,11 +69,7 @@ export const RecommendationSection = ({
       {/* タブコンテンツ */}
       <div className="min-h-[400px]">
         {activeTab === 'personalized' && (
-          <PersonalizedRecommendations
-            onSelectSake={handleSakeSelect}
-            onAddToComparison={handleAddToComparison}
-            isInComparison={isInComparison}
-          />
+          <PersonalizedRecommendations />
         )}
         
         {activeTab === 'trending' && (

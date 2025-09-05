@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { SakeData } from '@/types/sake';
-import { RecommendationResult, GachaAnimationState } from '../types';
+import { RecommendationResult } from '../types';
 
 export const useGachaAnimation = (restaurantMenuItems: string[]) => {
   const [isSlotAnimating, setIsSlotAnimating] = useState(false);

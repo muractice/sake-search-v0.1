@@ -55,7 +55,7 @@ describe('useFavorites', () => {
       Promise.resolve({ data: { session: null } })
     );
     
-    mockSupabase.auth.onAuthStateChange.mockImplementation((callback) => {
+    mockSupabase.auth.onAuthStateChange.mockImplementation(() => {
       // コールバックを即座に実行しない
       return { data: { subscription: { unsubscribe: jest.fn() } } };
     });

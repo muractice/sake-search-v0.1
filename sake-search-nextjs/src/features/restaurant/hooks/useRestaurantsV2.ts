@@ -15,9 +15,7 @@ import {
   RestaurantDrinkingRecordDetail,
   isConflictResponse,
   isRestaurantMenu,
-  RestaurantCreationResponse
 } from '@/types/restaurant';
-import { SakeData } from '@/types/sake';
 import { useRestaurantService } from '@/providers/ServiceProvider';
 import { 
   RestaurantServiceError,

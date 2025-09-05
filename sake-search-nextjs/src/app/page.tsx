@@ -10,6 +10,7 @@ import { UserProfile } from '@/features/auth/UserProfile';
 import { AuthForm } from '@/features/auth/AuthForm';
 import CustomDialog from '@/components/dialogs/CustomDialog';
 import { FavoritesProvider } from '@/features/favorites/contexts/FavoritesContext';
+import { MenuProvider } from '@/features/menu/contexts/MenuContext';
 import { useComparison } from '@/features/comparison/hooks/useComparison';
 import { useSearch } from '@/features/search/hooks/useSearch';
 import { useSelection } from '@/features/search/hooks/useSelection';
@@ -78,8 +79,9 @@ export default function Home() {
   };
 
   return (
-    <FavoritesProvider>
-      <div className="min-h-screen bg-gray-50">
+    <MenuProvider>
+      <FavoritesProvider>
+        <div className="min-h-screen bg-gray-50">
         {/* ヘッダー */}
         <header className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -173,7 +175,8 @@ export default function Home() {
           message={dialogState.message}
           onClose={() => setDialogState(prev => ({ ...prev, isOpen: false }))}
         />
-      </div>
-    </FavoritesProvider>
+        </div>
+      </FavoritesProvider>
+    </MenuProvider>
   );
 }

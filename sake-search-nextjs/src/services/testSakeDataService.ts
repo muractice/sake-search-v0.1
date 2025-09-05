@@ -301,7 +301,7 @@ export class TestSakeDataService {
     ];
   }
 
-  async getAvailableSakes(userId: string): Promise<SakeData[]> {
+  async getAvailableSakes(): Promise<SakeData[]> {
     const allSakes = await this.getAllSakes();
     // テスト用にランダムに一部を除外（お気に入り済みとして）
     return allSakes.filter((_, index) => index % 3 !== 0);
