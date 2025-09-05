@@ -2,8 +2,8 @@
 
 import { SakeData } from '@/types/sake';
 import ComparisonPanel from '@/features/comparison/ComparisonPanel';
-import TasteChart from '@/components/charts/TasteChart';
-import SakeRadarChartSection from '@/features/comparison/SakeRadarChartSection';
+import { TasteChartCard } from '@/components/charts/TasteChartCard';
+import { RadarChartCard } from '@/components/charts/RadarChartCard';
 
 interface ComparisonProps {
   list: SakeData[];
@@ -39,11 +39,6 @@ export const ComparisonChartSection = ({
     return null;
   }
 
-  // 高さのクラス名を決定
-  const tasteChartHeightClass = tasteChartHeight === 'lg' 
-    ? 'min-h-[500px] md:min-h-[600px] lg:min-h-[700px]'
-    : 'min-h-[400px] md:min-h-[500px] lg:min-h-[600px]';
-
   return (
     <>
       {/* 比較パネル */}
@@ -58,30 +53,18 @@ export const ComparisonChartSection = ({
 
       {/* チャート表示エリア */}
       <div className="space-y-8">
-        {/* 4象限チャート */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
-            <span className="mr-3 text-2xl">📊</span>
-            {tasteMapTitle}
-          </h2>
-          <div className={tasteChartHeightClass}>
-            <TasteChart 
-              sakeData={comparison.list}
-              onSakeClick={selection.onChartClick}
-            />
-          </div>
-        </div>
-
-        {/* レーダーチャート */}
-        <div className="bg-white rounded-lg shadow-md p-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
-            <span className="mr-3 text-2xl">🎯</span>
-            {radarChartTitle}
-          </h2>
-          <div className="min-h-[400px] md:min-h-[500px]">
-            <SakeRadarChartSection sakeData={comparison.list} />
-          </div>
-        </div>
+        <TasteChartCard
+          title={tasteMapTitle}
+          sakeData={comparison.list}
+          onSakeClick={selection.onChartClick}
+          minHeight={tasteChartHeight}
+        />
+        
+        <RadarChartCard
+          title={radarChartTitle}
+          sakeData={comparison.list}
+          minHeight="sm"
+        />
       </div>
     </>
   );

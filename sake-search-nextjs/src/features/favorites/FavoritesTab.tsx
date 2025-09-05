@@ -4,8 +4,8 @@ import { PreferenceMap } from '@/features/favorites/PreferenceMap';
 import { RecommendationDisplay } from '@/features/favorites/RecommendationDisplay';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { SakeData } from '@/types/sake';
-import TasteChart from '@/components/charts/TasteChart';
-import SakeRadarChartSection from '@/features/comparison/SakeRadarChartSection';
+import { TasteChartCard } from '@/components/charts/TasteChartCard';
+import { RadarChartCard } from '@/components/charts/RadarChartCard';
 
 interface FavoritesTabProps {
   onSelectSake: (sake: SakeData) => void;
@@ -127,28 +127,18 @@ export const FavoritesTab = ({
       {/* お気に入りの味わいマップ */}
       {favorites.length > 0 && (
         <div className="space-y-8">
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
-              <span className="mr-3 text-2xl">📊</span>
-              お気に入りの味わい分布
-            </h2>
-            <div className="min-h-[400px] md:min-h-[500px] lg:min-h-[600px]">
-              <TasteChart 
-                sakeData={favorites}
-                onSakeClick={onSelectSake}
-              />
-            </div>
-          </div>
+          <TasteChartCard
+            title="お気に入りの味わい分布"
+            sakeData={favorites}
+            onSakeClick={onSelectSake}
+            minHeight="md"
+          />
           
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900">
-              <span className="mr-3 text-2xl">🎯</span>
-              お気に入りの味覚特性
-            </h2>
-            <div className="min-h-[400px] md:min-h-[500px]">
-              <SakeRadarChartSection sakeData={favorites} />
-            </div>
-          </div>
+          <RadarChartCard
+            title="お気に入りの味覚特性"
+            sakeData={favorites}
+            minHeight="sm"
+          />
         </div>
       )}
 
