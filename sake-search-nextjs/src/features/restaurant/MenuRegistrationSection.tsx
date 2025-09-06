@@ -75,10 +75,7 @@ export const MenuRegistrationSection = ({
             notFoundItems: menuRegistration.inputState.notFoundItems,
             selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
             onRemoveItem: (item: string) => {
-              const index = menuRegistration.inputState.menuItems.indexOf(item);
-              if (index !== -1) {
-                menuRegistration.inputActions.handleRemoveItem(index);
-              }
+              menuRegistration.inputActions.removeItemByName(item);
             },
           }}
           comparison={{

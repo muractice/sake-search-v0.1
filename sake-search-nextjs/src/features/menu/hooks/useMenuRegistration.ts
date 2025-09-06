@@ -65,6 +65,7 @@ export const useMenuRegistration = () => {
     handleMenuItemsChange: menuContext.handleMenuItemsChange,
     handleProcessImage: menuContext.handleProcessImage,
     handleRemoveItem: menuContext.handleRemoveItem,
+    removeItemByName: menuContext.removeItemByName,
   };
 
   // メニュー管理関連の状態とアクション

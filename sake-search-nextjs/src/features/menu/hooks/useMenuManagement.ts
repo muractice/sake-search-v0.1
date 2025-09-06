@@ -95,7 +95,7 @@ export const useMenuManagement = () => {
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  }, [restaurantService, selectedRestaurant, selectedSavedMenu, hasUserSelected]);
+  }, [restaurantService, selectedRestaurant, hasUserSelected]);
 
   // 保存済みメニュー一覧を取得
   const fetchSavedMenus = useCallback(async () => {
@@ -212,7 +212,7 @@ export const useMenuManagement = () => {
       }
       return null;
     }
-  }, [restaurantService, restaurants, fetchRestaurants, fetchSavedMenus]);
+  }, [restaurantService, restaurants, fetchRestaurants, fetchSavedMenus, updateSelectedSavedMenu]);
 
   // 日本酒をメニューに保存
   const handleSaveToRestaurant = useCallback(async (menuSakeData: SakeData[]) => {

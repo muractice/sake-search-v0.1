@@ -21,6 +21,7 @@ interface MenuContextType {
   handleMenuItemsChange: (items: string[]) => void;
   handleProcessImage: (file: File) => Promise<void>;
   handleRemoveItem: (index: number) => void;
+  removeItemByName: (name: string) => void;
   clearMenuData: () => void;
 }
 
@@ -184,6 +185,13 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     setNotFoundItems(prev => prev.filter((_, i) => i !== index));
   }, []);
 
+  // アイテム名で削除（UIの意図に合わせたAPI）
+  const removeItemByName = useCallback((name: string) => {
+    setMenuItems(prev => prev.filter(item => item !== name));
+    setMenuSakeData(prev => prev.filter(sake => sake.name !== name));
+    setNotFoundItems(prev => prev.filter(item => item !== name));
+  }, []);
+
   // メニューデータをクリア
   const clearMenuData = useCallback(() => {
     setMenuItems([]);
@@ -205,6 +213,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     handleMenuItemsChange,
     handleProcessImage,
     handleRemoveItem,
+    removeItemByName,
     clearMenuData,
   };
 
