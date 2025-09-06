@@ -35,10 +35,10 @@ export const useMenuRegistration = () => {
       async (menuId: string): Promise<void> => {
         await menuManagement.handleLoadSavedMenu(
           menuId,
-          menuContext.handleMenuItemsChange
+          menuContext.handleMenuItemsAdd
         );
       },
-      [menuManagement, menuContext.handleMenuItemsChange]
+      [menuManagement, menuContext.handleMenuItemsAdd]
     ),
 
     /**

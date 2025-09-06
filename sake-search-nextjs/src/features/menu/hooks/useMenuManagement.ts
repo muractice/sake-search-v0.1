@@ -247,13 +247,26 @@ export const useMenuManagement = () => {
   }, [selectedRestaurant, restaurantService, fetchSavedMenus]);
 
   // 保存済みメニューをロード
-  const handleLoadSavedMenu = useCallback(async (restaurantMenuId: string, onMenuItemsChange: (items: string[]) => void) => {
+  const handleLoadSavedMenu = useCallback(async (restaurantMenuId: string, onMenuDataUpdate: (items: string[]) => Promise<void>) => {
     if (!restaurantMenuId) return;
 
     setLoadingMenu(true);
     try {
-      const sakeNames = await restaurantService.getMenuItemNames(restaurantMenuId);
-      onMenuItemsChange(sakeNames);
+      // 完全なデータを取得
+      const menuWithSakes = await restaurantService.getRestaurantWithSakes(restaurantMenuId);
+      
+      // 日本酒名のリストを作成
+      const sakeNames: string[] = [];
+      for (const item of menuWithSakes) {
+        if (item.sake_name) {
+          sakeNames.push(item.sake_name);
+        } else if (item.sake_id) {
+          sakeNames.push(item.sake_id);
+        }
+      }
+      
+      // MenuContextのhandleMenuItemsAddを呼び出して、名前から詳細データを検索・設定
+      await onMenuDataUpdate(sakeNames);
       updateSelectedSavedMenu(restaurantMenuId);  // カスタムセッターを使用
     } catch (error) {
       console.error('Error loading saved menu:', error);
