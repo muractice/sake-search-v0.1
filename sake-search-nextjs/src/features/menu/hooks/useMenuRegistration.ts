@@ -33,12 +33,17 @@ export const useMenuRegistration = () => {
      */
     loadSavedMenu: useCallback(
       async (menuId: string): Promise<void> => {
+        // メニューをクリアしてから新しいメニューを読み込む
+        menuContext.clearMenuData();
         await menuManagement.handleLoadSavedMenu(
           menuId,
-          menuContext.handleMenuItemsAdd
+          async (items: string[]) => {
+            // fromImageProcessing=falseで呼び出して新しいメニューを追加
+            await menuContext.handleMenuItemsAdd(items, false);
+          }
         );
       },
-      [menuManagement, menuContext.handleMenuItemsAdd]
+      [menuManagement, menuContext.handleMenuItemsAdd, menuContext.clearMenuData]
     ),
 
     /**
@@ -66,6 +71,7 @@ export const useMenuRegistration = () => {
     handleProcessImage: menuContext.handleProcessImage,
     handleRemoveItem: menuContext.handleRemoveItem,
     removeItemByName: menuContext.removeItemByName,
+    clearMenuData: menuContext.clearMenuData,
   };
 
   // メニュー管理関連の状態とアクション

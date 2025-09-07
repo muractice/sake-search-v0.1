@@ -12,8 +12,17 @@ import { NextRequest, NextResponse } from 'next/server';
  * - APIキーの設定が簡単（GEMINI_API_KEYのみ）
  */
 export async function POST(request: NextRequest) {
-  console.log('=== OCR API (DEPRECATED): リクエスト受信 ===');
+  // このAPIは非推奨です。/api/gemini-vision を使用してください。
   console.warn('警告: このAPIは非推奨です。/api/gemini-vision を使用してください。');
+  
+  return NextResponse.json({ 
+    text: '', 
+    error: 'This API is deprecated. Please use /api/gemini-vision instead.',
+    fallback: true 
+  }, { status: 410 }); // 410 Gone
+  
+  /* 元の処理はコメントアウト（ScanService経由でGemini APIのみ使用）
+  console.log('=== OCR API (DEPRECATED): リクエスト受信 ===');
   try {
     const requestBody = await request.json();
     console.log('OCR API: リクエストボディの型:', typeof requestBody);
@@ -104,4 +113,5 @@ export async function POST(request: NextRequest) {
       fallback: true 
     }, { status: 500 });
   }
+  */
 }

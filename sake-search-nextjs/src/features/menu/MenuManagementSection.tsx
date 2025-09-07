@@ -50,7 +50,6 @@ export const MenuManagementSection = ({
   state,
   actions
 }: MenuManagementSectionProps) => {
-  const [showAddRestaurantForm, setShowAddRestaurantForm] = useState(false);
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
 
@@ -62,7 +61,6 @@ export const MenuManagementSection = ({
 
     try {
       await actions.onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim());
-      setShowAddRestaurantForm(false);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
     } catch (error) {
@@ -71,10 +69,27 @@ export const MenuManagementSection = ({
   };
 
 
-  const handleMenuSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleMenuSelectionChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newValue = e.target.value;
     
-    // 新しいメニューから切り替える場合の確認
+    // 既存メニューから別のメニューへの切り替え
+    if (newValue && state.selectedSavedMenu && newValue !== state.selectedSavedMenu) {
+      const shouldProceed = confirm(
+        '現在表示中のメニューをクリアして、選択したメニューを読み込みます。\n\n' +
+        '続行しますか？'
+      );
+      
+      if (!shouldProceed) {
+        // キャンセルされた場合は元に戻す
+        e.target.value = state.selectedSavedMenu;
+        return;
+      }
+      
+      // 現在のメニューをクリア
+      actions.onMenuItemsChange([]);
+    }
+    
+    // 新しいメニューから既存メニューへの切り替え
     if (!state.selectedSavedMenu && menuData.items.length > 0 && newValue) {
       const shouldProceed = confirm(
         '現在の新しいメニューは保存されていません。\n' +
@@ -87,13 +102,16 @@ export const MenuManagementSection = ({
         e.target.value = state.selectedSavedMenu;
         return;
       }
+      
+      // 現在のメニューをクリア
+      actions.onMenuItemsChange([]);
     }
     
     if (newValue) {
       // 既存メニューを選択した場合
-      actions.onLoadSavedMenu(newValue);
+      actions.setSelectedSavedMenu(newValue);
       actions.setSelectedRestaurant(newValue);
-      setShowAddRestaurantForm(false);
+      await actions.onLoadSavedMenu(newValue);
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -101,9 +119,9 @@ export const MenuManagementSection = ({
       // 「新しいメニュー」を選択した場合
       if (state.selectedSavedMenu && menuData.items.length > 0) {
         const shouldClear = confirm(
-          '現在のメニューをどうしますか？\n\n' +
-          '「OK」: クリア\n' +
-          '「キャンセル」: そのまま'
+          '現在のメニューをクリアしますか？\n\n' +
+          '「OK」: クリアする\n' +
+          '「キャンセル」: そのまま残す'
         );
         
         if (shouldClear) {
@@ -113,8 +131,6 @@ export const MenuManagementSection = ({
       
       actions.setSelectedSavedMenu('');
       actions.setSelectedRestaurant('');
-      // 新しいメニュー選択時は自動でフォームを表示
-      setShowAddRestaurantForm(true);
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -189,7 +205,7 @@ export const MenuManagementSection = ({
         </div>
         
         {/* 新しいメニューが選択されている時にフォームを表示 */}
-        {state.selectedSavedMenu === '' && showAddRestaurantForm && (
+        {!state.selectedSavedMenu && (
           <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <div className="text-sm text-gray-700 mb-2">
               新しいメニューを保存するには、飲食店情報を入力してください
@@ -226,7 +242,6 @@ export const MenuManagementSection = ({
                     actions.setSelectedRestaurant(firstMenu.restaurant_menu_id);
                     actions.onLoadSavedMenu(firstMenu.restaurant_menu_id);
                   }
-                  setShowAddRestaurantForm(false);
                   setNewRestaurantName('');
                   setNewRestaurantLocation('');
                 }}

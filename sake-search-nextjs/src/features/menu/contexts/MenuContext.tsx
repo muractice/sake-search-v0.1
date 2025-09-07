@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { SakeData } from '@/types/sake';
+import ScanService from '@/services/ScanService';
 
 interface SearchResult {
   success: boolean;
@@ -23,6 +24,7 @@ interface MenuContextType {
   handleRemoveItem: (index: number) => void;
   removeItemByName: (name: string) => void;
   clearMenuData: () => void;
+  clearProcessingStatus: () => void;
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -129,8 +131,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     } finally {
       if (fromImageProcessing) {
         setIsProcessing(false);
-        // 3秒後にメッセージをクリア
-        setTimeout(() => setProcessingStatus(''), 3000);
+        // メッセージはクリアしない（画面リロードまたは次回処理まで保持）
       }
     }
   }, [searchSake, menuSakeData, notFoundItems, menuItems]);
@@ -146,33 +147,27 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     setNotFoundItems(prev => prev.filter(item => items.includes(item)));
   }, []);
 
-  // 画像処理
+  // 画像処理（ScanService を利用）
   const handleProcessImage = useCallback(async (file: File) => {
     if (!file) return;
 
     setIsProcessing(true);
-    setProcessingStatus('画像を処理中...');
-
+    setProcessingStatus(''); // 新しい処理開始時に前のメッセージをクリア
+    
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await fetch('/api/ocr', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.items) {
-        await handleMenuItemsAdd(data.items, true);
+      const result = await ScanService.processImage(file, setProcessingStatus);
+      
+      if (result.success && result.sake_names && result.sake_names.length > 0) {
+        setProcessingStatus(`${result.sake_names.length}件の日本酒を検出しました`);
+        await handleMenuItemsAdd(result.sake_names, true);
+      } else if (result.error) {
+        setProcessingStatus(result.error);
       } else {
-        throw new Error(data.error || '画像処理に失敗しました');
+        setProcessingStatus('日本酒が検出されませんでした');
       }
     } catch (error) {
-      console.error('Image processing error:', error);
-      setProcessingStatus('画像処理でエラーが発生しました');
-      setTimeout(() => setProcessingStatus(''), 3000);
+      console.error('画像処理エラー:', error);
+      setProcessingStatus('画像の処理に失敗しました');
     } finally {
       setIsProcessing(false);
     }
@@ -200,6 +195,11 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     setProcessingStatus('');
   }, []);
 
+  // 処理ステータスをクリア
+  const clearProcessingStatus = useCallback(() => {
+    setProcessingStatus('');
+  }, []);
+
   const value: MenuContextType = {
     // State
     menuItems,
@@ -215,6 +215,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     handleRemoveItem,
     removeItemByName,
     clearMenuData,
+    clearProcessingStatus,
   };
 
   return (
