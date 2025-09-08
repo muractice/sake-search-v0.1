@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { SakeData } from '@/types/sake';
+import { formatMenuOptionLabel, MenuDisplayInfo } from './utils';
 
 interface AuthState {
   user: User | null;
@@ -188,13 +189,19 @@ export const MenuManagementSection = ({
               className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
             >
               <option value="">新しいメニュー</option>
-              {Object.values(state.groupedSavedMenus).map((menu) => (
-                <option key={menu.restaurant_menu_id} value={menu.restaurant_menu_id}>
-                  {menu.restaurant_name}
-                  {menu.location && ` (${menu.location})`}
-                  {` - ${menu.count}件 - ${new Date(menu.restaurant_created_at).toLocaleDateString()}`}
-                </option>
-              ))}
+              {Object.values(state.groupedSavedMenus).map((menu) => {
+                const displayInfo: MenuDisplayInfo = {
+                  name: menu.restaurant_name,
+                  location: menu.location,
+                  sakeCount: menu.count,
+                  createdAt: menu.restaurant_created_at
+                };
+                return (
+                  <option key={menu.restaurant_menu_id} value={menu.restaurant_menu_id}>
+                    {formatMenuOptionLabel(displayInfo)}
+                  </option>
+                );
+              })}
             </select>
           </div>
           {state.loadingMenu && (

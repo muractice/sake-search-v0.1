@@ -12,6 +12,7 @@ import {
 import { useRestaurantService } from '@/providers/ServiceProvider';
 import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
+import { formatMenuOptionLabel, MenuDisplayInfo } from '@/features/menu/utils';
 
 interface MenuManagementProps {
   restaurantMenuSakeData: SakeData[];
@@ -270,12 +271,19 @@ export const MenuManagement = ({
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">メニューを選択</option>
-                {restaurants.map((restaurant) => (
-                  <option key={restaurant.id} value={restaurant.id}>
-                    {restaurant.restaurant_name}
-                    {restaurant.location && ` - ${restaurant.location}`}
-                  </option>
-                ))}
+                {restaurants.map((restaurant) => {
+                  const displayInfo: MenuDisplayInfo = {
+                    name: restaurant.restaurant_name,
+                    location: restaurant.location,
+                    sakeCount: restaurant.sake_count || 0,
+                    createdAt: restaurant.created_at
+                  };
+                  return (
+                    <option key={restaurant.id} value={restaurant.id}>
+                      {formatMenuOptionLabel(displayInfo)}
+                    </option>
+                  );
+                })}
               </select>
               {selectedRestaurant && (
                 <button
