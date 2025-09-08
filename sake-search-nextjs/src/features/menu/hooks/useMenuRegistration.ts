@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useMenuContext } from '../contexts/MenuContext';
 import { useMenuManagement } from './useMenuManagement';
 
@@ -33,15 +33,20 @@ export const useMenuRegistration = () => {
      */
     loadSavedMenu: useCallback(
       async (menuId: string): Promise<void> => {
+        console.log('[loadSavedMenu] 開始:', menuId);
         // メニューをクリアしてから新しいメニューを読み込む
         menuContext.clearMenuData();
+        
         await menuManagement.handleLoadSavedMenu(
           menuId,
           async (items: string[]) => {
+            console.log('[loadSavedMenu] handleMenuItemsAdd呼び出し - items:', items);
             // fromImageProcessing=falseで呼び出して新しいメニューを追加
+            // handleMenuItemsAdd内部で冪等性が保証されているため、そのまま呼び出し
             await menuContext.handleMenuItemsAdd(items, false);
           }
         );
+        console.log('[loadSavedMenu] 完了');
       },
       [menuManagement, menuContext.handleMenuItemsAdd, menuContext.clearMenuData]
     ),
@@ -75,6 +80,13 @@ export const useMenuRegistration = () => {
   };
 
   // メニュー管理関連の状態とアクション
+  const hasChangesResult = menuManagement.hasChanges(menuContext.menuSakeData);
+  console.log('=== useMenuRegistration デバッグ ===');
+  console.log('menuManagement.hasChanges:', menuManagement.hasChanges);
+  console.log('menuContext.menuSakeData:', menuContext.menuSakeData?.map(s => s.id));
+  console.log('hasChangesResult:', hasChangesResult);
+  console.log('=== useMenuRegistration デバッグ終了 ===');
+  
   const managementState = {
     user: menuManagement.user,
     isAuthLoading: menuManagement.isAuthLoading,
@@ -83,12 +95,40 @@ export const useMenuRegistration = () => {
     groupedSavedMenusData: menuManagement.groupedSavedMenusData,
     loadingMenu: menuManagement.loadingMenu,
     savingToMenu: menuManagement.savingToMenu,
+    hasChanges: hasChangesResult,
   };
 
   const managementActions = {
     setSelectedSavedMenu: menuManagement.setSelectedSavedMenu,
     setSelectedRestaurant: menuManagement.setSelectedRestaurant,
   };
+
+  // リロード時の初期化処理
+  useEffect(() => {
+    let isSubscribed = true;
+    
+    const initializeMenu = async () => {
+      // selectedSavedMenuが存在し、かつメニューデータが空で、ローディング中でない場合
+      if (managementState.selectedSavedMenu && 
+          inputState.menuSakeData.length === 0 && 
+          !managementState.loadingMenu &&
+          isSubscribed) {
+        
+        console.log('リロード時の自動メニュー復元:', managementState.selectedSavedMenu);
+        console.log('現在のmenuSakeData:', inputState.menuSakeData);
+        console.log('loadingMenu:', managementState.loadingMenu);
+        // 既存のloadSavedMenuアクションを呼び出して完全復元
+        await actions.loadSavedMenu(managementState.selectedSavedMenu);
+      }
+    };
+    
+    initializeMenu();
+    
+    // クリーンアップ関数で重複実行を防ぐ
+    return () => {
+      isSubscribed = false;
+    };
+  }, []); // 初回マウント時のみ実行
 
   return {
     // 状態（分離を維持）

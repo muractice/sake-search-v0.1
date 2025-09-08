@@ -227,7 +227,74 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店のメニューに複数の日本酒を一括追加
+   * メニューの現在の日本酒リストを取得
+   */
+  async getMenuSakes(menuId: string): Promise<string[]> {
+    try {
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
+      }
+
+      const response = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(
+        `/api/restaurant/menus/list?restaurant_id=${menuId}`
+      );
+
+      const menuWithSakes = (response as unknown as { menuWithSakes: RestaurantMenuWithSakes[] }).menuWithSakes || [];
+      return menuWithSakes.map(item => item.sake_id).filter((id): id is string => Boolean(id));
+    } catch (error) {
+      console.error('メニューの日本酒リスト取得エラー:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 飲食店のメニューを更新（差分検出による追加・削除）
+   */
+  async updateMenuSakes(menuId: string, sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]): Promise<RestaurantMenuSake[]> {
+    try {
+      if (!menuId) {
+        throw new RestaurantServiceError('メニューIDが指定されていません');
+      }
+
+      // 空配列の場合は全削除として扱う
+      if (!Array.isArray(sakes)) {
+        throw new RestaurantServiceError('日本酒データが不正です');
+      }
+
+      // 現在のDB状態を取得
+      const existingSakeIds = await this.getMenuSakes(menuId);
+      const newSakeIds = sakes.map(s => s.sake_id);
+
+      // 差分を計算
+      const toDelete = existingSakeIds.filter(id => !newSakeIds.includes(id));
+      const toAdd = sakes.filter(s => !existingSakeIds.includes(s.sake_id));
+      const toUpdate = sakes.filter(s => existingSakeIds.includes(s.sake_id));
+
+      console.log('[RestaurantService] 差分検出結果:', {
+        existing: existingSakeIds,
+        new: newSakeIds,
+        toDelete,
+        toAdd: toAdd.map(s => s.sake_id),
+        toUpdate: toUpdate.map(s => s.sake_id)
+      });
+
+      // 差分処理を実行
+      const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
+        restaurant_menu_id: menuId,
+        sakes,
+        upsert: true,  // UPSERTモードを指定
+        toDelete,      // 削除対象のIDリスト
+        diffMode: true // 差分モードを指定
+      });
+
+      return (response as unknown as { menuSakes: RestaurantMenuSake[] }).menuSakes || [];
+    } catch (error) {
+      this.handleError('メニューの更新に失敗しました', error);
+    }
+  }
+
+  /**
+   * 飲食店のメニューに複数の日本酒を一括追加（後方互換性のため維持）
    */
   async addMultipleSakesToMenu(menuId: string, sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]): Promise<RestaurantMenuSake[]> {
     try {

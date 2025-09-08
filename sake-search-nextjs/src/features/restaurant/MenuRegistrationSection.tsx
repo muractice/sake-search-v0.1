@@ -56,6 +56,7 @@ export const MenuRegistrationSection = ({
           groupedSavedMenus: menuRegistration.managementState.groupedSavedMenusData,
           loadingMenu: menuRegistration.managementState.loadingMenu,
           savingToMenu: menuRegistration.managementState.savingToMenu,
+          hasChanges: menuRegistration.managementState.hasChanges,
         }}
         actions={{
           setSelectedSavedMenu: menuRegistration.managementActions.setSelectedSavedMenu,

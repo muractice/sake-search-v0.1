@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('[API] リクエストボディ:', JSON.stringify(body, null, 2));
     
-    const { restaurant_menu_id, sakes } = body;
-    console.log('[API] パース結果:', { restaurant_menu_id, sakes });
+    const { restaurant_menu_id, sakes, upsert, toDelete, diffMode } = body;
+    console.log('[API] パース結果:', { restaurant_menu_id, sakes, upsert, toDelete, diffMode });
 
     if (!restaurant_menu_id || !Array.isArray(sakes)) {
       console.log('[API] バリデーションエラー - 400を返却:', { restaurant_menu_id, isArray: Array.isArray(sakes) });
@@ -126,10 +126,51 @@ export async function POST(request: NextRequest) {
     }));
     console.log('[API] Supabaseに挿入するデータ:', JSON.stringify(sakesWithRestaurantId, null, 2));
 
-    const { data, error } = await supabase
-      .from('restaurant_menu_sakes')
-      .insert(sakesWithRestaurantId)
-      .select();
+    let data, error;
+
+    if (diffMode && toDelete && toDelete.length > 0) {
+      console.log('[API] 差分モード: 削除処理を実行');
+      // まず削除対象を削除
+      const { error: deleteError } = await supabase
+        .from('restaurant_menu_sakes')
+        .delete()
+        .eq('restaurant_menu_id', restaurant_menu_id)
+        .in('sake_id', toDelete);
+      
+      if (deleteError) {
+        console.error('[API] 削除エラー:', deleteError);
+        throw deleteError;
+      }
+      console.log('[API] 削除完了:', toDelete);
+    }
+
+    if (sakes.length > 0) {
+      if (upsert || diffMode) {
+        console.log('[API] UPSERTモードで実行');
+        // UPSERTの場合：ON CONFLICT DO UPDATEで重複を回避
+        const { data: upsertData, error: upsertError } = await supabase
+          .from('restaurant_menu_sakes')
+          .upsert(sakesWithRestaurantId, {
+            onConflict: 'restaurant_menu_id,sake_id'
+          })
+          .select();
+        data = upsertData;
+        error = upsertError;
+      } else {
+        console.log('[API] 通常INSERTモードで実行');
+        // 通常の場合：INSERT（後方互換性）
+        const { data: insertData, error: insertError } = await supabase
+          .from('restaurant_menu_sakes')
+          .insert(sakesWithRestaurantId)
+          .select();
+        data = insertData;
+        error = insertError;
+      }
+    } else {
+      // 全削除の場合
+      data = [];
+      error = null;
+    }
 
     console.log('[API] Supabase挿入結果:', { data, error });
 

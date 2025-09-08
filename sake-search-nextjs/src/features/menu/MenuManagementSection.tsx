@@ -26,6 +26,7 @@ interface MenuManagementState {
   }>;
   loadingMenu: boolean;
   savingToMenu: boolean;
+  hasChanges?: boolean;
 }
 
 interface MenuManagementActions {
@@ -173,7 +174,7 @@ export const MenuManagementSection = ({
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="mb-3">
           <label className="text-sm font-medium text-gray-700 block mb-2">
-            保存するメニュー:
+            メニュー一覧:
           </label>
         </div>
         
@@ -207,9 +208,6 @@ export const MenuManagementSection = ({
         {/* 新しいメニューが選択されている時にフォームを表示 */}
         {!state.selectedSavedMenu && (
           <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="text-sm text-gray-700 mb-2">
-              新しいメニューを保存するには、飲食店情報を入力してください
-            </div>
             <input
               type="text"
               value={newRestaurantName}
@@ -230,7 +228,7 @@ export const MenuManagementSection = ({
                 disabled={!newRestaurantName.trim() || menuData.sakeData.length === 0}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                追加して保存
+                保存
               </button>
               <button
                 onClick={() => {
@@ -253,6 +251,46 @@ export const MenuManagementSection = ({
           </div>
         )}
       </div>
+
+      {/* 保存ボタン */}
+      {state.selectedSavedMenu && menuData.sakeData.length > 0 && (
+        <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+          {(() => {
+            console.log('=== MenuManagementSection デバッグ ===');
+            console.log('state.hasChanges:', state.hasChanges);
+            console.log('state.savingToMenu:', state.savingToMenu);
+            console.log('ボタン disabled:', state.savingToMenu || !state.hasChanges);
+            console.log('menuData.sakeData.length:', menuData.sakeData.length);
+            console.log('=== MenuManagementSection デバッグ終了 ===');
+            return null;
+          })()}
+          {state.hasChanges && (
+            <div className="text-sm text-orange-600 mb-3 flex items-center gap-2">
+              <span>⚠️</span>
+              <span>未保存の変更があります</span>
+            </div>
+          )}
+          <button
+            onClick={actions.onSaveToRestaurant}
+            disabled={state.savingToMenu || !state.hasChanges}
+            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {state.savingToMenu ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                メニューを更新中...
+              </>
+            ) : (
+              <>
+                🔄 メニューを更新
+              </>
+            )}
+          </button>
+          <div className="text-sm text-green-700 mt-2 text-center">
+            {menuData.sakeData.length}件の日本酒をメニューに更新します
+          </div>
+        </div>
+      )}
     </div>
   );
 };

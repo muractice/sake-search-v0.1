@@ -34,6 +34,11 @@ export const useMenuManagement = () => {
   });
   const [savingToMenu, setSavingToMenu] = useState(false);
   const [loadingMenu, setLoadingMenu] = useState(false);
+  const [lastSavedSakes, setLastSavedSakes] = useState<string[]>([]);  // 最後に保存した日本酒リスト
+  
+  console.log('=== useMenuManagement レンダリング ===');
+  console.log('lastSavedSakes:', lastSavedSakes);
+  console.log('selectedSavedMenu:', selectedSavedMenu);
   const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
     restaurant_menu_id: string;
     restaurant_name: string;
@@ -140,6 +145,7 @@ export const useMenuManagement = () => {
       fetchSavedMenus();
     }
   }, [user, fetchRestaurants, fetchSavedMenus]);
+  
 
   // 新しいメニューを追加
   const handleAddRestaurant = useCallback(async (
@@ -192,6 +198,8 @@ export const useMenuManagement = () => {
 
             await restaurantService.addMultipleSakesToMenu(data.id, sakes);
             await fetchSavedMenus();
+            // 保存成功後、最後に保存した状態を記録
+            setLastSavedSakes(menuSakeData.map(s => s.id));
             alert(`メニュー「${newRestaurantName}」を作成し、${menuSakeData.length}件の日本酒を保存しました。`);
           } catch (saveError) {
             console.error('Error saving menu to new restaurant:', saveError);
@@ -214,15 +222,10 @@ export const useMenuManagement = () => {
     }
   }, [restaurantService, restaurants, fetchRestaurants, fetchSavedMenus, updateSelectedSavedMenu]);
 
-  // 日本酒をメニューに保存
+  // 日本酒をメニューに保存/更新
   const handleSaveToRestaurant = useCallback(async (menuSakeData: SakeData[]) => {
     if (!selectedRestaurant) {
       alert('メニューを選択してください');
-      return;
-    }
-
-    if (menuSakeData.length === 0) {
-      alert('保存する日本酒データがありません');
       return;
     }
 
@@ -235,12 +238,17 @@ export const useMenuManagement = () => {
         menu_notes: null
       }));
 
-      await restaurantService.addMultipleSakesToMenu(selectedRestaurant, sakes);
-      alert(`${sakes.length}件の日本酒をメニューに保存しました`);
+      // updateMenuSakes（UPSERT）を使用して重複エラーを回避
+      await restaurantService.updateMenuSakes(selectedRestaurant, sakes);
+      
+      // 保存成功後、最後に保存した状態を記録
+      setLastSavedSakes(menuSakeData.map(s => s.id));
+      
+      alert(`メニューを更新しました（${sakes.length}件の日本酒）`);
       await fetchSavedMenus();
     } catch (error) {
-      console.error('Error saving to restaurant menu:', error);
-      alert(error instanceof Error ? error.message : 'メニューへの保存に失敗しました');
+      console.error('Error updating restaurant menu:', error);
+      alert(error instanceof Error ? error.message : 'メニューの更新に失敗しました');
     } finally {
       setSavingToMenu(false);
     }
@@ -268,6 +276,10 @@ export const useMenuManagement = () => {
       // MenuContextのhandleMenuItemsAddを呼び出して、名前から詳細データを検索・設定
       await onMenuDataUpdate(sakeNames);
       updateSelectedSavedMenu(restaurantMenuId);  // カスタムセッターを使用
+      
+      // 現在のDB状態を記録
+      const currentSakeIds = await restaurantService.getMenuSakes(restaurantMenuId);
+      setLastSavedSakes(currentSakeIds);
     } catch (error) {
       console.error('Error loading saved menu:', error);
       alert('保存済みメニューの読み込みに失敗しました');
@@ -275,6 +287,39 @@ export const useMenuManagement = () => {
       setLoadingMenu(false);
     }
   }, [restaurantService, updateSelectedSavedMenu]);
+
+  // 変更があるかチェック
+  const hasChanges = useCallback((currentSakes: SakeData[]): boolean => {
+    console.log('=== hasChanges デバッグ ===');
+    console.log('selectedSavedMenu:', selectedSavedMenu);
+    console.log('currentSakes:', currentSakes.map(s => s.id));
+    console.log('lastSavedSakes (変更前):', lastSavedSakes);
+    
+    if (!selectedSavedMenu) {
+      console.log('selectedSavedMenu が空のため false を返す');
+      return false;
+    }
+    
+    const currentIds = currentSakes.map(s => s.id).sort();
+    const savedIds = [...lastSavedSakes].sort();  // 配列をコピーしてからソート
+    
+    console.log('currentIds (sorted):', currentIds);
+    console.log('savedIds (sorted):', savedIds);
+    console.log('lastSavedSakes (変更後):', lastSavedSakes);
+    
+    // 配列の長さが違えば変更あり
+    if (currentIds.length !== savedIds.length) {
+      console.log('配列の長さが違う:', currentIds.length, '!=', savedIds.length);
+      return true;
+    }
+    
+    // 各要素を比較
+    const hasChange = !currentIds.every((id, index) => id === savedIds[index]);
+    console.log('要素比較結果:', hasChange);
+    console.log('=== hasChanges デバッグ終了 ===');
+    
+    return hasChange;
+  }, [selectedSavedMenu, lastSavedSakes]);
 
   return {
     user,
@@ -291,6 +336,7 @@ export const useMenuManagement = () => {
     fetchSavedMenus,
     handleAddRestaurant,
     handleSaveToRestaurant,
-    handleLoadSavedMenu
+    handleLoadSavedMenu,
+    hasChanges
   };
 };

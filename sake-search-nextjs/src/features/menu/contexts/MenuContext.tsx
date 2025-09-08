@@ -61,6 +61,9 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
 
   // メニューアイテムを追加
   const handleMenuItemsAdd = useCallback(async (items: string[], fromImageProcessing: boolean = false) => {
+    console.log('[handleMenuItemsAdd] 開始 - items:', items);
+    console.log('[handleMenuItemsAdd] 現在のmenuSakeData:', menuSakeData.map(s => s.id));
+    
     if (items.length === 0) return;
 
     // 新しい処理開始時に前のメッセージをクリア
@@ -89,27 +92,54 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
 
       results.forEach(({ item, data }) => {
         if (data) {
-          // 既に追加済みでないか確認
-          const existingSake = menuSakeData.find(s => s.id === data.id);
-          if (!existingSake) {
-            foundSakes.push(data);
-          }
+          foundSakes.push(data);
         } else {
-          // 既にnotFoundに追加済みでないか確認
-          if (!notFoundItems.includes(item) && !menuItems.includes(item)) {
-            notFound.push(item);
-          }
+          notFound.push(item);
         }
       });
 
       if (foundSakes.length > 0) {
-        setMenuSakeData(prev => [...prev, ...foundSakes]);
-        setMenuItems(prev => [...prev, ...foundSakes.map(s => s.name)]);
+        console.log('[handleMenuItemsAdd] 追加候補の日本酒:', foundSakes.map(s => s.id));
+        
+        setMenuSakeData(prev => {
+          // 1) 入力自体の重複も除去
+          const incoming = Array.from(new Map(foundSakes.map(s => [s.id, s])).values());
+          
+          // 2) 既存IDを除いたものだけ追加（順序: 既存→新規の出現順）
+          const existingIds = new Set(prev.map(s => s.id));
+          const onlyNew = incoming.filter(s => !existingIds.has(s.id));
+          
+          const result = [...prev, ...onlyNew];
+          console.log('[handleMenuItemsAdd] 重複除去後の新規追加:', onlyNew.map(s => s.id));
+          console.log('[handleMenuItemsAdd] 最終的なmenuSakeData:', result.map(s => s.id));
+          return result;
+        });
+        
+        setMenuItems(prev => {
+          // 同様のパターンで名前も冪等に追加
+          const incoming = Array.from(new Set(foundSakes.map(s => s.name)));
+          const existingNames = new Set(prev);
+          const onlyNew = incoming.filter(name => !existingNames.has(name));
+          return [...prev, ...onlyNew];
+        });
       }
 
       if (notFound.length > 0) {
-        setNotFoundItems(prev => [...prev, ...notFound]);
-        setMenuItems(prev => [...prev, ...notFound]);
+        setNotFoundItems(prev => {
+          // 同じパターンで冪等に追加
+          const incoming = Array.from(new Set(notFound));
+          const existingItems = new Set(prev);
+          const onlyNew = incoming.filter(item => !existingItems.has(item));
+          return [...prev, ...onlyNew];
+        });
+        
+        setMenuItems(prev => {
+          // notFoundアイテムも名前として追加
+          const incoming = Array.from(new Set(notFound));
+          const existingNames = new Set(prev);
+          const onlyNew = incoming.filter(name => !existingNames.has(name));
+          return [...prev, ...onlyNew];
+        });
       }
 
       const message = [];
@@ -189,11 +219,13 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
 
   // メニューデータをクリア
   const clearMenuData = useCallback(() => {
+    console.log('[clearMenuData] クリア実行');
+    console.log('[clearMenuData] クリア前のmenuSakeData:', menuSakeData.map(s => s.id));
     setMenuItems([]);
     setMenuSakeData([]);
     setNotFoundItems([]);
     setProcessingStatus('');
-  }, []);
+  }, [menuSakeData]);
 
   // 処理ステータスをクリア
   const clearProcessingStatus = useCallback(() => {
