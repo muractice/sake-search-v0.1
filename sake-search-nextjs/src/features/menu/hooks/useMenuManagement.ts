@@ -39,6 +39,7 @@ export const useMenuManagement = () => {
   console.log('=== useMenuManagement レンダリング ===');
   console.log('lastSavedSakes:', lastSavedSakes);
   console.log('selectedSavedMenu:', selectedSavedMenu);
+  console.log('lastSavedSakes.length:', lastSavedSakes.length);
   const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
     restaurant_menu_id: string;
     restaurant_name: string;
@@ -145,6 +146,24 @@ export const useMenuManagement = () => {
       fetchSavedMenus();
     }
   }, [user, fetchRestaurants, fetchSavedMenus]);
+  
+  // selectedSavedMenuが存在し、lastSavedSakesが空の場合、DBから現在の状態を取得
+  useEffect(() => {
+    const loadSavedState = async () => {
+      if (selectedSavedMenu && lastSavedSakes.length === 0 && !loadingMenu) {
+        console.log('[useMenuManagement] lastSavedSakesが空なので、DBから取得:', selectedSavedMenu);
+        try {
+          const currentSakeIds = await restaurantService.getMenuSakes(selectedSavedMenu);
+          console.log('[useMenuManagement] DBから取得したsakeIds:', currentSakeIds);
+          setLastSavedSakes(currentSakeIds);
+        } catch (error) {
+          console.error('Error loading saved sakes:', error);
+        }
+      }
+    };
+    
+    loadSavedState();
+  }, [selectedSavedMenu, lastSavedSakes.length, loadingMenu, restaurantService]);
   
 
   // 新しいメニューを追加
