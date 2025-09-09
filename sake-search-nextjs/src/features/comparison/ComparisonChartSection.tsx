@@ -30,7 +30,7 @@ export const ComparisonChartSection = ({
   comparison,
   selection,
   showComparisonPanel = true,
-  tasteMapTitle = '比較リストの味わいマップ',
+  tasteMapTitle = '味わいマップ',
   radarChartTitle = '比較リストの味覚特性',
   tasteChartHeight = 'md'
 }: ComparisonChartSectionProps) => {
