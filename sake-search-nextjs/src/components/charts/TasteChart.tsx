@@ -129,7 +129,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
               return [
                 sake.name,
                 `蔵元: ${sake.brewery}`,
-                `甘辛: ${sake.sweetness > 0 ? '甘口' : '辛口'} (${sake.sweetness.toFixed(1)})`,
+                `甘辛: ${sake.sweetness > 0 ? '甘' : '辛'} (${sake.sweetness.toFixed(1)})`,
                 `淡濃: ${sake.richness > 0 ? '濃醇' : '淡麗'} (${sake.richness.toFixed(1)})`
               ];
             }
@@ -367,7 +367,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       const quadrant1X = centerX + (chartArea.right - centerX) * 0.5;
       const quadrant1Y = chartArea.top + (centerY - chartArea.top) * 0.3;
       ctx.fillStyle = 'rgba(236, 72, 153, 0.6)';
-      ctx.fillText('甘口・濃醇', quadrant1X, quadrant1Y);
+      ctx.fillText('甘・濃', quadrant1X, quadrant1Y);
       ctx.font = 'normal 10px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(236, 72, 153, 0.5)';
       ctx.fillText('（デザート系）', quadrant1X, quadrant1Y + 20);
@@ -377,7 +377,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       const quadrant2Y = chartArea.top + (centerY - chartArea.top) * 0.3;
       ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
-      ctx.fillText('辛口・濃醇', quadrant2X, quadrant2Y);
+      ctx.fillText('辛・濃', quadrant2X, quadrant2Y);
       ctx.font = 'normal 10px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(239, 68, 68, 0.5)';
       ctx.fillText('（力強い系）', quadrant2X, quadrant2Y + 20);
@@ -387,7 +387,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       const quadrant3Y = centerY + (chartArea.bottom - centerY) * 0.7;
       ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
-      ctx.fillText('辛口・淡麗', quadrant3X, quadrant3Y);
+      ctx.fillText('辛・淡麗', quadrant3X, quadrant3Y);
       ctx.font = 'normal 10px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
       ctx.fillText('（すっきり系）', quadrant3X, quadrant3Y + 20);
@@ -397,7 +397,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       const quadrant4Y = centerY + (chartArea.bottom - centerY) * 0.7;
       ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(99, 102, 241, 0.6)';
-      ctx.fillText('甘口・淡麗', quadrant4X, quadrant4Y);
+      ctx.fillText('甘・淡麗', quadrant4X, quadrant4Y);
       ctx.font = 'normal 10px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
       ctx.fillStyle = 'rgba(99, 102, 241, 0.5)';
       ctx.fillText('（やわらか系）', quadrant4X, quadrant4Y + 20);
