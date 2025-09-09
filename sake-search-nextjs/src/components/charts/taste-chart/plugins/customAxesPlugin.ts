@@ -60,13 +60,6 @@ export const customAxesPlugin = {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // 象限ラベル
-    const quadrantLabels = [
-      { text: '甘・濃醇', x: centerX + (chartArea.right - centerX) / 2, y: chartArea.top + (centerY - chartArea.top) / 2 },
-      { text: '濃醇', x: chartArea.left + (centerX - chartArea.left) / 2, y: chartArea.top + (centerY - chartArea.top) / 2 },
-      { text: '辛・淡麗', x: chartArea.left + (centerX - chartArea.left) / 2, y: centerY + (chartArea.bottom - centerY) / 2 },
-      { text: '甘・淡麗', x: centerX + (chartArea.right - centerX) / 2, y: centerY + (chartArea.bottom - centerY) / 2 }
-    ];
     
     // 4象限内のラベル
     ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
