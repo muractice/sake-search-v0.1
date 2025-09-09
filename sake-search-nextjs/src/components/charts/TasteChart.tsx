@@ -15,6 +15,14 @@ import {
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Scatter } from 'react-chartjs-2';
 import { SakeData } from '@/types/sake';
+import { customAxesPlugin } from './taste-chart/plugins/customAxesPlugin';
+import { CHART_CONFIG } from './taste-chart/constants/chartConfig';
+import {
+  createChartDataset,
+  createTooltipCallbacks,
+  createDataLabelsConfig,
+  debugSakeData
+} from './taste-chart/utils/chartUtils';
 
 ChartJS.register(
   CategoryScale,
@@ -31,111 +39,38 @@ interface TasteChartProps {
   onSakeClick: (sake: SakeData) => void;
 }
 
+import TasteChartComponent from './taste-chart/TasteChart';
+
 export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
+  return (
+    <TasteChartComponent 
+      sakeData={sakeData}
+      onSakeClick={onSakeClick}
+    />
+  );
+}
+
+// Keep the legacy implementation for now but mark as deprecated
+function _LegacyTasteChart({ sakeData, onSakeClick }: TasteChartProps) {
   const chartRef = useRef<ChartJS<'scatter'>>(null);
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
-  if (typeof window !== 'undefined') {
-    (window as { debugSakeData?: SakeData[] }).debugSakeData = sakeData;
-  }
+  debugSakeData(sakeData);
   
   // 検証を一時的に無効化 - すべてのデータを表示
   const validSakeData = sakeData;
 
   const data = {
-    datasets: [
-      {
-        label: '日本酒',
-        data: validSakeData.map((sake) => ({
-          x: sake.sweetness,
-          y: sake.richness,
-        })),
-        backgroundColor: validSakeData.map((_, index) => {
-          // 美しいグラデーションカラーパレット
-          const colors = [
-            'rgba(99, 102, 241, 0.8)',   // インディゴ
-            'rgba(168, 85, 247, 0.8)',   // パープル  
-            'rgba(236, 72, 153, 0.8)',   // ピンク
-            'rgba(239, 68, 68, 0.8)',    // レッド
-            'rgba(245, 101, 101, 0.8)',  // ライトレッド
-            'rgba(34, 197, 94, 0.8)',    // グリーン
-            'rgba(59, 130, 246, 0.8)',   // ブルー
-            'rgba(14, 165, 233, 0.8)',   // スカイブルー
-            'rgba(6, 182, 212, 0.8)',    // シアン
-            'rgba(16, 185, 129, 0.8)',   // エメラルド
-          ];
-          return colors[index % colors.length];
-        }),
-        borderColor: validSakeData.map((_, index) => {
-          const colors = [
-            'rgba(99, 102, 241, 1)',
-            'rgba(168, 85, 247, 1)',
-            'rgba(236, 72, 153, 1)',
-            'rgba(239, 68, 68, 1)',
-            'rgba(245, 101, 101, 1)',
-            'rgba(34, 197, 94, 1)',
-            'rgba(59, 130, 246, 1)',
-            'rgba(14, 165, 233, 1)',
-            'rgba(6, 182, 212, 1)',
-            'rgba(16, 185, 129, 1)',
-          ];
-          return colors[index % colors.length];
-        }),
-        borderWidth: 3,
-        pointRadius: 12,
-        pointHoverRadius: 15,
-        pointHoverBackgroundColor: validSakeData.map((_, index) => {
-          const colors = [
-            'rgba(99, 102, 241, 0.95)',
-            'rgba(168, 85, 247, 0.95)',
-            'rgba(236, 72, 153, 0.95)',
-            'rgba(239, 68, 68, 0.95)',
-            'rgba(245, 101, 101, 0.95)',
-            'rgba(34, 197, 94, 0.95)',
-            'rgba(59, 130, 246, 0.95)',
-            'rgba(14, 165, 233, 0.95)',
-            'rgba(6, 182, 212, 0.95)',
-            'rgba(16, 185, 129, 0.95)',
-          ];
-          return colors[index % colors.length];
-        }),
-        pointHoverBorderColor: '#ffffff',
-        pointHoverBorderWidth: 4,
-        pointStyle: 'circle',
-      },
-    ],
+    datasets: [createChartDataset(validSakeData)],
   };
 
   const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: {
-        top: 40,
-        bottom: 40,
-        left: 20,
-        right: 20
-      }
-    },
+    ...CHART_CONFIG,
     plugins: {
-      legend: {
-        display: false,
-      },
+      ...CHART_CONFIG.plugins,
       tooltip: {
-        callbacks: {
-          label: function(context: { dataIndex: number }): string | string[] {
-            const sake = validSakeData[context.dataIndex];
-            if (sake && typeof sake.name === 'string') {
-              return [
-                sake.name,
-                `蔵元: ${sake.brewery}`,
-                `甘辛: ${sake.sweetness > 0 ? '甘' : '辛'} (${sake.sweetness.toFixed(1)})`,
-                `淡濃: ${sake.richness > 0 ? '濃醇' : '淡麗'} (${sake.richness.toFixed(1)})`
-              ];
-            }
-            return '';
-          }
-        },
+        ...CHART_CONFIG.plugins.tooltip,
+        callbacks: createTooltipCallbacks(validSakeData),
         backgroundColor: 'rgba(0, 0, 0, 0.9)',
         titleFont: {
           size: 16
@@ -146,59 +81,18 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
         padding: 15,
         cornerRadius: 8
       },
-      datalabels: {
-        display: true,
-        color: '#ffffff',
-        font: {
-          weight: 'bold' as const,
-          size: 16,
-          family: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif'
-        },
-        formatter: (_value: unknown, context: { dataIndex: number }) => {
-          return context.dataIndex + 1;
-        },
-        anchor: 'center' as const,
-        align: 'center' as const,
-        textStrokeColor: '#000000',
-        textStrokeWidth: 6
-      }
+      datalabels: createDataLabelsConfig()
     },
     scales: {
       x: {
-        type: 'linear' as const,
+        ...CHART_CONFIG.scales.x,
         position: 'center' as const,
-        min: -5,
-        max: 5,
-        title: {
-          display: false,
-        },
-        grid: {
-          display: false,
-          drawBorder: false,
-          drawOnChartArea: false,
-          drawTicks: false,
-        },
-        ticks: {
-          display: false,
-        },
       },
       y: {
-        type: 'linear' as const,
+        ...CHART_CONFIG.scales.y,
         position: 'center' as const,
         min: -3.5,
         max: 3.5,
-        title: {
-          display: false,
-        },
-        grid: {
-          display: false,
-          drawBorder: false,
-          drawOnChartArea: false,
-          drawTicks: false,
-        },
-        ticks: {
-          display: false,
-        },
       },
     },
     onClick: (_event: ChartEvent, elements: ActiveElement[], chart: ChartJS) => {
