@@ -11,28 +11,20 @@ export const CHART_CONFIG = {
     x: {
       type: 'linear' as const,
       position: 'bottom' as const,
-      min: -5.5,
-      max: 5.5,
+      min: -5,
+      max: 5,
       display: false,
     },
     y: {
       type: 'linear' as const,
-      min: -3.8,
-      max: 3.8,
+      min: -3,
+      max: 3,
       display: false,
     }
   },
   plugins: {
     legend: {
-      display: true,
-      position: 'bottom' as const,
-      labels: {
-        usePointStyle: true,
-        padding: 15,
-        font: {
-          size: 11,
-        },
-      },
+      display: false,
     },
     tooltip: {
       enabled: true,

@@ -106,7 +106,7 @@ export const customAxesPlugin = {
     
     // 縦軸ラベル
     ctx.fillText('濃醇', centerX, chartArea.top - 20);
-    ctx.fillText('淡麗', centerX, chartArea.bottom + 30);
+    ctx.fillText('淡麗', centerX, chartArea.bottom + 25);
     
     ctx.restore();
   },

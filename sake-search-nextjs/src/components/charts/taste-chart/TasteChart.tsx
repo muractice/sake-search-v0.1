@@ -79,8 +79,8 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       y: {
         ...CHART_CONFIG.scales.y,
         position: 'center' as const,
-        min: -3.8,
-        max: 3.8,
+        min: -3,
+        max: 3,
       },
     },
     onClick: (_event: ChartEvent, elements: ActiveElement[], chart: ChartJS) => {
@@ -114,7 +114,7 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
       </div>
       
       {validSakeData.length > 0 && (
-        <div className="mt-6 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
+        <div className="mt-16 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
           <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
             <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
             日本酒一覧
