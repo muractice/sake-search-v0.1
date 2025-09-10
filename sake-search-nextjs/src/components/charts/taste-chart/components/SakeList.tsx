@@ -9,7 +9,6 @@ interface SakeListProps {
   showRemoveButton?: boolean;
   showDescription?: boolean;
   showActions?: boolean;
-  recordButtonLabel?: string;
 }
 
 export const SakeList = ({ 
@@ -18,8 +17,7 @@ export const SakeList = ({
   onRemove,
   showRemoveButton = true,
   showDescription = true,
-  showActions = true,
-  recordButtonLabel = '飲んだ'
+  showActions = true
 }: SakeListProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -35,7 +33,6 @@ export const SakeList = ({
           showRemoveButton={showRemoveButton}
           showDescription={showDescription}
           showActions={showActions}
-          recordButtonLabel={recordButtonLabel}
         />
       ))}
     </div>

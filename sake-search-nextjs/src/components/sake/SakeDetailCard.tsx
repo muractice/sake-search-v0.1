@@ -15,7 +15,6 @@ interface SakeDetailCardProps {
   showRemoveButton?: boolean;
   showDescription?: boolean;
   showActions?: boolean;
-  recordButtonLabel?: string;
 }
 
 /**
@@ -31,8 +30,7 @@ export const SakeDetailCard = ({
   onRemove,
   showRemoveButton = true,
   showDescription = true,
-  showActions = true,
-  recordButtonLabel = '飲んだ'
+  showActions = true
 }: SakeDetailCardProps) => {
   
   /**
@@ -143,7 +141,6 @@ export const SakeDetailCard = ({
           <RecordButton 
             sake={sake}
             className="w-full"
-            label={recordButtonLabel}
           />
         </div>
       )}

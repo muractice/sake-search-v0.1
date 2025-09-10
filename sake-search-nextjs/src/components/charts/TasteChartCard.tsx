@@ -9,6 +9,7 @@ interface TasteChartCardProps {
   sakeData: SakeData[];                   // チャートデータ
   onSakeClick: (sake: SakeData) => void;  // クリックハンドラー
   onRemoveSake?: (sake: SakeData) => void; // 削除ハンドラー
+  onClearSake?: () => void;               // クリアハンドラー
   minHeight?: 'sm' | 'md' | 'lg';        // 高さバリエーション
   className?: string;                     // 追加スタイル
 }
@@ -19,6 +20,7 @@ export const TasteChartCard = ({
   sakeData,
   onSakeClick,
   onRemoveSake,
+  onClearSake,
   minHeight = 'md',
   className = ''
 }: TasteChartCardProps) => {
@@ -42,6 +44,7 @@ export const TasteChartCard = ({
           sakeData={sakeData}
           onSakeClick={onSakeClick}
           onRemoveSake={onRemoveSake}
+          onClearSake={onClearSake}
         />
       </div>
     </div>

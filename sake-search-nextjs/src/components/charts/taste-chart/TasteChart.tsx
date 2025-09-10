@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,7 +16,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { Scatter } from 'react-chartjs-2';
 import { SakeData } from '@/types/sake';
 import { customAxesPlugin } from './plugins/customAxesPlugin';
-import { CHART_CONFIG, CHART_COLORS } from './constants';
+import { CHART_CONFIG } from './constants';
 import { SakeList } from './components/SakeList';
 import {
   createChartDataset,
@@ -39,44 +39,22 @@ interface TasteChartProps {
   sakeData: SakeData[];
   onSakeClick: (sake: SakeData) => void;
   onRemoveSake?: (sake: SakeData) => void;
+  onClearSake?: () => void;
 }
 
-export default function TasteChart({ sakeData, onSakeClick, onRemoveSake }: TasteChartProps) {
+export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClearSake }: TasteChartProps) {
   const chartRef = useRef<ChartJS<'scatter'>>(null);
-  const [localSakeData, setLocalSakeData] = useState(sakeData);
-
-  // sakeDataが変更されたら更新
-  useEffect(() => {
-    console.log('🔍 sakeData changed, length:', sakeData.length);
-    console.log('🔍 Previous localSakeData length:', localSakeData.length);
-    setLocalSakeData(sakeData);
-  }, [sakeData]);
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
-  debugSakeData(localSakeData);
+  debugSakeData(sakeData);
   
   // 検証を一時的に無効化 - すべてのデータを表示
-  const validSakeData = localSakeData;
+  const validSakeData = sakeData;
 
-  // ローカル削除ハンドラー
+  // 削除ハンドラー - 親のonRemoveSakeを呼ぶだけ
   const handleRemoveSake = (sake: SakeData) => {
-    console.log('🔍 handleRemoveSake called:', sake.name);
-    console.log('🔍 onRemoveSake exists:', !!onRemoveSake);
-    console.log('🔍 Current localSakeData length:', localSakeData.length);
-    
     if (onRemoveSake) {
-      console.log('🔍 Calling onRemoveSake');
       onRemoveSake(sake);
-      // 親から削除されるので、ローカルでも削除
-      setLocalSakeData(prev => {
-        const filtered = prev.filter(s => s.id !== sake.id);
-        console.log('🔍 Local data after removal:', filtered.length);
-        return filtered;
-      });
-    } else {
-      // onRemoveSakeが提供されていない場合はローカルで削除
-      console.log('🔍 Removing locally only');
-      setLocalSakeData(prev => prev.filter(s => s.id !== sake.id));
     }
   };
 
@@ -147,10 +125,20 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake }: Tast
       
       {validSakeData.length > 0 && (
         <div className="mt-16 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl p-6 border border-purple-100">
-          <h3 className="font-bold text-gray-800 mb-4 text-lg flex items-center">
-            <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
-            日本酒一覧
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-bold text-gray-800 text-lg flex items-center">
+              <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
+              日本酒一覧
+            </h3>
+            {validSakeData.length > 0 && onClearSake && (
+              <button
+                onClick={onClearSake}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-semibold"
+              >
+                クリア
+              </button>
+            )}
+          </div>
           <SakeList
             sakeData={validSakeData}
             onSakeClick={onSakeClick}
@@ -158,7 +146,6 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake }: Tast
             showRemoveButton={true}
             showDescription={true}
             showActions={true}
-            recordButtonLabel="飲んだ"
           />
         </div>
       )}

@@ -1,7 +1,6 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import ComparisonPanel from '@/features/comparison/ComparisonPanel';
 import { TasteChartCard } from '@/components/charts/TasteChartCard';
 import { RadarChartCard } from '@/components/charts/RadarChartCard';
 
@@ -20,7 +19,6 @@ interface SelectionProps {
 interface ComparisonChartSectionProps {
   comparison: ComparisonProps;
   selection: SelectionProps;
-  showComparisonPanel?: boolean;  // 比較パネル表示フラグ（デフォルト: true）
   tasteMapTitle?: string;  // 味わいマップのタイトル（デフォルト: "比較リストの味わいマップ"）
   radarChartTitle?: string;  // レーダーチャートのタイトル（デフォルト: "比較リストの味覚特性"）
   tasteChartHeight?: 'md' | 'lg';  // チャート高さ（md: 400-600px, lg: 500-700px）
@@ -29,7 +27,6 @@ interface ComparisonChartSectionProps {
 export const ComparisonChartSection = ({
   comparison,
   selection,
-  showComparisonPanel = true,
   tasteMapTitle = '味わいマップ',
   radarChartTitle = '比較リストの味覚特性',
   tasteChartHeight = 'md'
@@ -41,16 +38,6 @@ export const ComparisonChartSection = ({
 
   return (
     <>
-      {/* 比較パネル */}
-      {showComparisonPanel && (
-        <ComparisonPanel
-          comparisonList={comparison.list}
-          onRemove={comparison.onToggle}
-          onClear={comparison.onClear}
-          onSelectSake={selection.onSelectSake}
-        />
-      )}
-
       {/* チャート表示エリア */}
       <div className="space-y-8">
         <TasteChartCard
@@ -58,6 +45,7 @@ export const ComparisonChartSection = ({
           sakeData={comparison.list}
           onSakeClick={selection.onChartClick}
           onRemoveSake={comparison.onToggle}
+          onClearSake={comparison.onClear}
           minHeight={tasteChartHeight}
         />
         

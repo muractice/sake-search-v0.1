@@ -50,7 +50,6 @@ export const SearchTab = ({
             onSelectSake: onSelectSake,
             onChartClick: onChartClick,
           }}
-          showComparisonPanel={true}
           tasteMapTitle="味わいマップ"
           radarChartTitle="味覚特性"
           tasteChartHeight="lg"

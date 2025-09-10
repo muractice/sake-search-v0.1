@@ -90,7 +90,6 @@ export default function ComparisonPanel({
                   showRemoveButton={true}
                   showDescription={true}
                   showActions={true}
-                  recordButtonLabel="飲んだ"
                 />
               ))}
             </div>
