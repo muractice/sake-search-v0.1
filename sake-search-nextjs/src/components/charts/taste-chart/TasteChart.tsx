@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,6 +17,7 @@ import { Scatter } from 'react-chartjs-2';
 import { SakeData } from '@/types/sake';
 import { customAxesPlugin } from './plugins/customAxesPlugin';
 import { CHART_CONFIG, CHART_COLORS } from './constants';
+import { SakeList } from './components/SakeList';
 import {
   createChartDataset,
   createTooltipCallbacks,
@@ -37,16 +38,47 @@ ChartJS.register(
 interface TasteChartProps {
   sakeData: SakeData[];
   onSakeClick: (sake: SakeData) => void;
+  onRemoveSake?: (sake: SakeData) => void;
 }
 
-export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
+export default function TasteChart({ sakeData, onSakeClick, onRemoveSake }: TasteChartProps) {
   const chartRef = useRef<ChartJS<'scatter'>>(null);
+  const [localSakeData, setLocalSakeData] = useState(sakeData);
+
+  // sakeDataが変更されたら更新
+  useEffect(() => {
+    console.log('🔍 sakeData changed, length:', sakeData.length);
+    console.log('🔍 Previous localSakeData length:', localSakeData.length);
+    setLocalSakeData(sakeData);
+  }, [sakeData]);
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
-  debugSakeData(sakeData);
+  debugSakeData(localSakeData);
   
   // 検証を一時的に無効化 - すべてのデータを表示
-  const validSakeData = sakeData;
+  const validSakeData = localSakeData;
+
+  // ローカル削除ハンドラー
+  const handleRemoveSake = (sake: SakeData) => {
+    console.log('🔍 handleRemoveSake called:', sake.name);
+    console.log('🔍 onRemoveSake exists:', !!onRemoveSake);
+    console.log('🔍 Current localSakeData length:', localSakeData.length);
+    
+    if (onRemoveSake) {
+      console.log('🔍 Calling onRemoveSake');
+      onRemoveSake(sake);
+      // 親から削除されるので、ローカルでも削除
+      setLocalSakeData(prev => {
+        const filtered = prev.filter(s => s.id !== sake.id);
+        console.log('🔍 Local data after removal:', filtered.length);
+        return filtered;
+      });
+    } else {
+      // onRemoveSakeが提供されていない場合はローカルで削除
+      console.log('🔍 Removing locally only');
+      setLocalSakeData(prev => prev.filter(s => s.id !== sake.id));
+    }
+  };
 
   const data = {
     datasets: [createChartDataset(validSakeData)],
@@ -119,30 +151,15 @@ export default function TasteChart({ sakeData, onSakeClick }: TasteChartProps) {
             <span className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mr-3"></span>
             日本酒一覧
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {validSakeData.map((sake, index) => (
-              <button
-                key={sake.id}
-                onClick={() => onSakeClick(sake)}
-                className="w-full text-left p-3 rounded-lg border border-purple-200/50 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 flex items-center space-x-3 bg-white/60 backdrop-blur-sm"
-              >
-                <div 
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                  style={{ backgroundColor: CHART_COLORS.solidColors[index % CHART_COLORS.solidColors.length] }}
-                >
-                  {index + 1}
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-800">{sake.name}</div>
-                  <div className="text-sm text-gray-600">{sake.brewery}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    甘辛: {sake.sweetness > 0 ? '甘' : '辛'} ({sake.sweetness.toFixed(1)}) | 
-                    淡濃: {sake.richness > 0 ? '濃醇' : '淡麗'} ({sake.richness.toFixed(1)})
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
+          <SakeList
+            sakeData={validSakeData}
+            onSakeClick={onSakeClick}
+            onRemove={handleRemoveSake}
+            showRemoveButton={true}
+            showDescription={true}
+            showActions={true}
+            recordButtonLabel="飲んだ"
+          />
         </div>
       )}
     </div>

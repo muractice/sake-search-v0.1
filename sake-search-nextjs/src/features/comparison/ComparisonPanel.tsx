@@ -1,7 +1,7 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import { ComparisonCard } from './components/ComparisonCard';
+import { SakeDetailCard } from '@/components/sake/SakeDetailCard';
 import { getComparisonProgressText } from './utils/comparisonHelpers';
 
 interface ComparisonPanelProps {
@@ -80,12 +80,17 @@ export default function ComparisonPanel({
           {comparisonList.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {comparisonList.map((sake, index) => (
-                <ComparisonCard
+                <SakeDetailCard
                   key={sake.id}
                   sake={sake}
                   index={index}
+                  variant="comparison"
                   onRemove={onRemove}
                   onSelect={onSelectSake}
+                  showRemoveButton={true}
+                  showDescription={true}
+                  showActions={true}
+                  recordButtonLabel="飲んだ"
                 />
               ))}
             </div>

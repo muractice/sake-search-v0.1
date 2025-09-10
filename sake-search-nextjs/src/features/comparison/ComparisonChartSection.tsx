@@ -57,6 +57,7 @@ export const ComparisonChartSection = ({
           title={tasteMapTitle}
           sakeData={comparison.list}
           onSakeClick={selection.onChartClick}
+          onRemoveSake={comparison.onToggle}
           minHeight={tasteChartHeight}
         />
         

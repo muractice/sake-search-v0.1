@@ -1,0 +1,1 @@
+export { SakeDetailCard } from './SakeDetailCard';

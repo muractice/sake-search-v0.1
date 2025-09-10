@@ -1,20 +1,41 @@
 import { SakeData } from '@/types/sake';
-import { SakeListItem } from './SakeListItem';
+import { SakeDetailCard } from '@/components/sake/SakeDetailCard';
+import { CHART_COLORS } from '../constants/chartColors';
 
 interface SakeListProps {
   sakeData: SakeData[];
   onSakeClick: (sake: SakeData) => void;
+  onRemove?: (sake: SakeData) => void;
+  showRemoveButton?: boolean;
+  showDescription?: boolean;
+  showActions?: boolean;
+  recordButtonLabel?: string;
 }
 
-export const SakeList = ({ sakeData, onSakeClick }: SakeListProps) => {
+export const SakeList = ({ 
+  sakeData, 
+  onSakeClick,
+  onRemove,
+  showRemoveButton = true,
+  showDescription = true,
+  showActions = true,
+  recordButtonLabel = '飲んだ'
+}: SakeListProps) => {
   return (
-    <div className="space-y-2 max-h-64 overflow-y-auto">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {sakeData.map((sake, index) => (
-        <SakeListItem
+        <SakeDetailCard
           key={sake.id}
           sake={sake}
           index={index}
-          onClick={() => onSakeClick(sake)}
+          variant="chart-list"
+          backgroundColor={CHART_COLORS.solidColors[index % CHART_COLORS.solidColors.length]}
+          onSelect={onSakeClick}
+          onRemove={onRemove}
+          showRemoveButton={showRemoveButton}
+          showDescription={showDescription}
+          showActions={showActions}
+          recordButtonLabel={recordButtonLabel}
         />
       ))}
     </div>
