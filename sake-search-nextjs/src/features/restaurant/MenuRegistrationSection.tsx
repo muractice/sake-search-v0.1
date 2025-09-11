@@ -70,21 +70,30 @@ export const MenuRegistrationSection = ({
 
       {/* 登録済み日本酒リスト表示 */}
       {(menuRegistration.inputState.menuItems.length > 0) && (
-        <MenuSakeListDisplay
-          menuData={{
-            menuSakeData: menuRegistration.inputState.menuSakeData,
-            notFoundItems: menuRegistration.inputState.notFoundItems,
-            selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
-            onRemoveItem: (item: string) => {
-              menuRegistration.inputActions.removeItemByName(item);
-            },
-          }}
-          comparison={{
-            list: comparison.list,
-            isInList: comparison.isInList,
-            onToggle: comparison.onToggle,
-          }}
-        />
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-bold mb-4 text-gray-900 flex items-center">
+            <span className="mr-2">📋</span>
+            メニューの日本酒一覧
+            <span className="ml-2 text-sm font-normal text-gray-600">
+              ({menuRegistration.inputState.menuItems.length}件)
+            </span>
+          </h2>
+          <MenuSakeListDisplay
+            menuData={{
+              menuSakeData: menuRegistration.inputState.menuSakeData,
+              notFoundItems: menuRegistration.inputState.notFoundItems,
+              selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
+              onRemoveItem: (item: string) => {
+                menuRegistration.inputActions.removeItemByName(item);
+              },
+            }}
+            comparison={{
+              list: comparison.list,
+              isInList: comparison.isInList,
+              onToggle: comparison.onToggle,
+            }}
+          />
+        </div>
       )}
 
       {/* 比較チャートセクション */}
