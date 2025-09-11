@@ -18,7 +18,7 @@ export const TasteCharacteristics = ({ vector }: TasteCharacteristicsProps) => {
 
   return (
     <div className="mb-6">
-      <h4 className="text-sm font-bold mb-2">味覚特性</h4>
+      <h4 className="text-sm font-bold mb-2 text-gray-900">味覚特性</h4>
       <div className="space-y-2">
         {characteristics.map((item) => (
           <div key={item.key} className="flex items-center">

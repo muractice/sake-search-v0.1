@@ -9,7 +9,7 @@ interface PreferenceQuadrantMapProps {
 export const PreferenceQuadrantMap = ({ vector }: PreferenceQuadrantMapProps) => {
   return (
     <div className="mb-6">
-      <h4 className="text-sm font-bold mb-2">好みマップ</h4>
+      <h4 className="text-sm font-bold mb-2 text-gray-900">好みマップ</h4>
       <div className="relative bg-gray-50 border rounded-lg" style={{ height: '200px' }}>
         {/* 横軸ラベル（中央線の下） */}
         <div className="absolute left-2 top-1/2 mt-2 text-xs text-gray-500">

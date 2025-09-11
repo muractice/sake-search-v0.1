@@ -68,7 +68,7 @@ export const PreferenceMap = ({ className = '' }: PreferenceMapProps) => {
   return (
     <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">🎯 あなたの好み分析</h3>
+        <h3 className="text-lg font-bold text-gray-900">🎯 あなたの好み分析</h3>
         <button
           onClick={refresh}
           className="text-sm text-blue-600 hover:text-blue-800"
@@ -90,7 +90,7 @@ export const PreferenceMap = ({ className = '' }: PreferenceMapProps) => {
       {/* 味覚特性（レーダーチャート） */}
       {preferenceSakeData && (
         <div className="mb-6">
-          <h4 className="text-sm font-bold mb-2">味覚特性レーダー</h4>
+          <h4 className="text-sm font-bold mb-2 text-gray-900">味覚特性レーダー</h4>
           <div className="max-w-sm mx-auto">
             <SakeRadarChart sake={preferenceSakeData} index={0} />
           </div>

@@ -119,7 +119,7 @@ export const RecommendationDisplay = ({
   if (loading) {
     return (
       <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
-        <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
+        <h3 className="text-lg font-bold mb-4 text-gray-900">💡 あなたへのおすすめ</h3>
         <div className="flex items-center justify-center h-40">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600">レコメンド生成中...</span>
@@ -131,7 +131,7 @@ export const RecommendationDisplay = ({
   if (error) {
     return (
       <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
-        <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
+        <h3 className="text-lg font-bold mb-4 text-gray-900">💡 あなたへのおすすめ</h3>
         <div className="text-center">
           <p className="text-red-600 mb-4">{error}</p>
           <button
@@ -148,7 +148,7 @@ export const RecommendationDisplay = ({
   // 作成中メッセージを表示（早期リターン）
   return (
     <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
-      <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
+      <h3 className="text-lg font-bold mb-4 text-gray-900">💡 あなたへのおすすめ</h3>
       <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
         <div className="flex items-center mb-3">
           <span className="text-amber-600 mr-2">🚧</span>
@@ -170,7 +170,7 @@ export const RecommendationDisplay = ({
   if (!isActivated) {
     return (
       <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
-        <h3 className="text-lg font-bold mb-4">💡 あなたへのおすすめ</h3>
+        <h3 className="text-lg font-bold mb-4 text-gray-900">💡 あなたへのおすすめ</h3>
         <div className="text-center">
           {!hasRecommendations ? (
             <>
@@ -211,7 +211,7 @@ export const RecommendationDisplay = ({
   return (
     <div className={`bg-white p-6 rounded-lg shadow-md ${className}`}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold">💡 あなたへのおすすめ</h3>
+        <h3 className="text-lg font-bold text-gray-900">💡 あなたへのおすすめ</h3>
         <button
           onClick={refresh}
           className="text-sm text-blue-600 hover:text-blue-800"
@@ -223,7 +223,7 @@ export const RecommendationDisplay = ({
 
       {/* 気分選択 */}
       <div className="mb-6">
-        <h4 className="text-sm font-bold mb-2">今日の気分は？</h4>
+        <h4 className="text-sm font-bold mb-2 text-gray-900">今日の気分は？</h4>
         <div className="grid grid-cols-2 gap-2">
           {moodOptions.map((mood) => (
             <button
