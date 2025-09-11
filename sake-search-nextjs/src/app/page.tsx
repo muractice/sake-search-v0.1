@@ -26,11 +26,20 @@ export default function Home() {
   });
   
   // カスタムフックを使用（日本酒を調べるタブ用）
+  // 検索タブ用の比較リスト
   const {
     comparisonList,
     toggleComparison,
     isInComparison,
     clearComparison,
+  } = useComparison();
+
+  // 飲食店タブ専用の比較リスト
+  const {
+    comparisonList: restaurantComparisonList,
+    toggleComparison: toggleRestaurantComparison,
+    isInComparison: isInRestaurantComparison,
+    clearComparison: clearRestaurantComparison,
   } = useComparison();
 
   const {
@@ -125,6 +134,10 @@ export default function Home() {
 
           {activeTab === 'restaurant' && (
             <RestaurantTab
+              comparisonList={restaurantComparisonList}
+              onToggleComparison={toggleRestaurantComparison}
+              isInComparison={isInRestaurantComparison}
+              onClearComparison={clearRestaurantComparison}
               onTabChange={setActiveTab}
             />
           )}

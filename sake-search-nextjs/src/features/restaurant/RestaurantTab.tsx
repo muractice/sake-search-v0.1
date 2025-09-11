@@ -4,27 +4,27 @@ import { useState } from 'react';
 import { MenuRegistrationSection } from '@/features/restaurant/MenuRegistrationSection';
 import { RestaurantRecommendations } from '@/features/recommendations/RestaurantRecommendations';
 import { useMenuRegistration } from '@/features/menu/hooks/useMenuRegistration';
-import { useComparison } from '@/features/comparison/hooks/useComparison';
 import { useSelection } from '@/features/search/hooks/useSelection';
+import { SakeData } from '@/types/sake';
 
 interface RestaurantTabProps {
+  comparisonList: SakeData[];
+  onToggleComparison: (sake: SakeData) => void;
+  isInComparison: (sakeId: string) => boolean;
+  onClearComparison: () => void;
   onTabChange?: (tabId: string) => void;
 }
 
 type SegmentType = 'menu' | 'recommendations';
 
 export const RestaurantTab = ({
+  comparisonList,
+  onToggleComparison,
+  isInComparison,
+  onClearComparison,
   onTabChange,
 }: RestaurantTabProps) => {
   const [activeSegment, setActiveSegment] = useState<SegmentType>('menu');
-  
-  // RestaurantTab内で全て管理
-  const {
-    comparisonList,
-    toggleComparison,
-    isInComparison,
-    clearComparison,
-  } = useComparison();
   
   const {
     selectSake,
@@ -72,9 +72,9 @@ export const RestaurantTab = ({
         <MenuRegistrationSection
           comparison={{
             list: comparisonList,
-            onToggle: toggleComparison,
+            onToggle: onToggleComparison,
             isInList: isInComparison,
-            onClear: clearComparison,
+            onClear: onClearComparison,
           }}
           selection={{
             onSelectSake: selectSake,
@@ -86,7 +86,7 @@ export const RestaurantTab = ({
         <RestaurantRecommendations
           restaurantMenuItems={menuRegistration.inputState.menuItems}
           restaurantMenuSakeData={menuRegistration.inputState.menuSakeData}
-          onToggleComparison={toggleComparison}
+          onToggleComparison={onToggleComparison}
           isInComparison={isInComparison}
           onTabChange={onTabChange}
         />
