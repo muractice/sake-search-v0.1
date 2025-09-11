@@ -3,6 +3,7 @@
 import { SakeData } from '@/types/sake';
 import { FavoriteButton } from '@/components/buttons/FavoriteButton';
 import { RecordButton } from '@/components/buttons/RecordButton';
+import { PurchaseButton } from '@/components/buttons/PurchaseButton';
 import { CHART_COLORS } from '@/components/charts/taste-chart/constants/chartColors';
 
 interface SakeDetailCardProps {
@@ -141,6 +142,11 @@ export const SakeDetailCard = ({
           <RecordButton 
             sake={sake}
             className="w-full"
+          />
+          <PurchaseButton 
+            sake={sake}
+            className="w-full"
+            variant="full"
           />
         </div>
       )}

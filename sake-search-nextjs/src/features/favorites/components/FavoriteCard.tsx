@@ -1,6 +1,7 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
+import { PurchaseButton } from '@/components/buttons/PurchaseButton';
 
 interface FavoriteCardProps {
   sake: SakeData;
@@ -38,7 +39,11 @@ export const FavoriteCard = ({
           </div>
         </div>
         <button
-          onClick={() => onRemove(sake.id)}
+          onClick={() => {
+            if (window.confirm(`「${sake.name}」をお気に入りから削除しますか？`)) {
+              onRemove(sake.id);
+            }
+          }}
           className="text-red-500 hover:text-red-700 transition-colors text-xl"
           title="お気に入りから削除"
         >
@@ -68,14 +73,11 @@ export const FavoriteCard = ({
       </div>
       
       <div className="flex gap-2">
-        <button
-          onClick={() => {
-            alert('準備中です');
-          }}
-          className="flex-1 bg-green-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors font-medium"
-        >
-          購入する
-        </button>
+        <PurchaseButton 
+          sake={sake}
+          className="flex-1 text-sm"
+          variant="full"
+        />
         <button
           onClick={() => onToggleComparison(sake)}
           className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors font-medium

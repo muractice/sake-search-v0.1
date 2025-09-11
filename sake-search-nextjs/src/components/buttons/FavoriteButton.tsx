@@ -27,8 +27,12 @@ export const FavoriteButton = ({
 
   const handleToggle = () => {
     if (isFav) {
-      removeFavorite(sake.id);
+      // お気に入りから削除する際は確認ダイアログを表示
+      if (window.confirm(`「${sake.name}」をお気に入りから削除しますか？`)) {
+        removeFavorite(sake.id);
+      }
     } else {
+      // お気に入りに追加する際はそのまま追加
       addFavorite(sake);
     }
   };
