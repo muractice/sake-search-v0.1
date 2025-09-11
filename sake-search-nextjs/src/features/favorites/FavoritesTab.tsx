@@ -3,7 +3,6 @@
 import { PreferenceMap } from '@/features/favorites/PreferenceMap';
 import { RecommendationDisplay } from '@/features/favorites/RecommendationDisplay';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
-import { FavoritesList } from '@/features/favorites/components/FavoritesList';
 import { SakeData } from '@/types/sake';
 import { TasteChartCard } from '@/components/charts/TasteChartCard';
 import { RadarChartCard } from '@/components/charts/RadarChartCard';
@@ -19,7 +18,7 @@ export const FavoritesTab = ({
   onToggleComparison,
   isInComparison,
 }: FavoritesTabProps) => {
-  const { favorites, removeFavorite, user } = useFavoritesContext();
+  const { favorites, user } = useFavoritesContext();
   
   // ログイン状態確認のログ出力
   console.log('🌟 FavoritesTab状態:', {
@@ -32,15 +31,6 @@ export const FavoritesTab = ({
 
   return (
     <div className="space-y-6">
-      {/* お気に入り一覧 */}
-      <FavoritesList
-        favorites={favorites}
-        onSelectSake={onSelectSake}
-        onToggleComparison={onToggleComparison}
-        isInComparison={isInComparison}
-        onRemoveFavorite={removeFavorite}
-      />
-
       {/* お気に入りの味わいマップ */}
       {favorites.length > 0 && (
         <div className="space-y-8">
