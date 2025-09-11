@@ -154,7 +154,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
   return (
     <button
       onClick={() => setShowForm(true)}
-      className={`px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 ${className}`}
+      className={`px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 ${className}`}
     >
       <span>📝</span>
       飲んだ
