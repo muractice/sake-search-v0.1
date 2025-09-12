@@ -10,6 +10,7 @@ import { UserProfile } from '@/features/auth/UserProfile';
 import { AuthForm } from '@/features/auth/AuthForm';
 import CustomDialog from '@/components/dialogs/CustomDialog';
 import { FavoritesProvider } from '@/features/favorites/contexts/FavoritesContext';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { MenuProvider } from '@/features/menu/contexts/MenuContext';
 import { useComparison } from '@/features/comparison/hooks/useComparison';
 import { useSearch } from '@/features/search/hooks/useSearch';
@@ -88,6 +89,7 @@ export default function Home() {
   };
 
   return (
+    <AuthProvider>
     <MenuProvider>
       <FavoritesProvider>
         <div className="min-h-screen bg-gray-50">
@@ -191,5 +193,6 @@ export default function Home() {
         </div>
       </FavoritesProvider>
     </MenuProvider>
+    </AuthProvider>
   );
 }

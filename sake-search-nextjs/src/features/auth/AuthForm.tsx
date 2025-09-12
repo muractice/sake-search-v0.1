@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 interface AuthFormProps {
   onClose?: () => void;
@@ -14,7 +14,7 @@ export const AuthForm = ({ onClose }: AuthFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
 
-  const { signInWithEmail, signUpWithEmail } = useFavoritesContext();
+  const { signInWithEmail, signUpWithEmail } = useAuthContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
