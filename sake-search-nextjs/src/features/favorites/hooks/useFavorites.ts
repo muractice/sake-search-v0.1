@@ -1,29 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { SakeData } from '@/types/sake';
 import { User } from '@supabase/supabase-js';
-
-// レコメンドキャッシュをクリアする関数
-async function clearRecommendationCache(userId: string): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('recommendation_cache')
-      .delete()
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error('Error clearing recommendation cache:', error);
-    }
-  } catch (err) {
-    console.error('Error clearing recommendation cache:', err);
-  }
-}
+import { FavoritesService } from '@/services/favorites/FavoritesService';
+import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
+import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<SakeData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<User | null>(null);
   const [showFavorites, setShowFavorites] = useState(true);
+
+  const favoritesService = useMemo(() => {
+    const repo = new SupabaseFavoritesRepository();
+    const recCacheRepo = new SupabaseRecommendationCacheRepository();
+    return new FavoritesService(repo, recCacheRepo);
+  }, []);
 
 
   // ユーザーセッションの監視
@@ -75,15 +68,8 @@ export const useFavorites = () => {
   // お気に入りを読み込む
   const loadFavorites = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const sakeDataList = data?.map(item => item.sake_data as SakeData) || [];
+      const items = await favoritesService.list(userId);
+      const sakeDataList = items.map(item => item.sakeData as SakeData);
       setFavorites(sakeDataList);
     } catch (error) {
       console.error('Error loading favorites:', error);
@@ -128,18 +114,7 @@ export const useFavorites = () => {
     setFavorites(prev => [sake, ...prev]);
 
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: user.id,
-          sake_id: sake.id,
-          sake_data: sake,
-        });
-
-      if (error) throw error;
-      
-      // レコメンドキャッシュをクリア
-      await clearRecommendationCache(user.id);
+      await favoritesService.add(user.id, sake);
     } catch (error) {
       console.error('Error adding favorite:', error);
       
@@ -166,16 +141,7 @@ export const useFavorites = () => {
     setFavorites(prev => prev.filter(sake => sake.id !== sakeId));
 
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('sake_id', sakeId);
-
-      if (error) throw error;
-      
-      // レコメンドキャッシュをクリア
-      await clearRecommendationCache(user.id);
+      await favoritesService.remove(user.id, sakeId);
     } catch (error) {
       console.error('Error removing favorite:', error);
       
