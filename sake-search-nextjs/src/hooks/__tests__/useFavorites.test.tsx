@@ -243,7 +243,14 @@ describe('useFavorites', () => {
       });
 
       // user_preferences テーブルのモック
-      const mockUpsert = jest.fn().mockResolvedValue({ error: null });
+      const mockUpsert = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: { user_id: mockUser.id, show_favorites: true, updated_at: new Date().toISOString() },
+            error: null,
+          })
+        })
+      });
       
       mockSupabase.from.mockImplementation((tableName: string) => {
         if (tableName === 'user_preferences') {

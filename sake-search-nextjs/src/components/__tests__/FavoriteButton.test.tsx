@@ -33,6 +33,10 @@ describe('FavoriteButton', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // jsdom の window.confirm をテスト内で明示的にモック
+    // 削除時の確認ダイアログで true を返すようにする
+    // @ts-ignore
+    window.confirm = jest.fn(() => true);
   });
 
   it('ユーザーがログインしていない場合は表示されない', () => {

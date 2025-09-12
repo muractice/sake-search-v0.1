@@ -134,7 +134,7 @@ describe('useFavorites (Simple Tests)', () => {
     const error = new Error('Authentication failed');
     mockSupabase.auth.signInWithPassword.mockRejectedValue(error);
 
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     await expect(
       act(async () => {
