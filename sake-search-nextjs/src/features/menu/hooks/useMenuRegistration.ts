@@ -18,10 +18,11 @@ export const useMenuRegistration = () => {
      * 飲食店を追加（menuContextのデータを使用）
      */
     addRestaurant: useCallback(
-      async (name: string, location: string): Promise<void> => {
+      async (name: string, location: string, registrationDate: string): Promise<void> => {
         await menuManagement.handleAddRestaurant(
           name,
           location,
+          registrationDate,
           menuContext.menuSakeData
         );
       },

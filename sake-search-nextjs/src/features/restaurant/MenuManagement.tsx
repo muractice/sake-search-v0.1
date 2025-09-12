@@ -276,6 +276,7 @@ export const MenuManagement = ({
                     name: restaurant.restaurant_name,
                     location: restaurant.location,
                     sakeCount: restaurant.sake_count || 0,
+                    registrationDate: restaurant.registration_date,
                     createdAt: restaurant.created_at
                   };
                   return (
@@ -363,6 +364,7 @@ const RestaurantForm = ({
 }) => {
   const [formData, setFormData] = useState<RestaurantMenuFormData>({
     restaurant_name: initialName,
+    registration_date: new Date().toISOString().split('T')[0],
     location: '',
     notes: ''
   });
@@ -387,6 +389,18 @@ const RestaurantForm = ({
           className="px-3 py-2 border rounded-lg"
           required
         />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            登録日 *
+          </label>
+          <input
+            type="date"
+            value={formData.registration_date}
+            onChange={(e) => setFormData({ ...formData, registration_date: e.target.value })}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          />
+        </div>
         <input
           type="text"
           value={formData.location}

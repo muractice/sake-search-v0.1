@@ -9,7 +9,8 @@ export interface MenuDisplayInfo {
   name: string;
   location?: string | null;
   sakeCount: number;
-  createdAt: string | Date;
+  registrationDate: string | Date;
+  createdAt?: string | Date; // 後方互換性のため残す
 }
 
 /**
@@ -36,11 +37,14 @@ export function formatMenuOptionLabel(info: MenuDisplayInfo): string {
   // 日本酒の件数を追加
   parts.push(` - ${info.sakeCount}件`);
   
-  // 作成日を追加
-  const date = info.createdAt instanceof Date 
-    ? info.createdAt 
-    : new Date(info.createdAt);
-  parts.push(` - ${date.toLocaleDateString()}`);
+  // 登録日を追加（後方互換性のためcreatedAtもサポート）
+  const dateToShow = info.registrationDate || info.createdAt;
+  if (dateToShow) {
+    const date = dateToShow instanceof Date 
+      ? dateToShow 
+      : new Date(dateToShow);
+    parts.push(` - ${date.toLocaleDateString()}`);
+  }
   
   return parts.join('');
 }

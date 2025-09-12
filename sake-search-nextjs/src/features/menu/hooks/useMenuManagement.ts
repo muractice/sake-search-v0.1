@@ -44,6 +44,7 @@ export const useMenuManagement = () => {
     restaurant_menu_id: string;
     restaurant_name: string;
     location?: string;
+    registration_date: string;
     restaurant_created_at: string;
     count: number;
   }>>({});
@@ -114,6 +115,7 @@ export const useMenuManagement = () => {
           restaurant_menu_id: restaurant.id,
           restaurant_name: restaurant.restaurant_name,
           location: restaurant.location,
+          registration_date: restaurant.registration_date,
           restaurant_created_at: restaurant.created_at,
           count: restaurant.sake_count || 0
         };
@@ -170,11 +172,13 @@ export const useMenuManagement = () => {
   const handleAddRestaurant = useCallback(async (
     newRestaurantName: string,
     newRestaurantLocation: string,
+    registrationDate: string,
     menuSakeData: SakeData[]
   ) => {
     try {
       const restaurantData = {
         restaurant_name: newRestaurantName.trim(),
+        registration_date: registrationDate,
         location: newRestaurantLocation.trim() || undefined
       };
       
@@ -185,8 +189,10 @@ export const useMenuManagement = () => {
         await fetchRestaurants();
         await fetchSavedMenus();
         
+        // 同じ飲食店名と登録日で既存のレストランを探す
         const existingRestaurant = restaurants.find(r => 
-          r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase()
+          r.restaurant_name.toLowerCase() === newRestaurantName.trim().toLowerCase() &&
+          r.registration_date === registrationDate
         );
         
         if (existingRestaurant) {

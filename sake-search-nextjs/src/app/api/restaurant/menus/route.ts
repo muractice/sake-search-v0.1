@@ -26,7 +26,7 @@ export async function GET() {
       .from('restaurant_menus')
       .select('*')
       .eq('user_id', user.id)
-      .order('restaurant_name', { ascending: true });
+      .order('registration_date', { ascending: false });
 
     if (error) {
       console.error('[API] Supabaseクエリエラー:', error);
@@ -78,11 +78,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { restaurant_name, location, notes } = body;
+    const { restaurant_name, registration_date, location, notes } = body;
     
     if (!restaurant_name) {
       return NextResponse.json(
         { error: 'Restaurant name is required' },
+        { status: 400 }
+      );
+    }
+    
+    if (!registration_date) {
+      return NextResponse.json(
+        { error: 'Registration date is required' },
         { status: 400 }
       );
     }
@@ -92,6 +99,7 @@ export async function POST(request: NextRequest) {
       .insert({
         user_id: user.id,
         restaurant_name,
+        registration_date,
         location,
         notes
       })
@@ -110,11 +118,13 @@ export async function POST(request: NextRequest) {
     
     // 一意制約違反エラー（重複する飲食店名）- 正常なビジネスフローとして扱う
     const dbError = error as { code?: string; message?: string };
-    if (dbError?.code === '23505' && dbError?.message?.includes('restaurant_menus_user_id_restaurant_name_key')) {
+    if (dbError?.code === '23505' && 
+        (dbError?.message?.includes('restaurant_menus_user_id_restaurant_name_key') ||
+         dbError?.message?.includes('restaurant_menus_user_id_restaurant_name_registration_date_key'))) {
       return NextResponse.json({ 
         success: true,
         conflict: true,
-        message: 'この飲食店名は既に登録されています。'
+        message: 'この飲食店名は同じ日付で既に登録されています。別の日付を選択してください。'
       });
     }
     

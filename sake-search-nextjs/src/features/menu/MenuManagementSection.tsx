@@ -22,6 +22,7 @@ interface MenuManagementState {
     restaurant_menu_id: string;
     restaurant_name: string;
     location?: string;
+    registration_date: string;
     restaurant_created_at: string;
     count: number;
   }>;
@@ -34,7 +35,7 @@ interface MenuManagementActions {
   setSelectedSavedMenu: (id: string) => void;
   setSelectedRestaurant: (id: string) => void;
   onSaveToRestaurant: () => Promise<void>;
-  onAddRestaurant: (name: string, location: string) => Promise<void>;
+  onAddRestaurant: (name: string, location: string, registrationDate: string) => Promise<void>;
   onLoadSavedMenu: (menuId: string) => Promise<void>;
   onMenuItemsChange: (items: string[]) => void;
 }
@@ -54,6 +55,10 @@ export const MenuManagementSection = ({
 }: MenuManagementSectionProps) => {
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
+  const [newRestaurantRegistrationDate, setNewRestaurantRegistrationDate] = useState(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
 
   const handleAddRestaurant = async () => {
     if (!newRestaurantName.trim()) {
@@ -62,9 +67,11 @@ export const MenuManagementSection = ({
     }
 
     try {
-      await actions.onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim());
+      await actions.onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim(), newRestaurantRegistrationDate);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
+      const today = new Date();
+      setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error adding restaurant:', error);
     }
@@ -117,6 +124,8 @@ export const MenuManagementSection = ({
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
+      const today = new Date();
+      setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     } else {
       // 「新しいメニュー」を選択した場合
       if (state.selectedSavedMenu && menuData.items.length > 0) {
@@ -136,6 +145,8 @@ export const MenuManagementSection = ({
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
+      const today = new Date();
+      setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     }
   };
 
@@ -194,6 +205,7 @@ export const MenuManagementSection = ({
                   name: menu.restaurant_name,
                   location: menu.location,
                   sakeCount: menu.count,
+                  registrationDate: menu.registration_date,
                   createdAt: menu.restaurant_created_at
                 };
                 return (
@@ -222,6 +234,17 @@ export const MenuManagementSection = ({
               placeholder="飲食店名 *"
               className="w-full px-3 py-2 border rounded-lg text-gray-900 bg-white"
             />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                登録日 *
+              </label>
+              <input
+                type="date"
+                value={newRestaurantRegistrationDate}
+                onChange={(e) => setNewRestaurantRegistrationDate(e.target.value)}
+                className="w-full px-3 py-2 border rounded-lg text-gray-900 bg-white"
+              />
+            </div>
             <input
               type="text"
               value={newRestaurantLocation}

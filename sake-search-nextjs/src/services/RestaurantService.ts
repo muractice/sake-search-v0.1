@@ -620,6 +620,10 @@ export class RestaurantService {
       throw new RestaurantServiceError('飲食店名は100文字以内で入力してください');
     }
 
+    if (!input.registration_date || typeof input.registration_date !== 'string' || !this.isValidDate(input.registration_date)) {
+      throw new RestaurantServiceError('登録日が必要です（YYYY-MM-DD形式）');
+    }
+
     if (input.location && input.location.length > 200) {
       throw new RestaurantServiceError('住所・場所は200文字以内で入力してください');
     }

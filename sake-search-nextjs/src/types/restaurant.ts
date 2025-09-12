@@ -4,6 +4,7 @@ export interface RestaurantMenu {
   id: string;
   user_id: string;
   restaurant_name: string;
+  registration_date: string; // YYYY-MM-DD形式
   location?: string;
   notes?: string;
   created_at: string;
@@ -43,6 +44,7 @@ export interface RestaurantMenuWithSakes {
   restaurant_menu_id: string;
   user_id: string;
   restaurant_name: string;
+  registration_date: string;
   location?: string;
   restaurant_notes?: string;
   restaurant_created_at: string;
@@ -82,6 +84,7 @@ export interface RestaurantDrinkingRecordDetail {
 // フォーム用の型定義
 export interface RestaurantMenuFormData {
   restaurant_name: string;
+  registration_date: string; // YYYY-MM-DD形式
   location?: string;
   notes?: string;
 }
