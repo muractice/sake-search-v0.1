@@ -1,17 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
 import { SakeData } from '@/types/sake';
-import { User } from '@supabase/supabase-js';
 import { FavoritesService } from '@/services/favorites/FavoritesService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<SakeData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // loading for favorites/preferences
   const [showFavorites, setShowFavorites] = useState(true);
+  const { user, isLoading: authLoading, signInWithEmail, signUpWithEmail, signOut } = useAuthContext();
 
   const favoritesService = useMemo(() => {
     const repo = new SupabaseFavoritesRepository();
@@ -21,51 +20,27 @@ export const useFavorites = () => {
   }, []);
 
 
-  // ユーザーセッションの監視
+  // AuthContext の user 変化で favorites/preferences を同期
   useEffect(() => {
-    // 現在のセッションを取得
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error);
-        // セッションエラーの場合、リフレッシュを試みる
-        supabase.auth.refreshSession().then(({ data: { session: refreshedSession } }) => {
-          setUser(refreshedSession?.user ?? null);
-          if (refreshedSession?.user) {
-            loadFavorites(refreshedSession.user.id);
-            loadPreferences(refreshedSession.user.id);
-          }
-        });
-      } else {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          loadFavorites(session.user.id);
-          loadPreferences(session.user.id);
+    let cancelled = false;
+    const run = async () => {
+      setIsLoading(true);
+      try {
+        if (user?.id) {
+          await Promise.all([
+            loadFavorites(user.id),
+            loadPreferences(user.id),
+          ]);
+        } else {
+          setFavorites([]);
         }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
-      setIsLoading(false);
-    });
-
-    // セッション変更の監視
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed successfully');
-      }
-      
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadFavorites(session.user.id);
-        loadPreferences(session.user.id);
-      } else {
-        setFavorites([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   // お気に入りを読み込む
   const loadFavorites = async (userId: string) => {
@@ -163,53 +138,13 @@ export const useFavorites = () => {
 
   // 比較モード管理は useComparison フックに移譲
 
-  // メールでログイン
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
-    }
-  };
-
-  // メールでサインアップ
-  const signUpWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error signing up:', error);
-      throw error;
-    }
-  };
-
-  // ログアウト
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setFavorites([]);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      alert('ログアウトに失敗しました');
-    }
-  };
+  // signIn/signUp/signOut は AuthContext の API をそのまま返す
 
   return {
     // データ
     favorites,
-    user,
-    isLoading,
+    user, // from AuthContext
+    isLoading: authLoading || isLoading,
     showFavorites,
     
     // メソッド
