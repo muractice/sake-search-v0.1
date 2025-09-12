@@ -52,6 +52,8 @@ describe('useFavorites with AuthContext', () => {
     // Table handlers
     mockSupabase.from.mockImplementation((table: string) => {
       if (table === 'favorites') {
+        const secondEq = jest.fn().mockResolvedValue({ error: null });
+        const firstEq = jest.fn().mockReturnValue({ eq: secondEq });
         return {
           select: jest.fn().mockReturnThis(),
           eq: jest.fn().mockReturnThis(),
@@ -62,9 +64,7 @@ describe('useFavorites with AuthContext', () => {
             error: null,
           }),
           insert: jest.fn().mockResolvedValue({ error: null }),
-          delete: jest.fn().mockReturnValue({
-            eq: jest.fn().mockResolvedValue({ error: null }),
-          }),
+          delete: jest.fn().mockReturnValue({ eq: firstEq }),
         } as any;
       }
       if (table === 'user_preferences') {
@@ -133,4 +133,3 @@ describe('useFavorites with AuthContext', () => {
     expect(result.current.showFavorites).toBe(!prev);
   });
 });
-
