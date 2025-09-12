@@ -3,8 +3,10 @@ import { IFavoritesRepository } from '@/repositories/favorites/FavoritesReposito
 import { IRecommendationCacheRepository } from '@/repositories/recommendations/RecommendationCacheRepository';
 import { SakeData } from '@/types/sake';
 
+interface RepoItem { userId: string; sakeId: string; sakeData: SakeData; createdAt: string }
+
 class MockFavoritesRepo implements IFavoritesRepository {
-  public items: any[] = [];
+  public items: RepoItem[] = [];
   public addCalls: Array<{ userId: string; sake: SakeData }> = [];
   public removeCalls: Array<{ userId: string; sakeId: string }> = [];
   public shouldThrowOnAdd = false;
@@ -126,4 +128,3 @@ describe('FavoritesService', () => {
     await expect(service.remove('u1', 's1')).resolves.toBeUndefined();
   });
 });
-

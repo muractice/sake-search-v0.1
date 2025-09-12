@@ -22,7 +22,8 @@ jest.mock('@/lib/supabase', () => ({
 import { supabase } from '@/lib/supabase';
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 
-const mockUser = { id: 'u1', email: 'test@example.com' } as any;
+type TestSession = { user: { id: string; email?: string } } | null;
+const mockUser: { id: string; email: string } = { id: 'u1', email: 'test@example.com' };
 const sake1: SakeData = {
   id: 's1',
   name: 'Sake 1',
@@ -43,11 +44,11 @@ describe('useFavorites with AuthContext', () => {
     jest.clearAllMocks();
 
     // Auth mocks
-    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { user: mockUser } } } as any);
-    mockSupabase.auth.refreshSession.mockResolvedValue({ data: { session: { user: mockUser } } } as any);
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { user: mockUser } as TestSession } } as unknown as { data: { session: TestSession } });
+    mockSupabase.auth.refreshSession.mockResolvedValue({ data: { session: { user: mockUser } as TestSession } } as unknown as { data: { session: TestSession } });
     mockSupabase.auth.onAuthStateChange.mockImplementation(() => ({
       data: { subscription: { unsubscribe: jest.fn() } },
-    }) as any);
+    }) as { data: { subscription: { unsubscribe: () => void } } });
 
     // Table handlers
     mockSupabase.from.mockImplementation((table: string) => {
@@ -65,7 +66,7 @@ describe('useFavorites with AuthContext', () => {
           }),
           insert: jest.fn().mockResolvedValue({ error: null }),
           delete: jest.fn().mockReturnValue({ eq: firstEq }),
-        } as any;
+        } as unknown as Record<string, unknown>;
       }
       if (table === 'user_preferences') {
         return {
@@ -79,16 +80,16 @@ describe('useFavorites with AuthContext', () => {
             data: { user_id: mockUser.id, show_favorites: true, updated_at: '2024-01-03' },
             error: null,
           }) }) }),
-        } as any;
+        } as unknown as Record<string, unknown>;
       }
       if (table === 'recommendation_cache') {
         return {
           delete: jest.fn().mockReturnValue({
             eq: jest.fn().mockResolvedValue({ error: null }),
           }),
-        } as any;
+        } as unknown as Record<string, unknown>;
       }
-      return {} as any;
+      return {} as unknown as Record<string, unknown>;
     });
   });
 

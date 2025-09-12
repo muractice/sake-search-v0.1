@@ -13,13 +13,12 @@ export class SupabaseFavoritesRepository implements IFavoritesRepository {
 
     if (error) throw error;
 
-    return (
-      data?.map((row: any) => ({
-        sakeId: row.sake_id as string,
-        sakeData: row.sake_data,
-        createdAt: row.created_at as string,
-      })) ?? []
-    );
+    type FavoriteRow = { sake_id: string; sake_data: SakeData; created_at: string };
+    return (data as unknown as FavoriteRow[] | null)?.map((row) => ({
+      sakeId: row.sake_id,
+      sakeData: row.sake_data,
+      createdAt: row.created_at,
+    })) ?? [];
   }
   
   async add(userId: string, sake: SakeData): Promise<void> {

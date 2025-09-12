@@ -12,7 +12,7 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
 
     if (error) {
       // PGRST116 = no rows
-      if ((error as any).code === 'PGRST116') return null;
+      if ((error as { code?: string }).code === 'PGRST116') return null;
       throw error;
     }
 
@@ -45,4 +45,3 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
     };
   }
 }
-
