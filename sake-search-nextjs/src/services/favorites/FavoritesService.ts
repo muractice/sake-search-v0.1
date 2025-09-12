@@ -1,12 +1,15 @@
 import { IFavoritesRepository } from '@/repositories/favorites/FavoritesRepository';
 import { IRecommendationCacheRepository } from '@/repositories/recommendations/RecommendationCacheRepository';
+import { IUserPreferencesRepository } from '@/repositories/preferences/UserPreferencesRepository';
 import { FavoriteItem } from '@/types/favorites';
 import { SakeData } from '@/types/sake';
+import { UserPreferences } from '@/types/preferences';
 
 export class FavoritesService {
   constructor(
     private readonly repo: IFavoritesRepository,
     private readonly recCacheRepo: IRecommendationCacheRepository,
+    private readonly prefsRepo?: IUserPreferencesRepository,
   ) {}
 
   async list(userId: string): Promise<FavoriteItem[]> {
@@ -44,6 +47,29 @@ export class FavoritesService {
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error('Failed to clear recommendation cache', e);
+    }
+  }
+
+  async getPreferences(userId: string): Promise<UserPreferences | null> {
+    if (!userId || !this.prefsRepo) return null;
+    try {
+      return await this.prefsRepo.get(userId);
+    } catch (e) {
+      // Keep UI resilient; return null to fallback to default
+      // eslint-disable-next-line no-console
+      console.error('Failed to load user preferences', e);
+      return null;
+    }
+  }
+
+  async updateShowFavorites(userId: string, show: boolean): Promise<UserPreferences | null> {
+    if (!userId || !this.prefsRepo) return null;
+    try {
+      return await this.prefsRepo.updateShowFavorites(userId, show);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to update user preferences', e);
+      return null;
     }
   }
 }

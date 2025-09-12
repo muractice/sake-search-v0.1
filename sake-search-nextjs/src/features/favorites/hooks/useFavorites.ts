@@ -5,6 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { FavoritesService } from '@/services/favorites/FavoritesService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
+import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<SakeData[]>([]);
@@ -15,7 +16,8 @@ export const useFavorites = () => {
   const favoritesService = useMemo(() => {
     const repo = new SupabaseFavoritesRepository();
     const recCacheRepo = new SupabaseRecommendationCacheRepository();
-    return new FavoritesService(repo, recCacheRepo);
+    const prefsRepo = new SupabaseUserPreferencesRepository();
+    return new FavoritesService(repo, recCacheRepo, prefsRepo);
   }, []);
 
 
@@ -79,19 +81,9 @@ export const useFavorites = () => {
   // ユーザー設定を読み込む
   const loadPreferences = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
-        throw error;
-      }
-
-      if (data) {
-        setShowFavorites(data.show_favorites);
-        // comparisonMode は削除済み（常にON）
+      const prefs = await favoritesService.getPreferences(userId);
+      if (prefs) {
+        setShowFavorites(prefs.showFavorites);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -160,16 +152,9 @@ export const useFavorites = () => {
   const toggleShowFavorites = async () => {
     const newValue = !showFavorites;
     setShowFavorites(newValue);
-
     if (user) {
       try {
-        await supabase
-          .from('user_preferences')
-          .upsert({
-            user_id: user.id,
-            show_favorites: newValue,
-            updated_at: new Date().toISOString(),
-          });
+        await favoritesService.updateShowFavorites(user.id, newValue);
       } catch (error) {
         console.error('Error updating preferences:', error);
       }
