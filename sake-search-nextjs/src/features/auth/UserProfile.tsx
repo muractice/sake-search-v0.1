@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 interface UserProfileProps {
   onShowAuth: () => void;
@@ -9,7 +9,7 @@ interface UserProfileProps {
 
 export const UserProfile = ({ onShowAuth }: UserProfileProps) => {
   const [showMenu, setShowMenu] = useState(false);
-  const { user, signOut } = useFavoritesContext();
+  const { user, signOut } = useAuthContext();
 
   const handleMenuClick = () => {
     if (!user) {

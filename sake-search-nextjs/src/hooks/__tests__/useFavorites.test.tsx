@@ -16,6 +16,11 @@ jest.mock('@/lib/supabase', () => ({
 }));
 
 import { useFavorites } from '@/features/favorites/hooks/useFavorites';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>{children}</AuthProvider>
+);
 import { supabase } from '@/lib/supabase';
 
 // モックされたSupabaseクライアントを取得
@@ -62,7 +67,7 @@ describe('useFavorites', () => {
   });
 
   it('初期状態が正しく設定される', async () => {
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     // 初期状態の確認
     expect(result.current.favorites).toEqual([]);
@@ -116,7 +121,7 @@ describe('useFavorites', () => {
 
     it('お気に入りに追加できる', async () => {
       // ユーザーがログインしている状態でテスト開始
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       // ログイン状態をシミュレート（内部で管理されるuser stateは直接変更できないので、関数の動作のみテスト）
       await act(async () => {
@@ -130,7 +135,7 @@ describe('useFavorites', () => {
     });
 
     it('重複したお気に入りは追加されない', async () => {
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       // 2回連続で同じお気に入りを追加しようとする
       await act(async () => {
@@ -144,7 +149,7 @@ describe('useFavorites', () => {
     });
 
     it('お気に入りから削除できる', async () => {
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       // 未ログイン状態では削除処理は早期リターンされる
       await act(async () => {
@@ -156,7 +161,7 @@ describe('useFavorites', () => {
     });
 
     it('isFavorite関数が正しく動作する', () => {
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       // 最初は false（空のfavoritesリスト）
       expect(result.current.isFavorite(mockSakeData.id)).toBe(false);
@@ -173,7 +178,7 @@ describe('useFavorites', () => {
     it('メールでサインアップできる', async () => {
       mockSupabase.auth.signUp.mockResolvedValue({ error: null });
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       await act(async () => {
         await result.current.signUpWithEmail('test@example.com', 'password123');
@@ -188,7 +193,7 @@ describe('useFavorites', () => {
     it('メールでサインインできる', async () => {
       mockSupabase.auth.signInWithPassword.mockResolvedValue({ error: null });
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       await act(async () => {
         await result.current.signInWithEmail('test@example.com', 'password123');
@@ -203,7 +208,7 @@ describe('useFavorites', () => {
     it('サインアウトできる', async () => {
       mockSupabase.auth.signOut.mockResolvedValue({ error: null });
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       await act(async () => {
         await result.current.signOut();
@@ -217,7 +222,7 @@ describe('useFavorites', () => {
       const mockError = new Error('Authentication failed');
       mockSupabase.auth.signInWithPassword.mockRejectedValue(mockError);
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       await expect(
         act(async () => {
@@ -238,7 +243,14 @@ describe('useFavorites', () => {
       });
 
       // user_preferences テーブルのモック
-      const mockUpsert = jest.fn().mockResolvedValue({ error: null });
+      const mockUpsert = jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          single: jest.fn().mockResolvedValue({
+            data: { user_id: mockUser.id, show_favorites: true, updated_at: new Date().toISOString() },
+            error: null,
+          })
+        })
+      });
       
       mockSupabase.from.mockImplementation((tableName: string) => {
         if (tableName === 'user_preferences') {
@@ -261,11 +273,10 @@ describe('useFavorites', () => {
     });
 
     it('お気に入り表示を切り替えられる', async () => {
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
-      act(() => {
-        result.current.user = mockUser as unknown as typeof result.current.user;
-      });
+      // AuthProvider経由でユーザーが設定されるため、明示的な代入は不要
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       const initialShowFavorites = result.current.showFavorites;
 
@@ -295,11 +306,9 @@ describe('useFavorites', () => {
         }
       });
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
-      act(() => {
-        result.current.user = mockUser as unknown as typeof result.current.user;
-      });
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
 
       const initialFavoritesLength = result.current.favorites.length;
 

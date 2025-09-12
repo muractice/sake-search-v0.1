@@ -1,89 +1,52 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState, useEffect, useMemo } from 'react';
 import { SakeData } from '@/types/sake';
-import { User } from '@supabase/supabase-js';
-
-// レコメンドキャッシュをクリアする関数
-async function clearRecommendationCache(userId: string): Promise<void> {
-  try {
-    const { error } = await supabase
-      .from('recommendation_cache')
-      .delete()
-      .eq('user_id', userId);
-    
-    if (error) {
-      console.error('Error clearing recommendation cache:', error);
-    }
-  } catch (err) {
-    console.error('Error clearing recommendation cache:', err);
-  }
-}
+import { FavoritesService } from '@/services/favorites/FavoritesService';
+import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
+import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
+import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 export const useFavorites = () => {
   const [favorites, setFavorites] = useState<SakeData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // loading for favorites/preferences
   const [showFavorites, setShowFavorites] = useState(true);
+  const { user, isLoading: authLoading, signInWithEmail, signUpWithEmail, signOut } = useAuthContext();
 
-
-  // ユーザーセッションの監視
-  useEffect(() => {
-    // 現在のセッションを取得
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
-      if (error) {
-        console.error('Session error:', error);
-        // セッションエラーの場合、リフレッシュを試みる
-        supabase.auth.refreshSession().then(({ data: { session: refreshedSession } }) => {
-          setUser(refreshedSession?.user ?? null);
-          if (refreshedSession?.user) {
-            loadFavorites(refreshedSession.user.id);
-            loadPreferences(refreshedSession.user.id);
-          }
-        });
-      } else {
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          loadFavorites(session.user.id);
-          loadPreferences(session.user.id);
-        }
-      }
-      setIsLoading(false);
-    });
-
-    // セッション変更の監視
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      
-      if (event === 'TOKEN_REFRESHED') {
-        console.log('Token refreshed successfully');
-      }
-      
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadFavorites(session.user.id);
-        loadPreferences(session.user.id);
-      } else {
-        setFavorites([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+  const favoritesService = useMemo(() => {
+    const repo = new SupabaseFavoritesRepository();
+    const recCacheRepo = new SupabaseRecommendationCacheRepository();
+    const prefsRepo = new SupabaseUserPreferencesRepository();
+    return new FavoritesService(repo, recCacheRepo, prefsRepo);
   }, []);
+
+
+  // AuthContext の user 変化で favorites/preferences を同期
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setIsLoading(true);
+      try {
+        if (user?.id) {
+          await Promise.all([
+            loadFavorites(user.id),
+            loadPreferences(user.id),
+          ]);
+        } else {
+          setFavorites([]);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   // お気に入りを読み込む
   const loadFavorites = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('favorites')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const sakeDataList = data?.map(item => item.sake_data as SakeData) || [];
+      const items = await favoritesService.list(userId);
+      const sakeDataList = items.map(item => item.sakeData as SakeData);
       setFavorites(sakeDataList);
     } catch (error) {
       console.error('Error loading favorites:', error);
@@ -93,19 +56,9 @@ export const useFavorites = () => {
   // ユーザー設定を読み込む
   const loadPreferences = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows
-        throw error;
-      }
-
-      if (data) {
-        setShowFavorites(data.show_favorites);
-        // comparisonMode は削除済み（常にON）
+      const prefs = await favoritesService.getPreferences(userId);
+      if (prefs) {
+        setShowFavorites(prefs.showFavorites);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
@@ -128,18 +81,7 @@ export const useFavorites = () => {
     setFavorites(prev => [sake, ...prev]);
 
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .insert({
-          user_id: user.id,
-          sake_id: sake.id,
-          sake_data: sake,
-        });
-
-      if (error) throw error;
-      
-      // レコメンドキャッシュをクリア
-      await clearRecommendationCache(user.id);
+      await favoritesService.add(user.id, sake);
     } catch (error) {
       console.error('Error adding favorite:', error);
       
@@ -166,16 +108,7 @@ export const useFavorites = () => {
     setFavorites(prev => prev.filter(sake => sake.id !== sakeId));
 
     try {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('sake_id', sakeId);
-
-      if (error) throw error;
-      
-      // レコメンドキャッシュをクリア
-      await clearRecommendationCache(user.id);
+      await favoritesService.remove(user.id, sakeId);
     } catch (error) {
       console.error('Error removing favorite:', error);
       
@@ -194,16 +127,9 @@ export const useFavorites = () => {
   const toggleShowFavorites = async () => {
     const newValue = !showFavorites;
     setShowFavorites(newValue);
-
     if (user) {
       try {
-        await supabase
-          .from('user_preferences')
-          .upsert({
-            user_id: user.id,
-            show_favorites: newValue,
-            updated_at: new Date().toISOString(),
-          });
+        await favoritesService.updateShowFavorites(user.id, newValue);
       } catch (error) {
         console.error('Error updating preferences:', error);
       }
@@ -212,53 +138,13 @@ export const useFavorites = () => {
 
   // 比較モード管理は useComparison フックに移譲
 
-  // メールでログイン
-  const signInWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
-    }
-  };
-
-  // メールでサインアップ
-  const signUpWithEmail = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error signing up:', error);
-      throw error;
-    }
-  };
-
-  // ログアウト
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      setFavorites([]);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      alert('ログアウトに失敗しました');
-    }
-  };
+  // signIn/signUp/signOut は AuthContext の API をそのまま返す
 
   return {
     // データ
     favorites,
-    user,
-    isLoading,
+    user, // from AuthContext
+    isLoading: authLoading || isLoading,
     showFavorites,
     
     // メソッド

@@ -16,6 +16,11 @@ jest.mock('@/lib/supabase', () => ({
 }));
 
 import { useFavorites } from '@/features/favorites/hooks/useFavorites';
+import { AuthProvider } from '@/features/auth/contexts/AuthContext';
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <AuthProvider>{children}</AuthProvider>
+);
 import { supabase } from '@/lib/supabase';
 
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
@@ -58,7 +63,7 @@ describe('useFavorites (Simple Tests)', () => {
   });
 
   it('初期状態を確認', async () => {
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     expect(result.current.favorites).toEqual([]);
     expect(result.current.user).toBeNull();
@@ -76,7 +81,7 @@ describe('useFavorites (Simple Tests)', () => {
   });
 
   it('isFavorite関数の基本動作', () => {
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     // 空の状態ではfalse
     expect(result.current.isFavorite('any-id')).toBe(false);
@@ -87,7 +92,7 @@ describe('useFavorites (Simple Tests)', () => {
     mockSupabase.auth.signInWithPassword.mockResolvedValue({ error: null });
     mockSupabase.auth.signOut.mockResolvedValue({ error: null });
 
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     await act(async () => {
       await result.current.signUpWithEmail('test@example.com', 'password');
@@ -107,7 +112,7 @@ describe('useFavorites (Simple Tests)', () => {
   });
 
   it('お気に入り追加の楽観的更新', () => {
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     // ユーザーがログインしている状態をシミュレート
     // 直接stateを変更するのではなく、内部状態の確認のみ行う
@@ -115,7 +120,7 @@ describe('useFavorites (Simple Tests)', () => {
   });
 
   it('未ログイン時のお気に入り追加', async () => {
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     await act(async () => {
       await result.current.addFavorite(mockSakeData);
@@ -129,7 +134,7 @@ describe('useFavorites (Simple Tests)', () => {
     const error = new Error('Authentication failed');
     mockSupabase.auth.signInWithPassword.mockRejectedValue(error);
 
-    const { result } = renderHook(() => useFavorites());
+    const { result } = renderHook(() => useFavorites(), { wrapper });
 
     await expect(
       act(async () => {
