@@ -11,7 +11,7 @@ import { NextRequest, NextResponse } from 'next/server';
  * - より高精度な日本酒メニュー解析
  * - APIキーの設定が簡単（GEMINI_API_KEYのみ）
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   // このAPIは非推奨です。/api/gemini-vision を使用してください。
   console.warn('警告: このAPIは非推奨です。/api/gemini-vision を使用してください。');
   

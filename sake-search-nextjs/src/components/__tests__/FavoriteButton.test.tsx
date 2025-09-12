@@ -35,7 +35,7 @@ describe('FavoriteButton', () => {
     jest.clearAllMocks();
     // jsdom の window.confirm をテスト内で明示的にモック
     // 削除時の確認ダイアログで true を返すようにする
-    // @ts-ignore
+    // @ts-expect-error jsdom window typings do not include confirm in this context
     window.confirm = jest.fn(() => true);
   });
 

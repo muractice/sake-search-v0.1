@@ -24,17 +24,18 @@ function wrapper({ children }: { children: React.ReactNode }) {
 }
 
 describe('AuthContext', () => {
-  let authCallback: ((event: string, session: any) => void) | null = null;
+  type TestSession = { user: { id: string; email?: string } } | null;
+  let authCallback: ((event: string, session: unknown) => void) | null = null;
 
   beforeEach(() => {
     jest.clearAllMocks();
     authCallback = null;
 
-    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null } } as any);
-    mockSupabase.auth.refreshSession.mockResolvedValue({ data: { session: null } } as any);
-    mockSupabase.auth.onAuthStateChange.mockImplementation((cb: any) => {
+    mockSupabase.auth.getSession.mockResolvedValue({ data: { session: null as TestSession } } as unknown as { data: { session: TestSession } });
+    mockSupabase.auth.refreshSession.mockResolvedValue({ data: { session: null as TestSession } } as unknown as { data: { session: TestSession } });
+    mockSupabase.auth.onAuthStateChange.mockImplementation((cb: (event: string, session: unknown) => void) => {
       authCallback = cb;
-      return { data: { subscription: { unsubscribe: jest.fn() } } } as any;
+      return { data: { subscription: { unsubscribe: jest.fn() } } } as { data: { subscription: { unsubscribe: () => void } } };
     });
   });
 
@@ -52,8 +53,8 @@ describe('AuthContext', () => {
   });
 
   it('loads user from initial session', async () => {
-    const mockUser = { id: 'u1', email: 'test@example.com' } as any;
-    mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: { user: mockUser } } } as any);
+    const mockUser = { id: 'u1', email: 'test@example.com' };
+    mockSupabase.auth.getSession.mockResolvedValueOnce({ data: { session: { user: mockUser } as TestSession } } as unknown as { data: { session: TestSession } });
 
     const { result } = renderHook(() => useAuthContext(), { wrapper });
     await waitFor(() => {
@@ -68,13 +69,13 @@ describe('AuthContext', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     act(() => {
-      authCallback?.('SIGNED_IN', { user: { id: 'u2' } } as any);
+      authCallback?.('SIGNED_IN', { user: { id: 'u2' } } as unknown);
     });
     expect(result.current.user?.id).toBe('u2');
   });
 
   it('signInWithEmail delegates to supabase', async () => {
-    mockSupabase.auth.signInWithPassword.mockResolvedValue({ error: null } as any);
+    mockSupabase.auth.signInWithPassword.mockResolvedValue({ error: null } as unknown as { error: null } );
     const { result } = renderHook(() => useAuthContext(), { wrapper });
     await act(async () => {
       await result.current.signInWithEmail('a@b.com', 'secret');
@@ -83,7 +84,7 @@ describe('AuthContext', () => {
   });
 
   it('signUpWithEmail delegates to supabase', async () => {
-    mockSupabase.auth.signUp.mockResolvedValue({ error: null } as any);
+    mockSupabase.auth.signUp.mockResolvedValue({ error: null } as unknown as { error: null });
     const { result } = renderHook(() => useAuthContext(), { wrapper });
     await act(async () => {
       await result.current.signUpWithEmail('a@b.com', 'secret');
@@ -92,7 +93,7 @@ describe('AuthContext', () => {
   });
 
   it('signOut delegates to supabase', async () => {
-    mockSupabase.auth.signOut.mockResolvedValue({ error: null } as any);
+    mockSupabase.auth.signOut.mockResolvedValue({ error: null } as unknown as { error: null });
     const { result } = renderHook(() => useAuthContext(), { wrapper });
     await act(async () => {
       await result.current.signOut();
@@ -100,4 +101,3 @@ describe('AuthContext', () => {
     expect(mockSupabase.auth.signOut).toHaveBeenCalled();
   });
 });
-
