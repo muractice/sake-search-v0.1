@@ -306,7 +306,7 @@ describe('useFavorites', () => {
         }
       });
 
-      const { result } = renderHook(() => useFavorites());
+      const { result } = renderHook(() => useFavorites(), { wrapper });
 
       await waitFor(() => expect(result.current.isLoading).toBe(false));
 

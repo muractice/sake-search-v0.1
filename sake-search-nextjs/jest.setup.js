@@ -27,9 +27,8 @@ if (typeof window !== 'undefined') {
 
 // Reduce noisy React act() warnings in tests output
 const originalConsoleError = console.error
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-console.error = (...args: any[]) => {
-  const msg = args?.[0]
+console.error = (...args) => {
+  const msg = args && args[0]
   if (typeof msg === 'string' && msg.includes('not wrapped in act(')) {
     return
   }
