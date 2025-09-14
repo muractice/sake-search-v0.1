@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
-import { useSakeService } from '@/providers/ServiceProvider';
+import { useSakeServiceV2 as useSakeService } from '@/providers/ServiceProvider';
 import { 
   SakeSearchError, 
   SakeSearchOptions, 
