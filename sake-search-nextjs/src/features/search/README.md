@@ -1,14 +1,17 @@
-# Search Feature - Migration Guide
+# Search Feature - Migration Guide (Server Actions/RSC first)
 
-- Data flow target: `features → services(SakeServiceV2) → repositories(ISakeRepository) → lib(ApiClient/Supabase)`
-- Current usage: `useSearch` (legacy), `useSearchV2` (Service-based)
+- Web(default): `features (useSearch) → app/actions/search.ts → services(SakeServiceV2) → repositories(SakenowaSakeRepository) → lib(sakenowaApi)`
+- Future Mobile/BFF: `features → HttpSakeRepository(ApiClient) → /api/v1/sakes/* → services → repositories → lib`
 
-## TODO (non-breaking)
+## Current State
 
-1. Wire `ServiceProvider` to optionally provide `SakeServiceV2` with `HttpSakeRepository`.
-2. Switch `useSearchV2` to call `SakeServiceV2` (feature flag/env guard OK).
-3. Remove direct `/api/search` fetch usage; route through service.
-4. Gradually replace `useSearch` usage, then delete it.
-5. If needed, add `SupabaseSakeRepository` for caching/offline strategies.
+- `useSearch` calls Server Action (`searchSakesAction`) and no longer uses `/api/search`
+- Menu scan flow also uses the same Server Action
 
-Notes: This file documents design only; no runtime behavior changed yet.
+## Next (when mobile starts)
+
+1. Add BFF routes under `app/api/v1/sakes/*` with zod-validated `ApiResponse<T>`
+2. Introduce `HttpSakeRepository` wiring for client via Provider (optional)
+3. Keep Web on Server Actions/RSC where it wins; use BFF for mobile/shared
+
+Notes: This feature uses server-side domain service; client holds minimal state only.
