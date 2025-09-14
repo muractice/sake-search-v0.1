@@ -12,8 +12,8 @@
 
 ## 現状
 
-- `useSearch` は `/api/search` を直接 `fetch` している（features → app/api）
-- `useSearchV2` は `SakeService`（services）を経由し `ApiClient`（lib）から HTTP API を呼び出している
+- `useSearch` は Server Actions（`app/actions/search.ts`）を呼び出し、サーバ側で `SakeServiceV2` → repository を実行
+- `/api/search` は段階的廃止（メニューなども Server Actions に統一済み）
 - `repositories` は Favorites/Preferences/Recommendations などで Supabase 実装が進行中
 
 ## 変更計画（Search領域）

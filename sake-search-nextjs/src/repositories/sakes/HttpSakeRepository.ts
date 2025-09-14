@@ -1,4 +1,4 @@
-import { ApiClient, ApiClientError } from '@/services/core/ApiClient';
+import { ApiClient } from '@/services/core/ApiClient';
 import { SakeData } from '@/types/sake';
 import { ISakeRepository, SakeSearchOptions, SakeSearchResult } from './SakeRepository';
 
@@ -11,25 +11,8 @@ export class HttpSakeRepository implements ISakeRepository {
   constructor(private readonly api: ApiClient) {}
 
   async search(options: SakeSearchOptions): Promise<SakeSearchResult> {
-    try {
-      const res = await this.api.post<SakeSearchResult>('/api/v1/sakes/search', options);
-      return res.data;
-    } catch (e) {
-      // 互換性のためのフォールバック: 旧 `/api/search?q=...` を使用
-      if (e instanceof ApiClientError && (e.statusCode === 404 || e.statusCode === 0)) {
-        const resp = await fetch(`/api/search?q=${encodeURIComponent(options.query)}`);
-        const legacy = await resp.json() as { success: boolean; results: unknown[] };
-        return {
-          sakes: (legacy.success ? legacy.results : []) as any,
-          total: legacy.success ? legacy.results.length : 0,
-          query: options.query,
-          filters: options.filters,
-          hasMore: false,
-          timestamp: new Date().toISOString(),
-        };
-      }
-      throw e;
-    }
+    const res = await this.api.post<SakeSearchResult>('/api/v1/sakes/search', options);
+    return res.data;
   }
 
   async getById(id: string): Promise<SakeData | null> {
