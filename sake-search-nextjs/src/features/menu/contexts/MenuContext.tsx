@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { SakeData } from '@/types/sake';
 import ScanService from '@/services/ScanService';
+import { searchSakesAction } from '@/app/actions/search';
 
 interface SearchResult {
   success: boolean;
@@ -45,14 +46,8 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     if (!query.trim()) return null;
 
     try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data: SearchResult = await response.json();
-      
-      if (data.success && data.results.length > 0) {
-        return data.results[0];
-      } else {
-        return null;
-      }
+      const result = await searchSakesAction({ query, limit: 1, offset: 0 });
+      return result.sakes[0] ?? null;
     } catch (error) {
       console.error('Search error:', error);
       return null;
