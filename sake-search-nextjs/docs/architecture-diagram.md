@@ -17,7 +17,7 @@ graph TB
         end
 
         subgraph "Backend"
-            API[API Routes<br/>api/search/route.ts]
+            SA[Server Actions<br/>app/actions/search.ts]
             Lib[Libraries<br/>- sakenowaApi.ts<br/>- mockData.ts]
         end
     end
@@ -31,8 +31,8 @@ graph TB
     Pages --> Components
     Components --> Styles
     
-    Pages --> API
-    API --> Lib
+    Pages --> SA
+    SA --> Lib
     Lib --> Sakenowa
 
     classDef client fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
@@ -53,26 +53,26 @@ sequenceDiagram
     participant User
     participant UI as UI Components
     participant State as React State
-    participant API as API Route
+    participant SA as Server Action
     participant Lib as sakenowaApi.ts
     participant Sakenowa as Sakenowa API
     participant Mock as mockData.ts
 
     User->>UI: 日本酒名を入力
     UI->>State: handleSearch(query)
-    State->>API: GET /api/search?q={query}
+    State->>SA: searchSakesAction({ query })
     
     alt Sakenowa API使用時
-        API->>Lib: searchRealSakeData(query)
+        SA->>Lib: searchRealSakeData(query)
         Lib->>Sakenowa: fetch(/brands, /breweries, /flavor-charts)
         Sakenowa-->>Lib: APIレスポンス
-        Lib-->>API: 変換されたSakeData[]
+        Lib-->>SA: 変換されたSakeData[]
     else モックデータ使用時
-        API->>Mock: searchMockSakeData(query)
-        Mock-->>API: モックSakeData[]
+        SA->>Mock: searchMockSakeData(query)
+        Mock-->>SA: モックSakeData[]
     end
     
-    API-->>State: SearchResponse
+    SA-->>State: SearchResult
     State->>UI: データ更新
     UI->>User: チャートと詳細表示
 ```
@@ -149,33 +149,10 @@ graph LR
     class File1,File2,File3,File4,File5 file
 ```
 
-## API エンドポイント
+## データ取得インターフェース
 
-| エンドポイント | メソッド | 用途 | レスポンス |
-|---------------|---------|------|-----------|
-| `/api/search` | GET | 日本酒検索 | `SearchResponse` |
-
-### SearchResponse型定義
-
-```typescript
-interface SearchResponse {
-  success: boolean;
-  results: SakeData[];
-  error?: string;
-}
-
-interface SakeData {
-  id: string;
-  brandId: number;
-  name: string;
-  brewery: string;
-  breweryId: number;
-  sweetness: number;  // -3 〜 +3
-  richness: number;   // -3 〜 +3
-  description: string;
-  flavorChart?: FlavorChart;
-}
-```
+- Web(既定): Server Actions `searchSakesAction(options)` を利用
+- 将来モバイル/BFF: `/api/v1/sakes/search` を追加して共通契約化（未実装）
 
 ## デプロイメント構成
 

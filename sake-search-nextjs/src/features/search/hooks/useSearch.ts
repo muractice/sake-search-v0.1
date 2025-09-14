@@ -1,66 +1,39 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { SakeData } from '@/types/sake';
+import { searchSakesAction } from '@/app/actions/search';
 
-interface SearchResult {
-  success: boolean;
-  results: SakeData[];
-}
-
+// 既存の useSearch API を維持しつつ、内部実装を ServiceV2 経由に切替
 export const useSearch = () => {
-  const [currentSakeData, setCurrentSakeData] = useState<SakeData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
-  // プライベート関数（外部に公開しない）
-  const fetchSearchResults = async (query: string): Promise<SearchResult> => {
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-    return await response.json();
-  };
+  // useSearchV2 相当の状態管理は ServiceV2 を都度呼び出す形に単純化
+  // 画面で必要な状態はこのフックが返す最小限（従来通り）に限定
+  const [state, setState] = useState({
+    currentSakeData: [] as SakeData[],
+    isLoading: false,
+  });
 
-  const processSearchResults = useCallback((data: SearchResult) => {
-    if (data.success && data.results.length > 0) {
-      setCurrentSakeData(data.results);
-      return data.results[0]; // 最初の結果を選択用として返す
-    } else {
-      setCurrentSakeData([]);
-      return null;
-    }
-  }, []); // setCurrentSakeDataは安定しているので空の依存配列
-
-  // パブリックAPI - useCallbackで安定化
   const search = useCallback(async (query: string): Promise<SakeData | null> => {
     if (!query.trim()) return null;
 
-    setIsLoading(true);
+    setState((s) => ({ ...s, isLoading: true }));
     try {
-      const data = await fetchSearchResults(query);
-      const selectedSake = processSearchResults(data);
-      
-      if (!selectedSake) {
-        // エラー通知は呼び出し側で行う（関心の分離）
-      }
-      
-      return selectedSake;
-    } catch (error) {
-      console.error('Search error:', error);
-      setCurrentSakeData([]);
-      throw error; // エラーハンドリングは呼び出し側に委ねる
-    } finally {
-      setIsLoading(false);
+      const result = await searchSakesAction({ query, limit: 20, offset: 0 });
+      setState({ currentSakeData: result.sakes, isLoading: false });
+      return result.sakes[0] ?? null;
+    } catch (e) {
+      console.error('Search error:', e);
+      setState({ currentSakeData: [], isLoading: false });
+      throw e;
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const clearSearch = useCallback(() => {
-    setCurrentSakeData([]);
-    setIsLoading(false);
-  }, []); // set関数は安定しているので空の依存配列
+    setState({ currentSakeData: [], isLoading: false });
+  }, []);
 
-  // 公開するAPIのみreturn
   return {
-    // 状態
-    currentSakeData,
-    isLoading,
-    
-    // メソッド（publicのみ）
+    currentSakeData: state.currentSakeData,
+    isLoading: state.isLoading,
     search,
     clearSearch,
   };

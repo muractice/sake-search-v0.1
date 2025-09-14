@@ -79,6 +79,11 @@ export const useSakeService = (): SakeService => {
 };
 
 /**
+ * SakeServiceV2にアクセスするためのhook
+ */
+// Removed: useSakeServiceV2 (search flows use Server Actions/RSC by default)
+
+/**
  * RecordServiceにアクセスするためのhook
  */
 export const useRecordService = (): RecordService => {

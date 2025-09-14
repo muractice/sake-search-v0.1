@@ -34,3 +34,21 @@ console.error = (...args) => {
   }
   originalConsoleError(...args)
 }
+
+// Mock Supabase client to silence jsdom errors in tests
+jest.mock('@/lib/supabase', () => {
+  const chain = {
+    select: jest.fn(() => chain),
+    upsert: jest.fn(() => chain),
+    insert: jest.fn(() => ({ error: null })),
+    delete: jest.fn(() => chain),
+    eq: jest.fn(() => chain),
+    order: jest.fn(() => ({ data: [], error: null })),
+    single: jest.fn(() => ({ data: null, error: { code: 'PGRST116' } })),
+  }
+  return {
+    supabase: {
+      from: jest.fn(() => chain),
+    },
+  }
+})

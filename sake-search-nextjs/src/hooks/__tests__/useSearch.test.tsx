@@ -1,33 +1,27 @@
 import { renderHook, act } from '@testing-library/react';
 import { useSearch } from '@/features/search/hooks/useSearch';
 import { SakeData } from '@/types/sake';
+import { searchSakesAction } from '@/app/actions/search';
 
-// テスト用のダミーデータ
+jest.mock('@/app/actions/search', () => ({
+  searchSakesAction: jest.fn(),
+}));
+
+// テスト用のダミーデータ（現行のSakeData型に合わせる）
 const createSakeData = (id: string, name: string): SakeData => ({
   id,
+  brandId: 1,
   name,
   brewery: 'テスト酒造',
-  region: '東京都',
+  breweryId: 1,
   sweetness: 0,
-  acidity: 0,
   richness: 0,
-  tags: [],
-  images: [],
-  prices: [],
-  ratings: { average: 0, count: 0 },
   description: '',
-  alcoholContent: 15,
-  ricePolishingRate: 60,
-  volume: 720,
 });
-
-// fetch APIのモック
-global.fetch = jest.fn();
-const mockFetch = fetch as jest.MockedFunction<typeof fetch>;
 
 describe('useSearch', () => {
   beforeEach(() => {
-    mockFetch.mockClear();
+    (searchSakesAction as jest.Mock).mockReset();
   });
 
   describe('初期状態', () => {
@@ -49,12 +43,13 @@ describe('useSearch', () => {
         createSakeData('2', '日本酒2'),
       ];
 
-      mockFetch.mockResolvedValueOnce({
-        json: async () => ({
-          success: true,
-          results: mockSakeData,
-        }),
-      } as Response);
+      (searchSakesAction as jest.Mock).mockResolvedValueOnce({
+        sakes: mockSakeData,
+        total: mockSakeData.length,
+        query: 'テスト検索',
+        hasMore: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const { result } = renderHook(() => useSearch());
 
@@ -69,12 +64,13 @@ describe('useSearch', () => {
     });
 
     test('検索結果が空の場合にnullを返すこと', async () => {
-      mockFetch.mockResolvedValueOnce({
-        json: async () => ({
-          success: false,
-          results: [],
-        }),
-      } as Response);
+      (searchSakesAction as jest.Mock).mockResolvedValueOnce({
+        sakes: [],
+        total: 0,
+        query: '存在しない日本酒',
+        hasMore: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const { result } = renderHook(() => useSearch());
 
@@ -96,7 +92,7 @@ describe('useSearch', () => {
       });
 
       expect(selectedSake).toBe(null);
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(searchSakesAction).not.toHaveBeenCalled();
     });
 
     test('空白文字のみの検索クエリの場合にnullを返すこと', async () => {
@@ -108,7 +104,7 @@ describe('useSearch', () => {
       });
 
       expect(selectedSake).toBe(null);
-      expect(mockFetch).not.toHaveBeenCalled();
+      expect(searchSakesAction).not.toHaveBeenCalled();
     });
 
     test('ローディング状態が正しく管理されること', async () => {
@@ -117,13 +113,14 @@ describe('useSearch', () => {
         resolvePromise = resolve;
       });
 
-      mockFetch.mockImplementationOnce(() => 
+      (searchSakesAction as jest.Mock).mockImplementationOnce(() => 
         searchPromise.then(() => ({
-          json: async () => ({
-            success: true,
-            results: [createSakeData('1', '日本酒1')],
-          }),
-        } as Response))
+          sakes: [createSakeData('1', '日本酒1')],
+          total: 1,
+          query: 'テスト検索',
+          hasMore: false,
+          timestamp: new Date().toISOString(),
+        }))
       );
 
       const { result } = renderHook(() => useSearch());
@@ -150,13 +147,14 @@ describe('useSearch', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    test('API呼び出し時に正しいURLが使用されること', async () => {
-      mockFetch.mockResolvedValueOnce({
-        json: async () => ({
-          success: true,
-          results: [createSakeData('1', '日本酒1')],
-        }),
-      } as Response);
+    test('Server Actionに正しい引数で依頼されること', async () => {
+      (searchSakesAction as jest.Mock).mockResolvedValueOnce({
+        sakes: [createSakeData('1', '日本酒1')],
+        total: 1,
+        query: 'テスト 検索',
+        hasMore: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const { result } = renderHook(() => useSearch());
 
@@ -164,12 +162,12 @@ describe('useSearch', () => {
         await result.current.search('テスト 検索');
       });
 
-      expect(mockFetch).toHaveBeenCalledWith('/api/search?q=%E3%83%86%E3%82%B9%E3%83%88%20%E6%A4%9C%E7%B4%A2');
+      expect(searchSakesAction).toHaveBeenCalledWith({ query: 'テスト 検索', limit: 20, offset: 0 });
     });
 
     test('APIエラー時に例外がスローされること', async () => {
       const errorMessage = 'Network Error';
-      mockFetch.mockRejectedValueOnce(new Error(errorMessage));
+      (searchSakesAction as jest.Mock).mockRejectedValueOnce(new Error(errorMessage));
 
       const { result } = renderHook(() => useSearch());
 
@@ -185,13 +183,13 @@ describe('useSearch', () => {
   describe('clearSearch機能', () => {
     test('検索データがクリアされること', async () => {
       const mockSakeData = [createSakeData('1', '日本酒1')];
-
-      mockFetch.mockResolvedValueOnce({
-        json: async () => ({
-          success: true,
-          results: mockSakeData,
-        }),
-      } as Response);
+      (searchSakesAction as jest.Mock).mockResolvedValueOnce({
+        sakes: mockSakeData,
+        total: mockSakeData.length,
+        query: 'テスト検索',
+        hasMore: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const { result } = renderHook(() => useSearch());
 

@@ -11,11 +11,7 @@ const tests = [
     path: '/',
     expectedStatus: 200,
   },
-  {
-    name: 'API検索エンドポイント',
-    path: '/api/search?q=' + encodeURIComponent('獺祭'),
-    expectedStatus: 200,
-  },
+  // 検索はServer Actions/RSC経由に統一したため、HTTPの旧エンドポイントテストは削除
   {
     name: 'Gemini Vision APIエンドポイント',
     path: '/api/gemini-vision',

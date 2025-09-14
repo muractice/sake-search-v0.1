@@ -4,7 +4,7 @@
  */
 
 import { ComparisonService } from '../ComparisonService';
-import { ApiClient } from '../core/ApiClient';
+import { ApiClient, ApiClientError } from '../core/ApiClient';
 import { SakeData } from '@/types/sake';
 
 // ApiClientのモック
@@ -40,7 +40,7 @@ class MockApiClient extends ApiClient {
     throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async get<T>(endpoint: string): Promise<{ data: T }> {
+  async get<T>(endpoint: string, query?: Record<string, string>): Promise<{ data: T }> {
     if (this.shouldThrowError) {
       throw this.errorToThrow;
     }

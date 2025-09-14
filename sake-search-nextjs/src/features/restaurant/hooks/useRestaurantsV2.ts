@@ -148,7 +148,7 @@ export const useRestaurantsV2 = (): UseRestaurantsReturn => {
       updateState({ error: errorMessage });
       return null;
     }
-  }, [restaurantService, updateState, state.restaurants, state.total]);
+  }, [restaurantService, updateState, state.restaurants, state.total, searchRestaurants]);
 
   /**
    * 飲食店を更新
@@ -373,7 +373,7 @@ export const useRestaurantsV2 = (): UseRestaurantsReturn => {
       updateState({ error: errorMessage });
       return null;
     }
-  }, [restaurantService, updateState, state.records]);
+  }, [restaurantService, updateState, state.records, searchRecords]);
 
   /**
    * 飲食店記録を更新
@@ -672,7 +672,7 @@ export const useRestaurantsV2 = (): UseRestaurantsReturn => {
   useEffect(() => {
     searchRestaurants(); // デフォルトの条件で飲食店を読み込み
     loadStatistics(); // 統計も読み込み
-  }, []);
+  }, [searchRestaurants, loadStatistics]);
 
   return {
     // State

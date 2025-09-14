@@ -3,11 +3,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { SakeData } from '@/types/sake';
 import ScanService from '@/services/ScanService';
+import { addMenuItemsAction } from '@/app/actions/menu';
 
-interface SearchResult {
-  success: boolean;
-  results: SakeData[];
-}
+// 旧APIレスポンス型は不要になったため削除
 
 interface MenuContextType {
   // State
@@ -40,23 +38,9 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string>('');
 
-  // 日本酒を検索する関数
-  const searchSake = useCallback(async (query: string): Promise<SakeData | null> => {
-    if (!query.trim()) return null;
-
-    try {
-      const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data: SearchResult = await response.json();
-      
-      if (data.success && data.results.length > 0) {
-        return data.results[0];
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      return null;
-    }
+  // バッチで日本酒を検索（Server Action）
+  const searchSakesBatch = useCallback(async (items: string[]) => {
+    return addMenuItemsAction(items);
   }, []);
 
   // メニューアイテムを追加
@@ -76,27 +60,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     }
 
     try {
-      const results = await Promise.all(
-        items.map(async (item) => {
-          try {
-            const data = await searchSake(item);
-            return { item, data };
-          } catch {
-            return { item, data: null };
-          }
-        })
-      );
-
-      const foundSakes: SakeData[] = [];
-      const notFound: string[] = [];
-
-      results.forEach(({ item, data }) => {
-        if (data) {
-          foundSakes.push(data);
-        } else {
-          notFound.push(item);
-        }
-      });
+      const { foundSakes, notFound } = await searchSakesBatch(items);
 
       if (foundSakes.length > 0) {
         console.log('[handleMenuItemsAdd] 追加候補の日本酒:', foundSakes.map(s => s.id));
@@ -164,7 +128,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
         // メッセージはクリアしない（画面リロードまたは次回処理まで保持）
       }
     }
-  }, [searchSake, menuSakeData, notFoundItems, menuItems]);
+  }, [searchSakesBatch, menuSakeData]);
 
   // メニューアイテムを変更
   const handleMenuItemsChange = useCallback((items: string[]) => {

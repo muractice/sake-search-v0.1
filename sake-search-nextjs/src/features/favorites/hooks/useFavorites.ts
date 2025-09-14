@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
 import { FavoritesService } from '@/services/favorites/FavoritesService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
@@ -18,7 +18,28 @@ export const useFavorites = () => {
     const prefsRepo = new SupabaseUserPreferencesRepository();
     return new FavoritesService(repo, recCacheRepo, prefsRepo);
   }, []);
+  // お気に入りを読み込む
+  const loadFavorites = useCallback(async (userId: string) => {
+    try {
+      const items = await favoritesService.list(userId);
+      const sakeDataList = items.map(item => item.sakeData as SakeData);
+      setFavorites(sakeDataList);
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  }, [favoritesService]);
 
+  // ユーザー設定を読み込む
+  const loadPreferences = useCallback(async (userId: string) => {
+    try {
+      const prefs = await favoritesService.getPreferences(userId);
+      if (prefs) {
+        setShowFavorites(prefs.showFavorites);
+      }
+    } catch (error) {
+      console.error('Error loading preferences:', error);
+    }
+  }, [favoritesService]);
 
   // AuthContext の user 変化で favorites/preferences を同期
   useEffect(() => {
@@ -40,30 +61,7 @@ export const useFavorites = () => {
     };
     run();
     return () => { cancelled = true; };
-  }, [user?.id]);
-
-  // お気に入りを読み込む
-  const loadFavorites = async (userId: string) => {
-    try {
-      const items = await favoritesService.list(userId);
-      const sakeDataList = items.map(item => item.sakeData as SakeData);
-      setFavorites(sakeDataList);
-    } catch (error) {
-      console.error('Error loading favorites:', error);
-    }
-  };
-
-  // ユーザー設定を読み込む
-  const loadPreferences = async (userId: string) => {
-    try {
-      const prefs = await favoritesService.getPreferences(userId);
-      if (prefs) {
-        setShowFavorites(prefs.showFavorites);
-      }
-    } catch (error) {
-      console.error('Error loading preferences:', error);
-    }
-  };
+  }, [user?.id, loadFavorites, loadPreferences]);
 
   // お気に入りに追加
   const addFavorite = async (sake: SakeData) => {
