@@ -183,13 +183,13 @@ describe('useSearch', () => {
   describe('clearSearch機能', () => {
     test('検索データがクリアされること', async () => {
       const mockSakeData = [createSakeData('1', '日本酒1')];
-
-      mockFetch.mockResolvedValueOnce({
-        json: async () => ({
-          success: true,
-          results: mockSakeData,
-        }),
-      } as Response);
+      (searchSakesAction as jest.Mock).mockResolvedValueOnce({
+        sakes: mockSakeData,
+        total: mockSakeData.length,
+        query: 'テスト検索',
+        hasMore: false,
+        timestamp: new Date().toISOString(),
+      });
 
       const { result } = renderHook(() => useSearch());
 

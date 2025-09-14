@@ -118,10 +118,7 @@ export class RestaurantService {
       const response = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>('/api/restaurant/menus');
       console.log('RestaurantService.getRestaurants: レスポンス取得成功', response);
       console.log('RestaurantService.getRestaurants: response.data:', response.data);
-      console.log('RestaurantService.getRestaurants: response.restaurants:', (response as unknown as { restaurants: RestaurantMenu[] }).restaurants);
-      
-      // APIは直接 { restaurants: [...] } を返すので response.restaurants にアクセス
-      const restaurants = (response as unknown as { restaurants: RestaurantMenu[] }).restaurants || [];
+      const restaurants = response.data?.restaurants || [];
       console.log('RestaurantService.getRestaurants: 最終的なrestaurants:', restaurants);
       return restaurants;
     } catch (error) {
@@ -239,7 +236,7 @@ export class RestaurantService {
         `/api/restaurant/menus/list?restaurant_id=${menuId}`
       );
 
-      const menuWithSakes = (response as unknown as { menuWithSakes: RestaurantMenuWithSakes[] }).menuWithSakes || [];
+      const menuWithSakes = response.data?.menuWithSakes || [];
       return menuWithSakes.map(item => item.sake_id).filter((id): id is string => Boolean(id));
     } catch (error) {
       console.error('メニューの日本酒リスト取得エラー:', error);
@@ -287,7 +284,7 @@ export class RestaurantService {
         diffMode: true // 差分モードを指定
       });
 
-      return (response as unknown as { menuSakes: RestaurantMenuSake[] }).menuSakes || [];
+      return response.data?.menuSakes || [];
     } catch (error) {
       this.handleError('メニューの更新に失敗しました', error);
     }
@@ -311,8 +308,7 @@ export class RestaurantService {
         sakes
       });
 
-      // APIは直接 { menuSakes: [...] } を返すので response.menuSakes にアクセス
-      return (response as unknown as { menuSakes: RestaurantMenuSake[] }).menuSakes || [];
+      return response.data?.menuSakes || [];
     } catch (error) {
       this.handleError('メニューへの日本酒一括追加に失敗しました', error);
     }
@@ -434,10 +430,7 @@ export class RestaurantService {
       console.log('RestaurantService.getRestaurantWithSakes: 詳細取得開始', menuId);
       const response = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${menuId}`);
       console.log('RestaurantService.getRestaurantWithSakes: 取得結果', response);
-      console.log('RestaurantService.getRestaurantWithSakes: response.menuWithSakes:', (response as unknown as { menuWithSakes: RestaurantMenuWithSakes[] }).menuWithSakes);
-      
-      // APIは直接 { menuWithSakes: [...] } を返すので response.menuWithSakes にアクセス
-      const menuWithSakes = (response as unknown as { menuWithSakes: RestaurantMenuWithSakes[] }).menuWithSakes || [];
+      const menuWithSakes = response.data?.menuWithSakes || [];
       console.log('RestaurantService.getRestaurantWithSakes: 最終的なmenuWithSakes:', menuWithSakes);
       return menuWithSakes;
     } catch (error) {
@@ -559,8 +552,7 @@ export class RestaurantService {
   async getRecentRecords(limit: number = 10): Promise<RestaurantDrinkingRecordDetail[]> {
     try {
       const response = await this.apiClient.get<{ records: RestaurantDrinkingRecordDetail[] }>(`/api/restaurant/records?limit=${limit}`);
-      // APIは直接 { records: [...] } を返すので response.records にアクセス
-      return (response as unknown as { records: RestaurantDrinkingRecordDetail[] }).records || [];
+      return response.data?.records || [];
     } catch (error) {
       this.handleError('最近の飲食店記録取得に失敗しました', error);
     }
@@ -620,8 +612,10 @@ export class RestaurantService {
       throw new RestaurantServiceError('飲食店名は100文字以内で入力してください');
     }
 
-    if (!input.registration_date || typeof input.registration_date !== 'string' || !this.isValidDate(input.registration_date)) {
-      throw new RestaurantServiceError('登録日が必要です（YYYY-MM-DD形式）');
+    if (input.registration_date !== undefined) {
+      if (typeof input.registration_date !== 'string' || !this.isValidDate(input.registration_date)) {
+        throw new RestaurantServiceError('登録日が必要です（YYYY-MM-DD形式）');
+      }
     }
 
     if (input.location && input.location.length > 200) {

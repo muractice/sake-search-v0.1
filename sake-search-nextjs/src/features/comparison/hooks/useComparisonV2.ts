@@ -396,7 +396,7 @@ export const useComparisonV2 = (): UseComparisonReturn => {
   useEffect(() => {
     loadCurrentSession();
     loadHistory();
-  }, []);
+  }, [loadCurrentSession, loadHistory]);
 
   return {
     // State

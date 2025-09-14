@@ -26,7 +26,7 @@ export const useMenuRegistration = () => {
           menuContext.menuSakeData
         );
       },
-      [menuManagement, menuContext.menuSakeData]
+      [menuManagement, menuContext]
     ),
 
     /**
@@ -49,7 +49,7 @@ export const useMenuRegistration = () => {
         );
         console.log('[loadSavedMenu] 完了');
       },
-      [menuManagement, menuContext.handleMenuItemsAdd, menuContext.clearMenuData]
+      [menuManagement, menuContext]
     ),
 
     /**
@@ -129,7 +129,7 @@ export const useMenuRegistration = () => {
     return () => {
       isSubscribed = false;
     };
-  }, []); // 初回マウント時のみ実行
+  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.selectedSavedMenu]);
 
   return {
     // 状態（分離を維持）

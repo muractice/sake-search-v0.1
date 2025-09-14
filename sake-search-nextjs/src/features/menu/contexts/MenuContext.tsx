@@ -128,7 +128,7 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
         // メッセージはクリアしない（画面リロードまたは次回処理まで保持）
       }
     }
-  }, [searchSakesBatch, menuSakeData, notFoundItems, menuItems]);
+  }, [searchSakesBatch, menuSakeData]);
 
   // メニューアイテムを変更
   const handleMenuItemsChange = useCallback((items: string[]) => {
