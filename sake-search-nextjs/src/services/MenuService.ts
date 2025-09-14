@@ -20,10 +20,10 @@ export class MenuService {
    * 既存SakeDataに新規SakeDataを重複なくマージ
    */
   mergeSakes(existing: SakeData[], incoming: SakeData[]): SakeData[] {
+    // NOTE: 現時点では未使用（将来、保存時の統合や差分適用で利用予定）
     const map = new Map<string, SakeData>();
     existing.forEach((s) => map.set(s.id, s));
     incoming.forEach((s) => map.set(s.id, s));
     return Array.from(map.values());
   }
 }
-

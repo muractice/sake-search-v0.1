@@ -13,14 +13,14 @@ export async function addMenuItemsAction(items: string[]): Promise<{
   notFound: string[];
 }> {
   const menuService = new MenuService();
-  const service = new SakeServiceV2(new SakenowaSakeRepository());
+  const sakeService = new SakeServiceV2(new SakenowaSakeRepository());
 
   const normalized = menuService.normalizeItems(items);
 
   const results = await Promise.all(
     normalized.map(async (item) => {
       try {
-        const res = await service.searchSakes({ query: item, limit: 1, offset: 0 });
+        const res = await sakeService.searchSakes({ query: item, limit: 1, offset: 0 });
         return { item, sake: res.sakes[0] ?? null };
       } catch {
         return { item, sake: null };
@@ -38,4 +38,3 @@ export async function addMenuItemsAction(items: string[]): Promise<{
 
   return { foundSakes, notFound };
 }
-
