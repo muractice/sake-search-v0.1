@@ -74,4 +74,4 @@ export class SakeServiceV2 {
     throw new SakeSearchError('日本酒の検索に失敗しました', error);
   }
 }
-
+import 'server-only';

@@ -30,10 +30,9 @@
    - `src/services/SakeServiceV2.ts` を追加し、`ISakeRepository` に依存する形へ（ロジックは現行 `SakeService` と同等の責務）
    - 現行 `SakeService` は据え置き。V2はまだ Provider に接続しない
 
-4. Provider への接続（実装済み・最小）
-   - `ServiceProvider` に `SakeServiceV2` と `HttpSakeRepository` を追加提供
-   - 新hook: `useSakeServiceV2`（現行の`useSakeService`は据え置き）
-   - 将来: 環境変数/設定で Repository 実装切替（Supabase/HTTP/Cache）
+4. Provider への接続（検索では非必須）
+   - 検索は Server Actions/RSC を既定とし、Providerによる注入は行わない
+   - 将来: BFF導入時に `HttpSakeRepository` を Provider 経由で注入可能
 
 5. Hook の移行（次ステップで実装）
    - `useSearchV2` を `SakeServiceV2` に付け替え
@@ -51,7 +50,7 @@
 - Step 4: API周りの重複ロジックを service/repository に集約
 - Step 5: `useSearch` を廃止、`useSearchV2` を標準化
 
-補足: 切替フラグは廃止。`useSearch` は新アーキテクチャ（SakeServiceV2 → ISakeRepository）に統一した。
+補足: 検索は Server Actions に統一。`useSearch` は SA を呼び出す薄いフック。
 
 ## 期待効果
 

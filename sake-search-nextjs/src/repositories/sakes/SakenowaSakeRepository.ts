@@ -55,3 +55,4 @@ export class SakenowaSakeRepository implements ISakeRepository {
     return Array.from(new Set(names)).slice(0, limit);
   }
 }
+import 'server-only';

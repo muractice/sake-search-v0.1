@@ -8,8 +8,6 @@
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { ApiClient } from '@/services/core/ApiClient';
 import { SakeService } from '@/services/SakeService';
-import { SakeServiceV2 } from '@/services/SakeServiceV2';
-import { HttpSakeRepository } from '@/repositories/sakes/HttpSakeRepository';
 import { RecordService } from '@/services/RecordService';
 import { RestaurantService } from '@/services/RestaurantService';
 import { FavoriteService } from '@/services/FavoriteService';
@@ -18,7 +16,6 @@ import { RecommendationService } from '@/services/RecommendationService';
 
 interface ServiceContainer {
   sakeService: SakeService;
-  sakeServiceV2: SakeServiceV2;
   recordService: RecordService;
   restaurantService: RestaurantService;
   favoriteService: FavoriteService;
@@ -51,7 +48,6 @@ export const ServiceProvider = ({
       const defaultServices = createDefaultServices(apiConfig);
       return {
         sakeService: mockServices.sakeService || defaultServices.sakeService,
-        sakeServiceV2: mockServices.sakeServiceV2 || defaultServices.sakeServiceV2,
         recordService: mockServices.recordService || defaultServices.recordService,
         restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
         favoriteService: mockServices.favoriteService || defaultServices.favoriteService,
@@ -85,13 +81,7 @@ export const useSakeService = (): SakeService => {
 /**
  * SakeServiceV2にアクセスするためのhook
  */
-export const useSakeServiceV2 = (): SakeServiceV2 => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useSakeServiceV2 must be used within ServiceProvider');
-  }
-  return services.sakeServiceV2;
-};
+// Removed: useSakeServiceV2 (search flows use Server Actions/RSC by default)
 
 /**
  * RecordServiceにアクセスするためのhook
@@ -172,12 +162,8 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
     },
   });
 
-  // Repository wiring (HTTP). 今はHTTPのみ、将来は差し替え可能。
-  const sakeHttpRepository = new HttpSakeRepository(apiClient);
-
   return {
     sakeService: new SakeService(apiClient),
-    sakeServiceV2: new SakeServiceV2(sakeHttpRepository),
     recordService: new RecordService(apiClient),
     restaurantService: new RestaurantService(apiClient),
     favoriteService: new FavoriteService(apiClient),
