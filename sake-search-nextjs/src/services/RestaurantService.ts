@@ -13,7 +13,8 @@ import {
   RestaurantCreationResponse
 } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
-import { ApiClient, ApiClientError } from './core/ApiClient';
+import { ApiClient } from './core/ApiClient';
+import { mapToServiceError } from './core/errorMapping';
 import { IRestaurantRepository } from '@/repositories/restaurants/RestaurantRepository';
 
 export interface RestaurantFilters {
@@ -365,33 +366,16 @@ export class RestaurantService {
    * プライベートメソッド: エラーハンドリング
    */
   private handleError(message: string, error: unknown): never {
-    if (error instanceof RestaurantServiceError) {
-      throw error;
-    }
-
-    if (error instanceof ApiClientError) {
-      switch (error.statusCode) {
-        case 400:
-          throw new RestaurantServiceError('入力データが無効です');
-        case 401:
-          throw new RestaurantServiceError('ログインが必要です');
-        case 403:
-          throw new RestaurantServiceError('この操作の権限がありません');
-        case 404:
-          throw new RestaurantServiceError('指定された飲食店が見つかりません');
-        case 409:
-          // 409エラーは現在使用されていない（conflictフラグで処理）
-          const apiErrorMessage = (error as { response?: { error?: string } }).response?.error || 'リソースが競合しています';
-          throw new RestaurantServiceError(apiErrorMessage);
-        case 429:
-          throw new RestaurantServiceError('リクエストが多すぎます。しばらく待ってから再試行してください');
-        case 500:
-          throw new RestaurantServiceError('サーバーエラーが発生しました。時間をおいて再試行してください');
-        default:
-          throw new RestaurantServiceError(`${message} (${error.statusCode})`);
-      }
-    }
-
-    throw new RestaurantServiceError(message, error);
+    const mapped = mapToServiceError(error, RestaurantServiceError, {
+      defaultMessage: message,
+      invalidInputMessage: '入力データが無効です',
+      unauthorizedMessage: 'ログインが必要です',
+      forbiddenMessage: 'この操作の権限がありません',
+      notFoundMessage: '指定された飲食店が見つかりません',
+      conflictMessage: 'リソースが競合しています',
+      tooManyRequestsMessage: 'リクエストが多すぎます。しばらく待ってから再試行してください',
+      serverErrorMessage: 'サーバーエラーが発生しました。時間をおいて再試行してください',
+    });
+    throw mapped;
   }
 }

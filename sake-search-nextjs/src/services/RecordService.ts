@@ -5,6 +5,7 @@
 
 import { DrinkingRecord, CreateRecordInput, UpdateRecordInput } from '@/types/record';
 import { ApiClient, ApiClientError } from './core/ApiClient';
+import { mapToServiceError } from './core/errorMapping';
 
 export interface RecordFilters {
   sakeId?: string;
@@ -317,30 +318,15 @@ export class RecordService {
    * プライベートメソッド: エラーハンドリング
    */
   private handleError(message: string, error: unknown): never {
-    if (error instanceof RecordServiceError) {
-      throw error;
-    }
-
-    if (error instanceof ApiClientError) {
-      switch (error.statusCode) {
-        case 400:
-          throw new RecordServiceError('入力データが無効です');
-        case 401:
-          throw new RecordServiceError('ログインが必要です');
-        case 403:
-          throw new RecordServiceError('この操作の権限がありません');
-        case 404:
-          throw new RecordServiceError('指定された記録が見つかりません');
-        case 429:
-          throw new RecordServiceError('リクエストが多すぎます。しばらく待ってから再試行してください');
-        case 500:
-          throw new RecordServiceError('サーバーエラーが発生しました。時間をおいて再試行してください');
-        default:
-          throw new RecordServiceError(`${message} (${error.statusCode})`);
-      }
-    }
-
-    // その他のエラー
-    throw new RecordServiceError(message, error);
+    const mapped = mapToServiceError(error, RecordServiceError, {
+      defaultMessage: message,
+      invalidInputMessage: '入力データが無効です',
+      unauthorizedMessage: 'ログインが必要です',
+      forbiddenMessage: 'この操作の権限がありません',
+      notFoundMessage: '指定された記録が見つかりません',
+      tooManyRequestsMessage: 'リクエストが多すぎます。しばらく待ってから再試行してください',
+      serverErrorMessage: 'サーバーエラーが発生しました。時間をおいて再試行してください',
+    });
+    throw mapped;
   }
 }
