@@ -103,12 +103,12 @@ export class RestaurantServiceError extends Error {
 
 export class RestaurantService {
   private apiClient: ApiClient;
-  private restaurantRepository: IRestaurantRepository;
+  private restaurantRepository?: IRestaurantRepository;
 
   constructor(apiClient: ApiClient, restaurantRepository?: IRestaurantRepository) {
     this.apiClient = apiClient;
-    // DIで明示的に渡されない場合は undefined のまま（後方互換のためHTTPをフォールバック使用）
-    this.restaurantRepository = restaurantRepository as IRestaurantRepository | undefined;
+    // Repository は必須運用（未設定時は実行時にエラー）
+    this.restaurantRepository = restaurantRepository;
   }
 
   /**
@@ -116,19 +116,10 @@ export class RestaurantService {
    */
   async getRestaurants(): Promise<RestaurantMenu[]> {
     try {
-      // Repository（Supabaseなど）経由で取得。未注入の場合は従来のHTTPにフォールバック
-      if (this.restaurantRepository) {
-        return await this.restaurantRepository.listForCurrentUser();
+      if (!this.restaurantRepository) {
+        throw new RestaurantServiceError('Repositoryが設定されていません');
       }
-
-      const response = await this.apiClient.get<{ restaurants: RestaurantMenu[] }>(
-        '/api/restaurant/menus'
-      );
-      const anyRes = response as unknown as {
-        data?: { restaurants?: RestaurantMenu[] };
-        restaurants?: RestaurantMenu[];
-      };
-      return anyRes.data?.restaurants ?? anyRes.restaurants ?? [];
+      return await this.restaurantRepository.listForCurrentUser();
     } catch (error) {
       this.handleError('飲食店の取得に失敗しました', error);
     }
