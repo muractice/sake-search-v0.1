@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, type Database } from '@/lib/supabase';
 import { IUserPreferencesRepository } from './UserPreferencesRepository';
 import { UserPreferences } from '@/types/preferences';
 
@@ -6,7 +6,7 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
   async get(userId: string): Promise<UserPreferences | null> {
     const { data, error } = await supabase
       .from('user_preferences')
-      .select('*')
+      .select('user_id,show_favorites,updated_at')
       .eq('user_id', userId)
       .single();
 
@@ -17,10 +17,12 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
     }
 
     if (!data) return null;
+    type Row = Pick<Database['public']['Tables']['user_preferences']['Row'], 'user_id' | 'show_favorites' | 'updated_at'>;
+    const row = data as Row;
     return {
-      userId: data.user_id as string,
-      showFavorites: !!data.show_favorites,
-      updatedAt: data.updated_at as string,
+      userId: row.user_id,
+      showFavorites: !!row.show_favorites,
+      updatedAt: row.updated_at,
     };
   }
 
@@ -33,15 +35,17 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
         show_favorites: show,
         updated_at: now,
       })
-      .select('*')
+      .select('user_id,show_favorites,updated_at')
       .single();
 
     if (error) throw error;
 
+    type Row = Pick<Database['public']['Tables']['user_preferences']['Row'], 'user_id' | 'show_favorites' | 'updated_at'>;
+    const row = data as Row;
     return {
-      userId: data.user_id as string,
-      showFavorites: !!data.show_favorites,
-      updatedAt: data.updated_at as string,
+      userId: row.user_id,
+      showFavorites: !!row.show_favorites,
+      updatedAt: row.updated_at,
     };
   }
 }

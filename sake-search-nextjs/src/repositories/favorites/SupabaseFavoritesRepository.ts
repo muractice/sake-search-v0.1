@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, type Database } from '@/lib/supabase';
 import { FavoriteItem } from '@/types/favorites';
 import { SakeData } from '@/types/sake';
 import { IFavoritesRepository } from './FavoritesRepository';
@@ -7,18 +7,19 @@ export class SupabaseFavoritesRepository implements IFavoritesRepository {
   async list(userId: string): Promise<FavoriteItem[]> {
     const { data, error } = await supabase
       .from('favorites')
-      .select('*')
+      .select('sake_id,sake_data,created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    type FavoriteRow = { sake_id: string; sake_data: SakeData; created_at: string };
-    return (data as unknown as FavoriteRow[] | null)?.map((row) => ({
+    type Row = Pick<Database['public']['Tables']['favorites']['Row'], 'sake_id' | 'sake_data' | 'created_at'>;
+    const rows = (data ?? []) as Row[];
+    return rows.map((row) => ({
       sakeId: row.sake_id,
-      sakeData: row.sake_data,
+      sakeData: row.sake_data as SakeData,
       createdAt: row.created_at,
-    })) ?? [];
+    }));
   }
   
   async add(userId: string, sake: SakeData): Promise<void> {
