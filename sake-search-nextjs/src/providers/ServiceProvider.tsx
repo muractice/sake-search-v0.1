@@ -13,6 +13,7 @@ import { RestaurantService } from '@/services/RestaurantService';
 import { FavoriteService } from '@/services/FavoriteService';
 import { ComparisonService } from '@/services/ComparisonService';
 import { RecommendationService } from '@/services/RecommendationService';
+import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 
 interface ServiceContainer {
   sakeService: SakeService;
@@ -165,7 +166,7 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
   return {
     sakeService: new SakeService(apiClient),
     recordService: new RecordService(apiClient),
-    restaurantService: new RestaurantService(apiClient),
+    restaurantService: new RestaurantService(apiClient, new SupabaseRestaurantRepository()),
     favoriteService: new FavoriteService(apiClient),
     comparisonService: new ComparisonService(apiClient),
     recommendationService: new RecommendationService(apiClient),
