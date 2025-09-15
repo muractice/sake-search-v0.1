@@ -11,37 +11,66 @@ import {
 } from '@/types/restaurant';
 import { IRestaurantRepository } from './RestaurantRepository';
 
+// DB Row 型の最小定義（Supabase Database 型未整備テーブル分）
+interface RestaurantMenusRow {
+  id: string;
+  user_id: string;
+  restaurant_name: string;
+  registration_date: string;
+  location: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface RestaurantMenuSakesRow {
+  id: string;
+  restaurant_menu_id: string;
+  sake_id: string;
+  brand_id: number | null;
+  is_available: boolean;
+  menu_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export class SupabaseRestaurantRepository implements IRestaurantRepository {
+  // DB Row 型（Database 型に未定義のためローカルで厳密化）
+  private mapMenu = (row: RestaurantMenusRow, sakeCount?: number): RestaurantMenu => ({
+    id: row.id,
+    user_id: row.user_id,
+    restaurant_name: row.restaurant_name,
+    registration_date: row.registration_date,
+    location: row.location ?? undefined,
+    notes: row.notes ?? undefined,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    ...(typeof sakeCount === 'number' ? { sake_count: sakeCount } : {}),
+  });
+
   async listForCurrentUser(): Promise<RestaurantMenu[]> {
     const { data: auth, error: authError } = await supabase.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
 
-    const { data: restaurants, error } = await supabase
+    // N+1 改善: 関連テーブルの集計を同時取得（1往復）
+    // restaurant_menu_sakes(count) は FK 関係が定義されている前提
+    type WithCountRow = RestaurantMenusRow & { restaurant_menu_sakes?: { count: number }[] };
+    const { data, error } = await supabase
       .from('restaurant_menus')
-      .select('*')
+      .select(
+        'id,user_id,restaurant_name,registration_date,location,notes,created_at,updated_at,restaurant_menu_sakes(count)'
+      )
       .eq('user_id', auth.user.id)
       .order('registration_date', { ascending: false });
 
     if (error) throw error;
 
-    // それぞれのメニューに紐づく日本酒件数を計算
-    const restaurantsWithCount = await Promise.all(
-      (restaurants ?? []).map(async (r) => {
-        const { count, error: countError } = await supabase
-          .from('restaurant_menu_sakes')
-          .select('*', { count: 'exact', head: true })
-          .eq('restaurant_menu_id', r.id);
-        if (countError) throw countError;
-        return {
-          ...r,
-          sake_count: count ?? 0,
-        } as RestaurantMenu;
-      })
+    const rows = (data ?? []) as WithCountRow[];
+    return rows.map((r) =>
+      this.mapMenu(r, r.restaurant_menu_sakes?.[0]?.count ?? 0)
     );
-
-    return restaurantsWithCount as RestaurantMenu[];
   }
 
   async createForCurrentUser(input: RestaurantMenuFormData): Promise<RestaurantCreationResponse> {
@@ -78,8 +107,8 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       }
       throw error;
     }
-
-    return data as unknown as RestaurantMenu;
+    const row = data as RestaurantMenusRow;
+    return this.mapMenu(row);
   }
 
   async delete(menuId: string): Promise<void> {
@@ -118,7 +147,17 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .single();
 
     if (error) throw error;
-    return data as unknown as RestaurantMenuSake;
+    const row = data as RestaurantMenuSakesRow;
+    return {
+      id: row.id,
+      restaurant_menu_id: row.restaurant_menu_id,
+      sake_id: row.sake_id,
+      brand_id: row.brand_id ?? undefined,
+      is_available: !!row.is_available,
+      menu_notes: row.menu_notes ?? undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    } satisfies RestaurantMenuSake;
   }
 
   async getMenuSakeIds(menuId: string): Promise<string[]> {
@@ -165,7 +204,17 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       : await query.insert(rows).select();
 
     if (error) throw error;
-    return (data ?? []) as unknown as RestaurantMenuSake[];
+    const d = (data ?? []) as RestaurantMenuSakesRow[];
+    return d.map((row) => ({
+      id: row.id,
+      restaurant_menu_id: row.restaurant_menu_id,
+      sake_id: row.sake_id,
+      brand_id: row.brand_id ?? undefined,
+      is_available: !!row.is_available,
+      menu_notes: row.menu_notes ?? undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
   }
 
   async addMultipleSakesToMenu(
@@ -203,7 +252,17 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .select()
       .single();
     if (error) throw error;
-    return data as unknown as RestaurantMenuSake;
+    const row = data as RestaurantMenuSakesRow;
+    return {
+      id: row.id,
+      restaurant_menu_id: row.restaurant_menu_id,
+      sake_id: row.sake_id,
+      brand_id: row.brand_id ?? undefined,
+      is_available: !!row.is_available,
+      menu_notes: row.menu_notes ?? undefined,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
   }
 
   async removeSakeFromMenu(menuSakeId: string): Promise<void> {
@@ -220,7 +279,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .select('*')
       .eq('restaurant_menu_id', menuId);
     if (error) throw error;
-    return (data ?? []) as unknown as RestaurantMenuWithSakes[];
+    return (data ?? []) as RestaurantMenuWithSakes[];
   }
 
   async getRecentRecords(limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
@@ -237,7 +296,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .order('record_created_at', { ascending: false })
       .limit(limit ?? 10);
     if (error) throw error;
-    return (data ?? []) as unknown as RestaurantDrinkingRecordDetail[];
+    return (data ?? []) as RestaurantDrinkingRecordDetail[];
   }
 
   async deleteRecord(recordId: string): Promise<void> {
