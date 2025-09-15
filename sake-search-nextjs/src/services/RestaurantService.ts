@@ -9,8 +9,6 @@ import {
   RestaurantMenuFormData,
   RestaurantMenuSake,
   RestaurantMenuSakeFormData,
-  RestaurantDrinkingRecord,
-  RestaurantDrinkingRecordFormData,
   RestaurantDrinkingRecordDetail,
   RestaurantCreationResponse,
   RestaurantCreationSuccessResponse,
@@ -170,25 +168,7 @@ export class RestaurantService {
     }
   }
 
-  /**
-   * 飲食店メニューを更新
-   */
-  async updateRestaurant(menuId: string, input: Partial<RestaurantMenuFormData>): Promise<RestaurantMenu> {
-    try {
-      if (!menuId) {
-        throw new RestaurantServiceError('メニューIDが指定されていません');
-      }
-
-      if (input.restaurant_name !== undefined) {
-        this.validateRestaurantInput(input as RestaurantMenuFormData);
-      }
-
-      const response = await this.apiClient.put<RestaurantMenu>(`/api/restaurant/menus/${menuId}`, input);
-      return response.data;
-    } catch (error) {
-      this.handleError('飲食店の更新に失敗しました', error);
-    }
-  }
+  
 
   /**
    * 飲食店メニューを削除
@@ -363,39 +343,7 @@ export class RestaurantService {
     }
   }
 
-  /**
-   * 飲食店記録を作成
-   */
-  async createRecord(input: RestaurantDrinkingRecordFormData): Promise<RestaurantDrinkingRecord> {
-    try {
-      this.validateRecordInput(input);
-
-      const response = await this.apiClient.post<RestaurantDrinkingRecord>('/api/restaurant/records', {
-        ...input,
-        date: input.date || new Date().toISOString().split('T')[0],
-      });
-
-      return response.data;
-    } catch (error) {
-      this.handleError('飲食店記録の作成に失敗しました', error);
-    }
-  }
-
-  /**
-   * 飲食店記録を更新
-   */
-  async updateRecord(recordId: string, input: Partial<RestaurantDrinkingRecordFormData>): Promise<RestaurantDrinkingRecord> {
-    try {
-      if (!recordId) {
-        throw new RestaurantServiceError('記録IDが指定されていません');
-      }
-
-      const response = await this.apiClient.put<RestaurantDrinkingRecord>(`/api/v1/restaurants/records/${recordId}`, input);
-      return response.data;
-    } catch (error) {
-      this.handleError('飲食店記録の更新に失敗しました', error);
-    }
-  }
+  
 
   /**
    * 飲食店記録を削除（既存の /api/restaurant/records エンドポイントを使用）
@@ -415,60 +363,11 @@ export class RestaurantService {
     }
   }
 
-  /**
-   * 飲食店記録を検索・取得
-   */
-  async getRecords(options: RestaurantSearchOptions = {}): Promise<RestaurantRecordSearchResult> {
-    try {
-      const queryParams: Record<string, string> = {
-        limit: String(options.limit || 50),
-        offset: String(options.offset || 0),
-        sortBy: options.sortBy || 'created_at',
-        sortOrder: options.sortOrder || 'desc',
-      };
-      
-      if (options.filters) {
-        // filtersオブジェクトを文字列化して渡す
-        queryParams.filters = JSON.stringify(options.filters);
-      }
-      
-      const response = await this.apiClient.get<RestaurantRecordSearchResult>('/api/restaurant/records', queryParams);
+  
 
-      return response.data;
-    } catch (error) {
-      this.handleError('飲食店記録の取得に失敗しました', error);
-    }
-  }
+  
 
-  /**
-   * 飲食店記録統計を取得
-   */
-  async getStatistics(): Promise<RestaurantStatistics> {
-    try {
-      const response = await this.apiClient.get<RestaurantStatistics>('/api/restaurant/records');
-      return response.data;
-    } catch (error) {
-      this.handleError('飲食店記録統計の取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 飲食店向け日本酒レコメンドを取得
-   */
-  async getRecommendations(options: RecommendationOptions): Promise<RecommendationResult[]> {
-    try {
-      this.validateRecommendationOptions(options);
-
-      const response = await this.apiClient.post<RecommendationResult[]>('/api/recommendations/restaurant', {
-        ...options,
-        limit: options.limit || 10,
-      });
-
-      return response.data;
-    } catch (error) {
-      this.handleError('レコメンドの取得に失敗しました', error);
-    }
-  }
+  
 
   /**
    * 最近の飲食店記録を取得（既存の /api/restaurant/records エンドポイントを使用）
@@ -483,47 +382,7 @@ export class RestaurantService {
     }
   }
 
-  /**
-   * 特定飲食店の記録を取得
-   */
-  async getRecordsByRestaurant(menuId: string): Promise<RestaurantDrinkingRecordDetail[]> {
-    try {
-      if (!menuId) {
-        throw new RestaurantServiceError('メニューIDが指定されていません');
-      }
-
-      const result = await this.getRecords({
-        filters: { restaurantName: menuId }, // TODO: 実装ではmenu_idでフィルター
-        limit: 100,
-      });
-
-      return result.records;
-    } catch (error) {
-      this.handleError('飲食店記録の取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 高評価飲食店記録を取得
-   */
-  async getHighRatedRecords(minRating: number = 4, limit: number = 20): Promise<RestaurantDrinkingRecordDetail[]> {
-    try {
-      if (minRating < 1 || minRating > 5) {
-        throw new RestaurantServiceError('評価は1-5の範囲で指定してください');
-      }
-
-      const result = await this.getRecords({
-        filters: { ratingMin: minRating },
-        limit,
-        sortBy: 'created_at',
-        sortOrder: 'desc',
-      });
-
-      return result.records;
-    } catch (error) {
-      this.handleError('高評価飲食店記録の取得に失敗しました', error);
-    }
-  }
+  
 
   /**
    * プライベートメソッド: 飲食店入力のバリデーション
@@ -569,55 +428,7 @@ export class RestaurantService {
     }
   }
 
-  /**
-   * プライベートメソッド: 飲食店記録入力のバリデーション
-   */
-  private validateRecordInput(input: RestaurantDrinkingRecordFormData): void {
-    if (!input.restaurant_menu_id || typeof input.restaurant_menu_id !== 'string') {
-      throw new RestaurantServiceError('飲食店IDが必要です');
-    }
-
-    if (!input.restaurant_menu_sake_id || typeof input.restaurant_menu_sake_id !== 'string') {
-      throw new RestaurantServiceError('メニュー日本酒IDが必要です');
-    }
-
-    if (!input.sake_id || typeof input.sake_id !== 'string') {
-      throw new RestaurantServiceError('日本酒IDが必要です');
-    }
-
-    if (typeof input.rating !== 'number' || input.rating < 1 || input.rating > 5) {
-      throw new RestaurantServiceError('評価は1-5の範囲で入力してください');
-    }
-
-    if (input.date && !this.isValidDate(input.date)) {
-      throw new RestaurantServiceError('日付の形式が正しくありません (YYYY-MM-DD)');
-    }
-
-    if (input.memo && input.memo.length > 1000) {
-      throw new RestaurantServiceError('メモは1000文字以内で入力してください');
-    }
-
-    if (input.price_paid && (input.price_paid < 0 || input.price_paid > 100000)) {
-      throw new RestaurantServiceError('支払い金額は0-100000円の範囲で入力してください');
-    }
-
-    if (input.glass_ml && (input.glass_ml < 0 || input.glass_ml > 1000)) {
-      throw new RestaurantServiceError('グラス容量は0-1000mlの範囲で入力してください');
-    }
-  }
-
-  /**
-   * プライベートメソッド: レコメンド オプションのバリデーション
-   */
-  private validateRecommendationOptions(options: RecommendationOptions): void {
-    if (!['similarity', 'pairing', 'random'].includes(options.type)) {
-      throw new RestaurantServiceError('無効なレコメンドタイプです');
-    }
-
-    if (options.limit && (options.limit < 1 || options.limit > 100)) {
-      throw new RestaurantServiceError('取得件数は1-100の範囲で指定してください');
-    }
-  }
+  
 
   /**
    * プライベートメソッド: 日付形式チェック
