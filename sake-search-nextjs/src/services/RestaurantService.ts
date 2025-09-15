@@ -10,11 +10,7 @@ import {
   RestaurantMenuSake,
   RestaurantMenuSakeFormData,
   RestaurantDrinkingRecordDetail,
-  RestaurantCreationResponse,
-  RestaurantCreationSuccessResponse,
-  RestaurantCreationConflictResponse,
-  isConflictResponse,
-  isRestaurantMenu
+  RestaurantCreationResponse
 } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
 import { ApiClient, ApiClientError } from './core/ApiClient';

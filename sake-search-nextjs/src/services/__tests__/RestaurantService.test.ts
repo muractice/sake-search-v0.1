@@ -10,6 +10,7 @@ import {
   RestaurantMenu, 
   RestaurantMenuFormData,
   RestaurantMenuSakeFormData,
+  RestaurantMenuSake,
   RestaurantMenuWithSakes,
   RestaurantDrinkingRecordDetail
 } from '@/types/restaurant';
@@ -94,24 +95,24 @@ class MockRestaurantRepository implements IRestaurantRepository {
   listResult: RestaurantMenu[] = [];
   listError: unknown = null;
 
-  createResult: any = null;
+  createResult: RestaurantMenu | import('@/types/restaurant').RestaurantCreationConflictResponse | null = null;
   createError: unknown = null;
 
   deleteError: unknown = null;
 
-  addSakeToMenuResult: any = null;
+  addSakeToMenuResult: RestaurantMenuSake | null = null;
   addSakeToMenuError: unknown = null;
 
   menuSakeIdsResult: string[] = [];
   menuSakeIdsError: unknown = null;
 
-  updateMenuSakesResult: any[] = [];
+  updateMenuSakesResult: RestaurantMenuSake[] = [];
   updateMenuSakesError: unknown = null;
 
-  addMultipleSakesResult: any[] = [];
+  addMultipleSakesResult: RestaurantMenuSake[] = [];
   addMultipleSakesError: unknown = null;
 
-  updateMenuSakeResult: any = null;
+  updateMenuSakeResult: RestaurantMenuSake | null = null;
   updateMenuSakeError: unknown = null;
 
   removeSakeFromMenuError: unknown = null;
@@ -128,45 +129,52 @@ class MockRestaurantRepository implements IRestaurantRepository {
     if (this.listError) throw this.listError;
     return this.listResult;
   }
-  async createForCurrentUser(input: RestaurantMenuFormData) {
+  async createForCurrentUser(_input: RestaurantMenuFormData) {
     if (this.createError) throw this.createError;
     return this.createResult;
   }
-  async delete(menuId: string): Promise<void> {
+  async delete(_menuId: string): Promise<void> {
     if (this.deleteError) throw this.deleteError;
   }
-  async addSakeToMenu(menuId: string, input: RestaurantMenuSakeFormData) {
+  async addSakeToMenu(_menuId: string, _input: RestaurantMenuSakeFormData) {
     if (this.addSakeToMenuError) throw this.addSakeToMenuError;
     return this.addSakeToMenuResult;
   }
-  async getMenuSakeIds(menuId: string): Promise<string[]> {
+  async getMenuSakeIds(_menuId: string): Promise<string[]> {
     if (this.menuSakeIdsError) throw this.menuSakeIdsError;
     return this.menuSakeIdsResult;
   }
-  async updateMenuSakes(menuId: string, sakes: any[], options?: { upsert?: boolean; toDelete?: string[] }) {
+  async updateMenuSakes(
+    _menuId: string,
+    _sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[],
+    _options?: { upsert?: boolean; toDelete?: string[] }
+  ) {
     if (this.updateMenuSakesError) throw this.updateMenuSakesError;
-    return this.updateMenuSakesResult as any;
+    return this.updateMenuSakesResult;
   }
-  async addMultipleSakesToMenu(menuId: string, sakes: any[]) {
+  async addMultipleSakesToMenu(
+    _menuId: string,
+    _sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]
+  ) {
     if (this.addMultipleSakesError) throw this.addMultipleSakesError;
-    return this.addMultipleSakesResult as any;
+    return this.addMultipleSakesResult;
   }
-  async updateMenuSake(menuSakeId: string, input: Partial<RestaurantMenuSakeFormData>) {
+  async updateMenuSake(_menuSakeId: string, _input: Partial<RestaurantMenuSakeFormData>) {
     if (this.updateMenuSakeError) throw this.updateMenuSakeError;
     return this.updateMenuSakeResult;
   }
-  async removeSakeFromMenu(menuSakeId: string): Promise<void> {
+  async removeSakeFromMenu(_menuSakeId: string): Promise<void> {
     if (this.removeSakeFromMenuError) throw this.removeSakeFromMenuError;
   }
-  async getRestaurantWithSakes(menuId: string): Promise<RestaurantMenuWithSakes[]> {
+  async getRestaurantWithSakes(_menuId: string): Promise<RestaurantMenuWithSakes[]> {
     if (this.withSakesError) throw this.withSakesError;
     return this.withSakesResult;
   }
-  async getRecentRecords(limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
+  async getRecentRecords(_limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
     if (this.recentRecordsError) throw this.recentRecordsError;
     return this.recentRecordsResult;
   }
-  async deleteRecord(recordId: string): Promise<void> {
+  async deleteRecord(_recordId: string): Promise<void> {
     if (this.deleteRecordError) throw this.deleteRecordError;
   }
 }
@@ -325,7 +333,7 @@ describe('RestaurantService', () => {
     };
 
     it('should add sake to menu successfully', async () => {
-      const mockMenuSake = {
+      const mockMenuSake: RestaurantMenuSake = {
         id: 'menu-sake-1',
         restaurant_menu_id: 'restaurant-1',
         ...validInput,
@@ -333,7 +341,7 @@ describe('RestaurantService', () => {
         updated_at: '2024-01-15T11:00:00Z',
       };
 
-      mockRepo.addSakeToMenuResult = mockMenuSake as any;
+      mockRepo.addSakeToMenuResult = mockMenuSake;
       const result = await restaurantService.addSakeToMenu('restaurant-1', validInput);
       expect(result).toEqual(mockMenuSake);
     });
