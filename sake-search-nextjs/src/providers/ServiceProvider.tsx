@@ -7,7 +7,6 @@
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { ApiClient } from '@/services/core/ApiClient';
-import { SakeService } from '@/services/SakeService';
 import { RecordService } from '@/services/RecordService';
 import { RestaurantService } from '@/services/RestaurantService';
 import { ComparisonService } from '@/services/ComparisonService';
@@ -15,7 +14,6 @@ import { RecommendationService } from '@/services/RecommendationService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 
 interface ServiceContainer {
-  sakeService: SakeService;
   recordService: RecordService;
   restaurantService: RestaurantService;
   comparisonService: ComparisonService;
@@ -46,7 +44,6 @@ export const ServiceProvider = ({
     if (mockServices) {
       const defaultServices = createDefaultServices(apiConfig);
       return {
-        sakeService: mockServices.sakeService || defaultServices.sakeService,
         recordService: mockServices.recordService || defaultServices.recordService,
         restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
         comparisonService: mockServices.comparisonService || defaultServices.comparisonService,
@@ -66,20 +63,7 @@ export const ServiceProvider = ({
 };
 
 /**
- * SakeServiceにアクセスするためのhook
- */
-export const useSakeService = (): SakeService => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useSakeService must be used within ServiceProvider');
-  }
-  return services.sakeService;
-};
-
-/**
- * SakeServiceV2にアクセスするためのhook
- */
-// Removed: useSakeServiceV2 (search flows use Server Actions/RSC by default)
+// Removed: SakeService hooks (search flows use Server Actions/RSC by default)
 
 /**
  * RecordServiceにアクセスするためのhook
@@ -152,7 +136,6 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
   });
 
   return {
-    sakeService: new SakeService(apiClient),
     recordService: new RecordService(apiClient),
     restaurantService: new RestaurantService(apiClient, new SupabaseRestaurantRepository()),
     comparisonService: new ComparisonService(apiClient),
