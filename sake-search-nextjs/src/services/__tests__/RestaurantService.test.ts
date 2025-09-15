@@ -5,15 +5,15 @@
 
 import { RestaurantService, RestaurantServiceError } from '../RestaurantService';
 import { ApiClient, ApiClientError } from '../core/ApiClient';
+import { IRestaurantRepository } from '@/repositories/restaurants/RestaurantRepository';
 import { 
   RestaurantMenu, 
   RestaurantMenuFormData,
   RestaurantMenuSakeFormData,
-  RestaurantDrinkingRecordFormData,
   RestaurantMenuWithSakes,
   RestaurantDrinkingRecordDetail
 } from '@/types/restaurant';
-import { SakeData } from '@/types/sake';
+// import { SakeData } from '@/types/sake';
 
 // ApiClientのモック（RecordService.test.tsから流用・拡張）
 class MockApiClient extends ApiClient {
@@ -89,8 +89,91 @@ class MockApiClient extends ApiClient {
   }
 }
 
+// Repository のモック
+class MockRestaurantRepository implements IRestaurantRepository {
+  listResult: RestaurantMenu[] = [];
+  listError: unknown = null;
+
+  createResult: any = null;
+  createError: unknown = null;
+
+  deleteError: unknown = null;
+
+  addSakeToMenuResult: any = null;
+  addSakeToMenuError: unknown = null;
+
+  menuSakeIdsResult: string[] = [];
+  menuSakeIdsError: unknown = null;
+
+  updateMenuSakesResult: any[] = [];
+  updateMenuSakesError: unknown = null;
+
+  addMultipleSakesResult: any[] = [];
+  addMultipleSakesError: unknown = null;
+
+  updateMenuSakeResult: any = null;
+  updateMenuSakeError: unknown = null;
+
+  removeSakeFromMenuError: unknown = null;
+
+  withSakesResult: RestaurantMenuWithSakes[] = [];
+  withSakesError: unknown = null;
+
+  recentRecordsResult: RestaurantDrinkingRecordDetail[] = [];
+  recentRecordsError: unknown = null;
+
+  deleteRecordError: unknown = null;
+
+  async listForCurrentUser(): Promise<RestaurantMenu[]> {
+    if (this.listError) throw this.listError;
+    return this.listResult;
+  }
+  async createForCurrentUser(input: RestaurantMenuFormData) {
+    if (this.createError) throw this.createError;
+    return this.createResult;
+  }
+  async delete(menuId: string): Promise<void> {
+    if (this.deleteError) throw this.deleteError;
+  }
+  async addSakeToMenu(menuId: string, input: RestaurantMenuSakeFormData) {
+    if (this.addSakeToMenuError) throw this.addSakeToMenuError;
+    return this.addSakeToMenuResult;
+  }
+  async getMenuSakeIds(menuId: string): Promise<string[]> {
+    if (this.menuSakeIdsError) throw this.menuSakeIdsError;
+    return this.menuSakeIdsResult;
+  }
+  async updateMenuSakes(menuId: string, sakes: any[], options?: { upsert?: boolean; toDelete?: string[] }) {
+    if (this.updateMenuSakesError) throw this.updateMenuSakesError;
+    return this.updateMenuSakesResult as any;
+  }
+  async addMultipleSakesToMenu(menuId: string, sakes: any[]) {
+    if (this.addMultipleSakesError) throw this.addMultipleSakesError;
+    return this.addMultipleSakesResult as any;
+  }
+  async updateMenuSake(menuSakeId: string, input: Partial<RestaurantMenuSakeFormData>) {
+    if (this.updateMenuSakeError) throw this.updateMenuSakeError;
+    return this.updateMenuSakeResult;
+  }
+  async removeSakeFromMenu(menuSakeId: string): Promise<void> {
+    if (this.removeSakeFromMenuError) throw this.removeSakeFromMenuError;
+  }
+  async getRestaurantWithSakes(menuId: string): Promise<RestaurantMenuWithSakes[]> {
+    if (this.withSakesError) throw this.withSakesError;
+    return this.withSakesResult;
+  }
+  async getRecentRecords(limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
+    if (this.recentRecordsError) throw this.recentRecordsError;
+    return this.recentRecordsResult;
+  }
+  async deleteRecord(recordId: string): Promise<void> {
+    if (this.deleteRecordError) throw this.deleteRecordError;
+  }
+}
+
 describe('RestaurantService', () => {
   let mockApiClient: MockApiClient;
+  let mockRepo: MockRestaurantRepository;
   let restaurantService: RestaurantService;
 
   const mockRestaurant: RestaurantMenu = {
@@ -147,28 +230,19 @@ describe('RestaurantService', () => {
 
   beforeEach(() => {
     mockApiClient = new MockApiClient();
-    restaurantService = new RestaurantService(mockApiClient);
+    mockRepo = new MockRestaurantRepository();
+    restaurantService = new RestaurantService(mockApiClient, mockRepo as IRestaurantRepository);
   });
 
   describe('getRestaurants', () => {
     it('should get restaurants successfully', async () => {
-      const mockResult = {
-        restaurants: [mockRestaurant],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/menus', mockResult);
-
+      mockRepo.listResult = [mockRestaurant];
       const result = await restaurantService.getRestaurants();
-
       expect(result).toEqual([mockRestaurant]);
     });
 
     it('should handle API errors', async () => {
-      mockApiClient.setError(new ApiClientError('Server Error', 500));
-
+      mockRepo.listError = new ApiClientError('Server Error', 500);
       await expect(restaurantService.getRestaurants()).rejects.toThrow('サーバーエラーが発生しました');
     });
   });
@@ -176,15 +250,14 @@ describe('RestaurantService', () => {
   describe('createRestaurant', () => {
     const validInput: RestaurantMenuFormData = {
       restaurant_name: '鮨 銀座',
+      registration_date: '2024-01-15',
       location: '東京都中央区銀座',
       notes: '高級鮨店',
     };
 
     it('should create restaurant successfully', async () => {
-      mockApiClient.setMockResponse('/api/restaurant/menus', mockRestaurant);
-
+      mockRepo.createResult = mockRestaurant;
       const result = await restaurantService.createRestaurant(validInput);
-
       expect(result).toEqual(mockRestaurant);
     });
 
@@ -213,35 +286,7 @@ describe('RestaurantService', () => {
     });
   });
 
-  describe('updateRestaurant', () => {
-    const validUpdate = {
-      restaurant_name: '鮨 銀座 新店',
-      location: '東京都中央区銀座8-1-1',
-    };
-
-    it('should update restaurant successfully', async () => {
-      const updatedRestaurant = { ...mockRestaurant, ...validUpdate };
-      mockApiClient.setMockResponse('/api/restaurant/menus/restaurant-1', updatedRestaurant);
-
-      const result = await restaurantService.updateRestaurant('restaurant-1', validUpdate);
-
-      expect(result).toEqual(updatedRestaurant);
-    });
-
-    it('should validate restaurant ID', async () => {
-      await expect(
-        restaurantService.updateRestaurant('', validUpdate)
-      ).rejects.toThrow('メニューIDが指定されていません');
-    });
-
-    it('should validate updated fields', async () => {
-      const invalidUpdate = { restaurant_name: 'a'.repeat(101) };
-
-      await expect(
-        restaurantService.updateRestaurant('restaurant-1', invalidUpdate)
-      ).rejects.toThrow(RestaurantServiceError);
-    });
-  });
+  // updateRestaurant は削除済み
 
   describe('deleteRestaurant', () => {
     it('should delete restaurant successfully', async () => {
@@ -254,19 +299,13 @@ describe('RestaurantService', () => {
       ).rejects.toThrow('メニューIDが指定されていません');
     });
 
-    it('should handle 404 errors gracefully', async () => {
-      mockApiClient.setError(new ApiClientError('Not Found', 404));
-
-      await expect(restaurantService.deleteRestaurant('restaurant-1')).resolves.not.toThrow();
-    });
+    // 404 の握りつぶしは廃止（Repository 経由で例外へ）
   });
 
   describe('getRestaurantWithSakes', () => {
     it('should get restaurant with sakes successfully', async () => {
-      mockApiClient.setMockResponse('/api/restaurant/menus/list?restaurant_id=restaurant-1', { menuWithSakes: [mockRestaurantWithSakes] });
-
+      mockRepo.withSakesResult = [mockRestaurantWithSakes];
       const result = await restaurantService.getRestaurantWithSakes('restaurant-1');
-
       expect(result).toEqual([mockRestaurantWithSakes]);
     });
 
@@ -294,10 +333,8 @@ describe('RestaurantService', () => {
         updated_at: '2024-01-15T11:00:00Z',
       };
 
-      mockApiClient.setMockResponse('/api/restaurant/restaurant-1/menus/sake-1', mockMenuSake);
-
+      mockRepo.addSakeToMenuResult = mockMenuSake as any;
       const result = await restaurantService.addSakeToMenu('restaurant-1', validInput);
-
       expect(result).toEqual(mockMenuSake);
     });
 
@@ -324,234 +361,22 @@ describe('RestaurantService', () => {
     });
   });
 
-  describe('createRecord', () => {
-    const validInput: RestaurantDrinkingRecordFormData = {
-      restaurant_menu_id: 'restaurant-1',
-      restaurant_menu_sake_id: 'menu-sake-1',
-      sake_id: 'sake-1',
-      brand_id: 1,
-      date: '2024-01-15',
-      rating: 5,
-      memo: '美味しかった',
-      price_paid: 2000,
-      glass_ml: 120,
-    };
+  // createRecord は削除済み（RecordService に集約）
 
-    it('should create record successfully', async () => {
-      const mockNewRecord = {
-        id: 'record-1',
-        user_id: 'user-1',
-        ...validInput,
-        created_at: '2024-01-15T12:00:00Z',
-        updated_at: '2024-01-15T12:00:00Z',
-      };
+  // getRecords は削除済み（RecordService に集約）
 
-      mockApiClient.setMockResponse('/api/restaurant/records', mockNewRecord);
+  // getStatistics は削除済み（RecordService に集約）
 
-      const result = await restaurantService.createRecord(validInput);
-
-      expect(result).toEqual(mockNewRecord);
-    });
-
-    it('should validate required fields', async () => {
-      const invalidInputs = [
-        { ...validInput, restaurant_menu_id: '' },
-        { ...validInput, restaurant_menu_sake_id: '' },
-        { ...validInput, sake_id: '' },
-        { ...validInput, rating: 0 },
-        { ...validInput, rating: 6 },
-      ];
-
-      for (const input of invalidInputs) {
-        await expect(restaurantService.createRecord(input)).rejects.toThrow(RestaurantServiceError);
-      }
-    });
-
-    it('should validate date format', async () => {
-      const invalidDates = [
-        'invalid-date',
-        '2024/01/15',
-        '15-01-2024',
-      ];
-
-      for (const date of invalidDates) {
-        await expect(
-          restaurantService.createRecord({ ...validInput, date })
-        ).rejects.toThrow('日付の形式が正しくありません');
-      }
-    });
-
-    it('should validate numeric ranges', async () => {
-      const invalidInputs = [
-        { ...validInput, price_paid: -1 },
-        { ...validInput, price_paid: 100001 },
-        { ...validInput, glass_ml: -1 },
-        { ...validInput, glass_ml: 1001 },
-      ];
-
-      for (const input of invalidInputs) {
-        await expect(restaurantService.createRecord(input)).rejects.toThrow(RestaurantServiceError);
-      }
-    });
-
-    it('should set default date', async () => {
-      const today = new Date().toISOString().split('T')[0];
-      const inputWithoutDate = { ...validInput };
-      delete inputWithoutDate.date;
-
-      const mockNewRecord = {
-        id: 'record-1',
-        user_id: 'user-1',
-        ...inputWithoutDate,
-        date: today,
-        created_at: '2024-01-15T12:00:00Z',
-        updated_at: '2024-01-15T12:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/records', mockNewRecord);
-
-      const result = await restaurantService.createRecord(inputWithoutDate);
-
-      expect(result.date).toBe(today);
-    });
-  });
-
-  describe('getRecords', () => {
-    it('should get records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T12:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/records', mockResult);
-
-      const result = await restaurantService.getRecords();
-
-      expect(result).toEqual(mockResult);
-    });
-  });
-
-  describe('getStatistics', () => {
-    it('should get statistics successfully', async () => {
-      const mockStats = {
-        totalRestaurants: 5,
-        totalRecords: 20,
-        uniqueSakes: 15,
-        averageRating: 4.3,
-        mostVisitedRestaurant: '鮨 銀座',
-        recentActivity: {
-          thisWeek: 3,
-          thisMonth: 8,
-        },
-        priceRange: {
-          min: 800,
-          max: 5000,
-          average: 2500,
-        },
-        ratingDistribution: [
-          { rating: 5, count: 8 },
-          { rating: 4, count: 7 },
-          { rating: 3, count: 3 },
-          { rating: 2, count: 2 },
-          { rating: 1, count: 0 },
-        ],
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/records', mockStats);
-
-      const result = await restaurantService.getStatistics();
-
-      expect(result).toEqual(mockStats);
-    });
-  });
-
-  describe('getRecommendations', () => {
-    it('should get recommendations successfully', async () => {
-      const mockRecommendations = [
-        {
-          sake: {
-            id: 'sake-rec-1',
-            name: '久保田 萬寿',
-            brewery: '朝日酒造',
-            brandId: 2,
-            breweryId: 2,
-            sweetness: 2,
-            richness: 3,
-            description: '上品な味わい',
-          } as SakeData,
-          score: 0.95,
-          type: 'similarity',
-          reason: '過去の高評価銘柄との類似性',
-          similarityScore: 0.95,
-          predictedRating: 4.8,
-        },
-      ];
-
-      mockApiClient.setMockResponse('/api/recommendations/restaurant', mockRecommendations);
-
-      const result = await restaurantService.getRecommendations({ type: 'similarity' });
-
-      expect(result).toEqual(mockRecommendations);
-    });
-
-    it('should validate recommendation options', async () => {
-      const invalidOptions = [
-        { type: 'invalid' as never },
-        { type: 'similarity', limit: 0 },
-        { type: 'similarity', limit: 101 },
-      ];
-
-      for (const options of invalidOptions) {
-        await expect(restaurantService.getRecommendations(options)).rejects.toThrow(RestaurantServiceError);
-      }
-    });
-  });
+  // getRecommendations は削除済み（RecommendationService に集約）
 
   describe('getRecentRecords', () => {
     it('should get recent records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T12:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/records?limit=5', mockResult);
-
+      mockRepo.recentRecordsResult = [mockRecord];
       const result = await restaurantService.getRecentRecords(5);
-
       expect(result).toEqual([mockRecord]);
     });
   });
-
-  describe('getHighRatedRecords', () => {
-    it('should get high rated records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T12:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/restaurant/records', mockResult);
-
-      const result = await restaurantService.getHighRatedRecords(4);
-
-      expect(result).toEqual([mockRecord]);
-    });
-
-    it('should validate rating range', async () => {
-      await expect(
-        restaurantService.getHighRatedRecords(0)
-      ).rejects.toThrow('評価は1-5の範囲で指定してください');
-
-      await expect(
-        restaurantService.getHighRatedRecords(6)
-      ).rejects.toThrow('評価は1-5の範囲で指定してください');
-    });
-  });
+  // getHighRatedRecords は削除済み（RecordService に集約）
 
   describe('error handling', () => {
     it('should handle different HTTP status codes', async () => {
@@ -565,11 +390,9 @@ describe('RestaurantService', () => {
       ];
 
       for (const { status, expectedMessage } of testCases) {
-        mockApiClient.setError(new ApiClientError('Test Error', status));
-
+        mockRepo.listError = new ApiClientError('Test Error', status);
         await expect(restaurantService.getRestaurants()).rejects.toThrow(expectedMessage);
-
-        mockApiClient.clearError();
+        mockRepo.listError = null;
       }
     });
   });
