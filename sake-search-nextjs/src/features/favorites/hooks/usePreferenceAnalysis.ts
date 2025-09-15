@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
@@ -29,17 +29,8 @@ export function usePreferenceAnalysis() {
   //   }
   // }, [user, favorites.length]);
 
-  // 初回ロード時のみ実行（手動更新メイン）
-  useEffect(() => {
-    if (user && favorites.length > 0) {
-      loadExistingPreferences();
-    } else if (user && favorites.length === 0) {
-      setPreference(null);
-    }
-  }, [user, favorites.length]); // favoritesの長さも監視
-
   // 既存データのロード専用（24時間縛りなし）
-  const loadExistingPreferences = async () => {
+  const loadExistingPreferences = useCallback(async () => {
     if (!user) return;
 
     setLoading(true);
@@ -87,7 +78,16 @@ export function usePreferenceAnalysis() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  // 初回ロード時のみ実行（手動更新メイン）
+  useEffect(() => {
+    if (user && favorites.length > 0) {
+      loadExistingPreferences();
+    } else if (user && favorites.length === 0) {
+      setPreference(null);
+    }
+  }, [user, favorites.length, loadExistingPreferences]);
 
   // TODO: 将来的に自動再分析で使用する関数（24時間縛り付き）
   // const loadOrAnalyzePreferences = async () => {

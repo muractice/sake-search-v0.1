@@ -130,17 +130,21 @@ class MockRestaurantRepository implements IRestaurantRepository {
     return this.listResult;
   }
   async createForCurrentUser(_input: RestaurantMenuFormData) {
+    void _input;
     if (this.createError) throw this.createError;
     return this.createResult;
   }
   async delete(_menuId: string): Promise<void> {
+    void _menuId;
     if (this.deleteError) throw this.deleteError;
   }
   async addSakeToMenu(_menuId: string, _input: RestaurantMenuSakeFormData) {
+    void _menuId; void _input;
     if (this.addSakeToMenuError) throw this.addSakeToMenuError;
     return this.addSakeToMenuResult;
   }
   async getMenuSakeIds(_menuId: string): Promise<string[]> {
+    void _menuId;
     if (this.menuSakeIdsError) throw this.menuSakeIdsError;
     return this.menuSakeIdsResult;
   }
@@ -149,6 +153,7 @@ class MockRestaurantRepository implements IRestaurantRepository {
     _sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[],
     _options?: { upsert?: boolean; toDelete?: string[] }
   ) {
+    void _menuId; void _sakes; void _options;
     if (this.updateMenuSakesError) throw this.updateMenuSakesError;
     return this.updateMenuSakesResult;
   }
@@ -156,25 +161,31 @@ class MockRestaurantRepository implements IRestaurantRepository {
     _menuId: string,
     _sakes: { sake_id: string; brand_id?: number | null; is_available?: boolean; menu_notes?: string | null }[]
   ) {
+    void _menuId; void _sakes;
     if (this.addMultipleSakesError) throw this.addMultipleSakesError;
     return this.addMultipleSakesResult;
   }
   async updateMenuSake(_menuSakeId: string, _input: Partial<RestaurantMenuSakeFormData>) {
+    void _menuSakeId; void _input;
     if (this.updateMenuSakeError) throw this.updateMenuSakeError;
     return this.updateMenuSakeResult;
   }
   async removeSakeFromMenu(_menuSakeId: string): Promise<void> {
+    void _menuSakeId;
     if (this.removeSakeFromMenuError) throw this.removeSakeFromMenuError;
   }
   async getRestaurantWithSakes(_menuId: string): Promise<RestaurantMenuWithSakes[]> {
+    void _menuId;
     if (this.withSakesError) throw this.withSakesError;
     return this.withSakesResult;
   }
   async getRecentRecords(_limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
+    void _limit;
     if (this.recentRecordsError) throw this.recentRecordsError;
     return this.recentRecordsResult;
   }
   async deleteRecord(_recordId: string): Promise<void> {
+    void _recordId;
     if (this.deleteRecordError) throw this.deleteRecordError;
   }
 }

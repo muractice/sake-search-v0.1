@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useMenuContext } from '../contexts/MenuContext';
 import { useMenuManagement } from './useMenuManagement';
 
@@ -12,55 +12,51 @@ export const useMenuRegistration = () => {
   const menuContext = useMenuContext();
   const menuManagement = useMenuManagement();
 
-  // 統合アクション（hook間でデータの受け渡しが必要な部分）
-  const actions = {
-    /**
-     * 飲食店を追加（menuContextのデータを使用）
-     */
-    addRestaurant: useCallback(
-      async (name: string, location: string, registrationDate: string): Promise<void> => {
-        await menuManagement.handleAddRestaurant(
-          name,
-          location,
-          registrationDate,
-          menuContext.menuSakeData
-        );
-      },
-      [menuManagement, menuContext]
-    ),
-
-    /**
-     * 保存済みメニューを読み込み（menuContextのコールバックを使用）
-     */
-    loadSavedMenu: useCallback(
-      async (menuId: string): Promise<void> => {
-        console.log('[loadSavedMenu] 開始:', menuId);
-        // メニューをクリアしてから新しいメニューを読み込む
-        menuContext.clearMenuData();
-        
-        await menuManagement.handleLoadSavedMenu(
-          menuId,
-          async (items: string[]) => {
-            console.log('[loadSavedMenu] handleMenuItemsAdd呼び出し - items:', items);
-            // fromImageProcessing=falseで呼び出して新しいメニューを追加
-            // handleMenuItemsAdd内部で冪等性が保証されているため、そのまま呼び出し
-            await menuContext.handleMenuItemsAdd(items, false);
-          }
-        );
-        console.log('[loadSavedMenu] 完了');
-      },
-      [menuManagement, menuContext]
-    ),
-
-    /**
-     * 飲食店にメニューを保存（menuContextのデータを使用）
-     */
-    saveToRestaurant: useCallback(async (): Promise<void> => {
-      await menuManagement.handleSaveToRestaurant(
+  // 各アクションを安定化
+  const addRestaurant = useCallback(
+    async (name: string, location: string, registrationDate: string): Promise<void> => {
+      await menuManagement.handleAddRestaurant(
+        name,
+        location,
+        registrationDate,
         menuContext.menuSakeData
       );
-    }, [menuManagement, menuContext.menuSakeData]),
-  };
+    },
+    [menuManagement, menuContext]
+  );
+
+  const loadSavedMenu = useCallback(
+    async (menuId: string): Promise<void> => {
+      console.log('[loadSavedMenu] 開始:', menuId);
+      // メニューをクリアしてから新しいメニューを読み込む
+      menuContext.clearMenuData();
+      
+      await menuManagement.handleLoadSavedMenu(
+        menuId,
+        async (items: string[]) => {
+          console.log('[loadSavedMenu] handleMenuItemsAdd呼び出し - items:', items);
+          // fromImageProcessing=falseで呼び出して新しいメニューを追加
+          // handleMenuItemsAdd内部で冪等性が保証されているため、そのまま呼び出し
+          await menuContext.handleMenuItemsAdd(items, false);
+        }
+      );
+      console.log('[loadSavedMenu] 完了');
+    },
+    [menuManagement, menuContext]
+  );
+
+  const saveToRestaurant = useCallback(async (): Promise<void> => {
+    await menuManagement.handleSaveToRestaurant(
+      menuContext.menuSakeData
+    );
+  }, [menuManagement, menuContext.menuSakeData]);
+
+  // 統合アクション（hook間でデータの受け渡しが必要な部分）をメモ化
+  const actions = useMemo(() => ({
+    addRestaurant,
+    loadSavedMenu,
+    saveToRestaurant,
+  }), [addRestaurant, loadSavedMenu, saveToRestaurant]);
 
   // メニュー入力関連の状態とアクション（MenuContextから取得）
   const inputState = {

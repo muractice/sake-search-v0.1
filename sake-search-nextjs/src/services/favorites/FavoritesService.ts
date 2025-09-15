@@ -34,7 +34,6 @@ export class FavoritesService {
       await this.recCacheRepo.clearByUser(userId);
     } catch (e) {
       // Cache clear failure should not break user operation
-      // eslint-disable-next-line no-console
       console.error('Failed to clear recommendation cache', e);
     }
   }
@@ -45,7 +44,6 @@ export class FavoritesService {
     try {
       await this.recCacheRepo.clearByUser(userId);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Failed to clear recommendation cache', e);
     }
   }
@@ -56,7 +54,6 @@ export class FavoritesService {
       return await this.prefsRepo.get(userId);
     } catch (e) {
       // Keep UI resilient; return null to fallback to default
-      // eslint-disable-next-line no-console
       console.error('Failed to load user preferences', e);
       return null;
     }
@@ -67,7 +64,6 @@ export class FavoritesService {
     try {
       return await this.prefsRepo.updateShowFavorites(userId, show);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Failed to update user preferences', e);
       return null;
     }
