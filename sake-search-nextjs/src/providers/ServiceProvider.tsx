@@ -10,7 +10,6 @@ import { ApiClient } from '@/services/core/ApiClient';
 import { SakeService } from '@/services/SakeService';
 import { RecordService } from '@/services/RecordService';
 import { RestaurantService } from '@/services/RestaurantService';
-import { FavoriteService } from '@/services/FavoriteService';
 import { ComparisonService } from '@/services/ComparisonService';
 import { RecommendationService } from '@/services/RecommendationService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
@@ -19,7 +18,6 @@ interface ServiceContainer {
   sakeService: SakeService;
   recordService: RecordService;
   restaurantService: RestaurantService;
-  favoriteService: FavoriteService;
   comparisonService: ComparisonService;
   recommendationService: RecommendationService;
 }
@@ -51,7 +49,6 @@ export const ServiceProvider = ({
         sakeService: mockServices.sakeService || defaultServices.sakeService,
         recordService: mockServices.recordService || defaultServices.recordService,
         restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
-        favoriteService: mockServices.favoriteService || defaultServices.favoriteService,
         comparisonService: mockServices.comparisonService || defaultServices.comparisonService,
         recommendationService: mockServices.recommendationService || defaultServices.recommendationService,
       };
@@ -106,16 +103,7 @@ export const useRestaurantService = (): RestaurantService => {
   return services.restaurantService;
 };
 
-/**
- * FavoriteServiceにアクセスするためのhook
- */
-export const useFavoriteService = (): FavoriteService => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useFavoriteService must be used within ServiceProvider');
-  }
-  return services.favoriteService;
-};
+// Removed: FavoriteService (hooks use repository-backed useFavorites directly)
 
 /**
  * ComparisonServiceにアクセスするためのhook
@@ -167,7 +155,6 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
     sakeService: new SakeService(apiClient),
     recordService: new RecordService(apiClient),
     restaurantService: new RestaurantService(apiClient, new SupabaseRestaurantRepository()),
-    favoriteService: new FavoriteService(apiClient),
     comparisonService: new ComparisonService(apiClient),
     recommendationService: new RecommendationService(apiClient),
   };
