@@ -99,11 +99,10 @@ export class RestaurantServiceError extends Error {
 
 export class RestaurantService {
   private apiClient: ApiClient;
-  private restaurantRepository?: IRestaurantRepository;
+  private restaurantRepository: IRestaurantRepository;
 
-  constructor(apiClient: ApiClient, restaurantRepository?: IRestaurantRepository) {
+  constructor(apiClient: ApiClient, restaurantRepository: IRestaurantRepository) {
     this.apiClient = apiClient;
-    // Repository は必須運用（未設定時は実行時にエラー）
     this.restaurantRepository = restaurantRepository;
   }
 
@@ -112,9 +111,6 @@ export class RestaurantService {
    */
   async getRestaurants(): Promise<RestaurantMenu[]> {
     try {
-      if (!this.restaurantRepository) {
-        throw new RestaurantServiceError('Repositoryが設定されていません');
-      }
       return await this.restaurantRepository.listForCurrentUser();
     } catch (error) {
       this.handleError('飲食店の取得に失敗しました', error);
@@ -175,7 +171,7 @@ export class RestaurantService {
         throw new RestaurantServiceError('メニューIDが指定されていません');
       }
       return await this.restaurantRepository.getMenuSakeIds(menuId);
-    } catch (error) {
+    } catch {
       // 取得失敗時は空配列を返す
       return [];
     }
@@ -199,12 +195,8 @@ export class RestaurantService {
       const existingSakeIds = await this.getMenuSakes(menuId);
       const newSakeIds = sakes.map(s => s.sake_id);
 
-      // 差分を計算
+      // 差分を計算（削除対象のみ使用）
       const toDelete = existingSakeIds.filter(id => !newSakeIds.includes(id));
-      const toAdd = sakes.filter(s => !existingSakeIds.includes(s.sake_id));
-      const toUpdate = sakes.filter(s => existingSakeIds.includes(s.sake_id));
-
-      // 差分情報（必要に応じて呼び出し側でログ出力）
 
       // 差分処理を実行（Repository経由）
       return await this.restaurantRepository.updateMenuSakes(menuId, sakes, { upsert: true, toDelete });
