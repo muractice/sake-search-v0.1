@@ -140,29 +140,7 @@ export class RestaurantService {
   async createRestaurant(input: RestaurantMenuFormData): Promise<RestaurantCreationResponse> {
     try {
       this.validateRestaurantInput(input);
-
-      const apiResponse = await this.apiClient.post<RestaurantCreationSuccessResponse | RestaurantCreationConflictResponse>('/api/restaurant/menus', input);
-      
-      // ApiResponse構造からdataを取得
-      const response = (apiResponse.data || apiResponse) as RestaurantCreationResponse;
-      
-      // conflictフラグがある場合は特別な処理
-      if (isConflictResponse(response)) {
-        return response;
-      }
-      
-      // 成功レスポンスの場合 - type guardを使用
-      if (isRestaurantMenu(response)) {
-        return response;
-      }
-      
-      // 成功レスポンスでrestaurantプロパティを持つ場合
-      const successResponse = response as RestaurantCreationSuccessResponse;
-      if (successResponse.restaurant) {
-        return successResponse.restaurant;
-      }
-      
-      throw new Error('Unexpected response format');
+      return await this.restaurantRepository.createForCurrentUser(input);
     } catch (error) {
       this.handleError('飲食店の作成に失敗しました', error);
     }
@@ -179,11 +157,8 @@ export class RestaurantService {
         throw new RestaurantServiceError('メニューIDが指定されていません');
       }
 
-      await this.apiClient.delete(`/api/restaurant/menus/${menuId}`);
+      await this.restaurantRepository.delete(menuId);
     } catch (error) {
-      if (error instanceof ApiClientError && error.statusCode === 404) {
-        return;
-      }
       this.handleError('飲食店の削除に失敗しました', error);
     }
   }
@@ -198,9 +173,7 @@ export class RestaurantService {
       }
 
       this.validateMenuSakeInput(input);
-
-      const response = await this.apiClient.post<RestaurantMenuSake>(`/api/restaurant/${menuId}/menus/${input.sake_id}`, input);
-      return response.data;
+      return await this.restaurantRepository.addSakeToMenu(menuId, input);
     } catch (error) {
       this.handleError('メニューへの日本酒追加に失敗しました', error);
     }
@@ -214,13 +187,7 @@ export class RestaurantService {
       if (!menuId) {
         throw new RestaurantServiceError('メニューIDが指定されていません');
       }
-
-      const response = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(
-        `/api/restaurant/menus/list?restaurant_id=${menuId}`
-      );
-      const anyRes = response as unknown as { data?: { menuWithSakes?: RestaurantMenuWithSakes[] }; menuWithSakes?: RestaurantMenuWithSakes[] };
-      const menuWithSakes = anyRes.data?.menuWithSakes ?? anyRes.menuWithSakes ?? [];
-      return menuWithSakes.map(item => item.sake_id).filter((id): id is string => Boolean(id));
+      return await this.restaurantRepository.getMenuSakeIds(menuId);
     } catch (error) {
       // 取得失敗時は空配列を返す
       return [];
@@ -252,16 +219,8 @@ export class RestaurantService {
 
       // 差分情報（必要に応じて呼び出し側でログ出力）
 
-      // 差分処理を実行
-      const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
-        restaurant_menu_id: menuId,
-        sakes,
-        upsert: true,  // UPSERTモードを指定
-        toDelete,      // 削除対象のIDリスト
-        diffMode: true // 差分モードを指定
-      });
-      const anyRes = response as unknown as { data?: { menuSakes?: RestaurantMenuSake[] }; menuSakes?: RestaurantMenuSake[] };
-      return anyRes.data?.menuSakes ?? anyRes.menuSakes ?? [];
+      // 差分処理を実行（Repository経由）
+      return await this.restaurantRepository.updateMenuSakes(menuId, sakes, { upsert: true, toDelete });
     } catch (error) {
       this.handleError('メニューの更新に失敗しました', error);
     }
@@ -279,13 +238,7 @@ export class RestaurantService {
       if (!Array.isArray(sakes) || sakes.length === 0) {
         throw new RestaurantServiceError('日本酒データが必要です');
       }
-
-      const response = await this.apiClient.post<{ menuSakes: RestaurantMenuSake[] }>('/api/restaurant/menus/list', {
-        restaurant_menu_id: menuId,
-        sakes
-      });
-      const anyRes = response as unknown as { data?: { menuSakes?: RestaurantMenuSake[] }; menuSakes?: RestaurantMenuSake[] };
-      return anyRes.data?.menuSakes ?? anyRes.menuSakes ?? [];
+      return await this.restaurantRepository.addMultipleSakesToMenu(menuId, sakes);
     } catch (error) {
       this.handleError('メニューへの日本酒一括追加に失敗しました', error);
     }
@@ -299,9 +252,7 @@ export class RestaurantService {
       if (!menuSakeId) {
         throw new RestaurantServiceError('メニュー日本酒IDが指定されていません');
       }
-
-      const response = await this.apiClient.put<RestaurantMenuSake>(`/api/v1/restaurants/sakes/${menuSakeId}`, input);
-      return response.data;
+      return await this.restaurantRepository.updateMenuSake(menuSakeId, input);
     } catch (error) {
       this.handleError('メニュー日本酒の更新に失敗しました', error);
     }
@@ -315,12 +266,8 @@ export class RestaurantService {
       if (!menuSakeId) {
         throw new RestaurantServiceError('メニュー日本酒IDが指定されていません');
       }
-
-      await this.apiClient.delete(`/api/restaurant/menus/list?id=${menuSakeId}`);
+      await this.restaurantRepository.removeSakeFromMenu(menuSakeId);
     } catch (error) {
-      if (error instanceof ApiClientError && error.statusCode === 404) {
-        return;
-      }
       this.handleError('メニューからの日本酒削除に失敗しました', error);
     }
   }
@@ -333,11 +280,7 @@ export class RestaurantService {
       if (!menuId) {
         throw new RestaurantServiceError('メニューIDが指定されていません');
       }
-
-      const response = await this.apiClient.get<{ menuWithSakes: RestaurantMenuWithSakes[] }>(`/api/restaurant/menus/list?restaurant_id=${menuId}`);
-      const anyRes = response as unknown as { data?: { menuWithSakes?: RestaurantMenuWithSakes[] }; menuWithSakes?: RestaurantMenuWithSakes[] };
-      const menuWithSakes = anyRes.data?.menuWithSakes ?? anyRes.menuWithSakes ?? [];
-      return menuWithSakes;
+      return await this.restaurantRepository.getRestaurantWithSakes(menuId);
     } catch (error) {
       this.handleError('飲食店詳細の取得に失敗しました', error);
     }
@@ -353,12 +296,8 @@ export class RestaurantService {
       if (!recordId) {
         throw new RestaurantServiceError('記録IDが指定されていません');
       }
-
-      await this.apiClient.delete(`/api/restaurant/records?id=${recordId}`);
+      await this.restaurantRepository.deleteRecord(recordId);
     } catch (error) {
-      if (error instanceof ApiClientError && error.statusCode === 404) {
-        return;
-      }
       this.handleError('飲食店記録の削除に失敗しました', error);
     }
   }
@@ -374,9 +313,7 @@ export class RestaurantService {
    */
   async getRecentRecords(limit: number = 10): Promise<RestaurantDrinkingRecordDetail[]> {
     try {
-      const response = await this.apiClient.get<{ records: RestaurantDrinkingRecordDetail[] }>(`/api/restaurant/records?limit=${limit}`);
-      const anyRes = response as unknown as { data?: { records?: RestaurantDrinkingRecordDetail[] }; records?: RestaurantDrinkingRecordDetail[] };
-      return anyRes.data?.records ?? anyRes.records ?? [];
+      return await this.restaurantRepository.getRecentRecords(limit);
     } catch (error) {
       this.handleError('最近の飲食店記録取得に失敗しました', error);
     }
