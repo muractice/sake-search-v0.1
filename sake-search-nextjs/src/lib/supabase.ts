@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { SakeData } from '@/types/sake'
 
@@ -18,14 +18,60 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // cookieベースの認証を使用（Next.js auth-helpers）
-export const supabase = typeof window !== 'undefined' 
-  ? createClientComponentClient() 
-  : createClient(supabaseUrl, supabaseAnonKey)
+export const supabase: SupabaseClient<Database> = typeof window !== 'undefined' 
+  ? createClientComponentClient<Database>() 
+  : createClient<Database>(supabaseUrl, supabaseAnonKey)
 
 // 型定義
 export type Database = {
   public: {
     Tables: {
+      restaurant_menus: {
+        Row: {
+          id: string
+          user_id: string
+          restaurant_name: string
+          registration_date: string
+          location: string | null
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          restaurant_name: string
+          registration_date: string
+          location?: string | null
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['restaurant_menus']['Row']>
+      }
+      restaurant_menu_sakes: {
+        Row: {
+          id: string
+          restaurant_menu_id: string
+          sake_id: string
+          brand_id: number | null
+          is_available: boolean
+          menu_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          restaurant_menu_id: string
+          sake_id: string
+          brand_id?: number | null
+          is_available?: boolean
+          menu_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['restaurant_menu_sakes']['Row']>
+      }
       favorites: {
         Row: {
           id: string
@@ -161,6 +207,51 @@ export type Database = {
           recommendation_reason?: string
           created_at?: string
           expires_at?: string
+        }
+      }
+    }
+    Views: {
+      restaurant_menu_with_sakes: {
+        Row: {
+          restaurant_menu_id: string
+          user_id: string
+          restaurant_name: string
+          registration_date: string
+          location: string | null
+          restaurant_notes: string | null
+          restaurant_created_at: string
+          menu_sake_id: string | null
+          sake_id: string | null
+          brand_id: number | null
+          is_available: boolean | null
+          menu_notes: string | null
+          sake_added_at: string | null
+          sake_name: string | null
+          sake_brewery: string | null
+          sweetness: number | null
+          richness: number | null
+        }
+      }
+      restaurant_drinking_records_detail: {
+        Row: {
+          record_id: string
+          user_id: string
+          date: string
+          rating: number
+          memo: string | null
+          price_paid: number | null
+          glass_ml: number | null
+          record_created_at: string
+          restaurant_name: string
+          location: string | null
+          sake_id: string
+          brand_id: number | null
+          is_available: boolean
+          menu_notes: string | null
+          sake_name: string | null
+          sake_brewery: string | null
+          sweetness: number | null
+          richness: number | null
         }
       }
     }

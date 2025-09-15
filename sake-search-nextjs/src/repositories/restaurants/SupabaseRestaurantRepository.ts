@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase, type Database } from '@/lib/supabase';
 import {
   RestaurantMenu,
   RestaurantMenuFormData,
@@ -11,28 +11,10 @@ import {
 } from '@/types/restaurant';
 import { IRestaurantRepository } from './RestaurantRepository';
 
-// DB Row 型の最小定義（Supabase Database 型未整備テーブル分）
-interface RestaurantMenusRow {
-  id: string;
-  user_id: string;
-  restaurant_name: string;
-  registration_date: string;
-  location: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-interface RestaurantMenuSakesRow {
-  id: string;
-  restaurant_menu_id: string;
-  sake_id: string;
-  brand_id: number | null;
-  is_available: boolean;
-  menu_notes: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type RestaurantMenusRow = Database['public']['Tables']['restaurant_menus']['Row'];
+type RestaurantMenuSakesRow = Database['public']['Tables']['restaurant_menu_sakes']['Row'];
+type RestaurantMenuWithSakesViewRow = Database['public']['Views']['restaurant_menu_with_sakes']['Row'];
+type RecordsDetailViewRow = Database['public']['Views']['restaurant_drinking_records_detail']['Row'];
 
 export class SupabaseRestaurantRepository implements IRestaurantRepository {
   // DB Row 型（Database 型に未定義のためローカルで厳密化）
@@ -279,7 +261,27 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .select('*')
       .eq('restaurant_menu_id', menuId);
     if (error) throw error;
-    return (data ?? []) as RestaurantMenuWithSakes[];
+    const rows = (data ?? []) as RestaurantMenuWithSakesViewRow[];
+    // Row -> domain 型に軽く合わせる（null を undefined に）
+    return rows.map((r) => ({
+      restaurant_menu_id: r.restaurant_menu_id,
+      user_id: r.user_id,
+      restaurant_name: r.restaurant_name,
+      registration_date: r.registration_date,
+      location: r.location ?? undefined,
+      restaurant_notes: r.restaurant_notes ?? undefined,
+      restaurant_created_at: r.restaurant_created_at,
+      menu_sake_id: r.menu_sake_id ?? undefined,
+      sake_id: r.sake_id ?? undefined,
+      brand_id: r.brand_id ?? undefined,
+      is_available: r.is_available ?? undefined,
+      menu_notes: r.menu_notes ?? undefined,
+      sake_added_at: r.sake_added_at ?? undefined,
+      sake_name: r.sake_name ?? undefined,
+      sake_brewery: r.sake_brewery ?? undefined,
+      sweetness: r.sweetness ?? undefined,
+      richness: r.richness ?? undefined,
+    }));
   }
 
   async getRecentRecords(limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
@@ -296,7 +298,27 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       .order('record_created_at', { ascending: false })
       .limit(limit ?? 10);
     if (error) throw error;
-    return (data ?? []) as RestaurantDrinkingRecordDetail[];
+    const rows = (data ?? []) as RecordsDetailViewRow[];
+    return rows.map((r) => ({
+      record_id: r.record_id,
+      user_id: r.user_id,
+      date: r.date,
+      rating: r.rating,
+      memo: r.memo ?? undefined,
+      price_paid: r.price_paid ?? undefined,
+      glass_ml: r.glass_ml ?? undefined,
+      record_created_at: r.record_created_at,
+      restaurant_name: r.restaurant_name,
+      location: r.location ?? undefined,
+      sake_id: r.sake_id,
+      brand_id: r.brand_id ?? undefined,
+      is_available: r.is_available,
+      menu_notes: r.menu_notes ?? undefined,
+      sake_name: r.sake_name ?? undefined,
+      sake_brewery: r.sake_brewery ?? undefined,
+      sweetness: r.sweetness ?? undefined,
+      richness: r.richness ?? undefined,
+    }));
   }
 
   async deleteRecord(recordId: string): Promise<void> {
