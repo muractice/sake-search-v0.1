@@ -57,11 +57,11 @@ export const RestaurantRecords = () => {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <div className="text-6xl mb-4">🍽️</div>
-        <h2 className="text-xl font-bold mb-2">飲食店記録がありません</h2>
-        <p className="text-gray-700 mb-4">
+        <h2 className="text-xl font-bold mb-2 text-gray-900">飲食店記録がありません</h2>
+        <p className="text-gray-800 mb-4 font-medium">
           飲食店でお酒を飲んだ記録を残してみましょう
         </p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-700 font-medium">
           「飲食店」タブでメニューを登録し、<br />
           実際に飲んだ記録を追加できます
         </p>
@@ -89,34 +89,34 @@ export const RestaurantRecords = () => {
     <div className="space-y-6">
       {/* 統計サマリー */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold flex items-center mb-4">
+        <h2 className="text-xl font-bold flex items-center mb-4 text-gray-900">
           <span className="mr-2">📊</span>
           飲食店記録サマリー
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{totalRecords}</div>
-            <div className="text-sm text-gray-700">総記録数</div>
+            <div className="text-sm text-gray-800 font-medium">総記録数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{uniqueRestaurants}</div>
-            <div className="text-sm text-gray-700">訪問店舗数</div>
+            <div className="text-sm text-gray-800 font-medium">訪問店舗数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{uniqueSakes}</div>
-            <div className="text-sm text-gray-700">飲んだ銘柄数</div>
+            <div className="text-sm text-gray-800 font-medium">飲んだ銘柄数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600">
               {averageRating.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-700">平均評価</div>
+            <div className="text-sm text-gray-800 font-medium">平均評価</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">
               ¥{totalSpent.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-700">総支払額</div>
+            <div className="text-sm text-gray-800 font-medium">総支払額</div>
           </div>
         </div>
       </div>
@@ -126,11 +126,11 @@ export const RestaurantRecords = () => {
         {Object.entries(groupedRecords).map(([restaurant, restaurantRecords]) => (
           <div key={restaurant} className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold flex items-center">
+              <h3 className="text-lg font-bold flex items-center text-gray-900">
                 <span className="mr-2">📍</span>
                 {restaurant}
               </h3>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-700 font-medium">
                 {restaurantRecords.length}件の記録
               </span>
             </div>
@@ -144,7 +144,7 @@ export const RestaurantRecords = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-gray-700 font-medium">
                           {record.date}
                         </span>
                         <div className="flex">
@@ -160,21 +160,21 @@ export const RestaurantRecords = () => {
                           ))}
                         </div>
                         {record.price_paid && (
-                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                          <span className="px-2 py-1 bg-green-100 text-green-900 text-xs rounded-full font-medium">
                             ¥{record.price_paid.toLocaleString()}
                           </span>
                         )}
                       </div>
-                      <h4 className="font-semibold text-lg mb-1">
+                      <h4 className="font-semibold text-lg mb-1 text-gray-900">
                         {record.sake_name || record.sake_id}
                       </h4>
                       {record.sake_brewery && (
-                        <p className="text-sm text-gray-700 mb-2">
+                        <p className="text-sm text-gray-800 mb-2 font-medium">
                           {record.sake_brewery}
                         </p>
                       )}
                       {record.memo && (
-                        <p className="text-sm text-gray-800 bg-white rounded p-2">
+                        <p className="text-sm text-gray-900 bg-white rounded p-2 font-medium">
                           💭 {record.memo}
                         </p>
                       )}

@@ -74,11 +74,11 @@ export const RecordsTab = () => {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <div className="text-6xl mb-4">📝</div>
-        <h2 className="text-xl font-bold mb-2">まだ記録がありません</h2>
-        <p className="text-gray-700 mb-4">
+        <h2 className="text-xl font-bold mb-2 text-gray-900">まだ記録がありません</h2>
+        <p className="text-gray-800 mb-4 font-medium">
           日本酒を検索して、飲んだ記録を残してみましょう
         </p>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-700 font-medium">
           「日本酒を調べる」タブから日本酒を検索し、<br />
           詳細画面で「記録する」ボタンを押して記録を作成できます
         </p>
@@ -179,7 +179,7 @@ export const RecordsTab = () => {
         {/* 統計サマリー（日本酒記録の場合のみ） */}
         {recordType === 'sake' && (
           <div>
-            <h2 className="text-xl font-bold flex items-center mb-4">
+            <h2 className="text-xl font-bold flex items-center mb-4 text-gray-900">
               <span className="mr-2">📊</span>
               日本酒記録サマリー
             </h2>
@@ -207,7 +207,7 @@ export const RecordsTab = () => {
       {recordType === 'sake' && viewMode === 'timeline' ? (
         /* 日本酒記録タイムライン表示 */
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-bold mb-4 flex items-center">
+          <h2 className="text-xl font-bold mb-4 flex items-center text-gray-900">
             <span className="mr-2">🍶</span>
             日本酒記録
           </h2>
@@ -220,7 +220,7 @@ export const RecordsTab = () => {
 
               return (
                 <div key={month}>
-                  <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-200">
                     {monthLabel} ({monthRecords.length}件)
                   </h3>
                   <div className="space-y-3">
@@ -232,7 +232,7 @@ export const RecordsTab = () => {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-gray-700 font-medium">
                                 {record.date}
                               </span>
                               <div className="flex">
@@ -248,21 +248,21 @@ export const RecordsTab = () => {
                                 ))}
                               </div>
                               {record.sakePrefecture && (
-                                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                <span className="px-2 py-1 bg-blue-100 text-blue-900 text-xs rounded-full font-medium">
                                   {record.sakePrefecture}
                                 </span>
                               )}
                             </div>
-                            <h4 className="font-semibold text-lg mb-1">
+                            <h4 className="font-semibold text-lg mb-1 text-gray-900">
                               {record.sakeName}
                             </h4>
                             {record.sakeBrewery && (
-                              <p className="text-sm text-gray-700 mb-2">
+                              <p className="text-sm text-gray-800 mb-2 font-medium">
                                 {record.sakeBrewery}
                               </p>
                             )}
                             {record.memo && (
-                              <p className="text-sm text-gray-800 bg-white rounded p-2">
+                              <p className="text-sm text-gray-900 bg-white rounded p-2 font-medium">
                                 {record.memo}
                               </p>
                             )}
