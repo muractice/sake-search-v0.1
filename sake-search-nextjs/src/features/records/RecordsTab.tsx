@@ -75,10 +75,10 @@ export const RecordsTab = () => {
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <div className="text-6xl mb-4">📝</div>
         <h2 className="text-xl font-bold mb-2">まだ記録がありません</h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-700 mb-4">
           日本酒を検索して、飲んだ記録を残してみましょう
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-600">
           「日本酒を調べる」タブから日本酒を検索し、<br />
           詳細画面で「記録する」ボタンを押して記録を作成できます
         </p>
@@ -104,7 +104,7 @@ export const RecordsTab = () => {
                 className={`px-6 py-2 rounded-md transition-colors ${
                   recordType === 'sake' 
                     ? 'bg-blue-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
                 🍶 日本酒記録
@@ -114,7 +114,7 @@ export const RecordsTab = () => {
                 className={`px-6 py-2 rounded-md transition-colors ${
                   recordType === 'restaurant' 
                     ? 'bg-green-600 text-white' 
-                    : 'text-gray-600 hover:text-gray-800'
+                    : 'text-gray-700 hover:text-gray-900'
                 }`}
               >
                 🍽️ 飲食店管理
@@ -131,7 +131,7 @@ export const RecordsTab = () => {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     viewMode === 'map' 
                       ? 'bg-blue-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   🗾 マップ
@@ -141,7 +141,7 @@ export const RecordsTab = () => {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     viewMode === 'timeline' 
                       ? 'bg-blue-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   📝 タイムライン
@@ -156,7 +156,7 @@ export const RecordsTab = () => {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     viewMode === 'management' 
                       ? 'bg-green-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   🍽️ 飲食店管理
@@ -166,7 +166,7 @@ export const RecordsTab = () => {
                   className={`px-4 py-2 rounded-md transition-colors ${
                     viewMode === 'timeline' 
                       ? 'bg-green-600 text-white' 
-                      : 'text-gray-600 hover:text-gray-800'
+                      : 'text-gray-700 hover:text-gray-900'
                   }`}
                 >
                   📝 記録一覧
@@ -186,17 +186,17 @@ export const RecordsTab = () => {
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">{totalRecords}</div>
-                <div className="text-sm text-gray-600">総記録数</div>
+                <div className="text-sm text-gray-700">総記録数</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">{uniqueSakes}</div>
-                <div className="text-sm text-gray-600">銘柄数</div>
+                <div className="text-sm text-gray-700">銘柄数</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-yellow-600">
                   {averageRating.toFixed(1)}
                 </div>
-                <div className="text-sm text-gray-600">平均評価</div>
+                <div className="text-sm text-gray-700">平均評価</div>
               </div>
             </div>
           </div>
@@ -220,7 +220,7 @@ export const RecordsTab = () => {
 
               return (
                 <div key={month}>
-                  <h3 className="font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
                     {monthLabel} ({monthRecords.length}件)
                   </h3>
                   <div className="space-y-3">
@@ -232,7 +232,7 @@ export const RecordsTab = () => {
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-gray-600">
                                 {record.date}
                               </span>
                               <div className="flex">
@@ -240,7 +240,7 @@ export const RecordsTab = () => {
                                   <span
                                     key={i}
                                     className={`text-lg ${
-                                      i < record.rating ? 'text-yellow-400' : 'text-gray-300'
+                                      i < record.rating ? 'text-yellow-400' : 'text-gray-400'
                                     }`}
                                   >
                                     ★
@@ -257,12 +257,12 @@ export const RecordsTab = () => {
                               {record.sakeName}
                             </h4>
                             {record.sakeBrewery && (
-                              <p className="text-sm text-gray-600 mb-2">
+                              <p className="text-sm text-gray-700 mb-2">
                                 {record.sakeBrewery}
                               </p>
                             )}
                             {record.memo && (
-                              <p className="text-sm text-gray-700 bg-white rounded p-2">
+                              <p className="text-sm text-gray-800 bg-white rounded p-2">
                                 {record.memo}
                               </p>
                             )}

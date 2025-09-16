@@ -58,10 +58,10 @@ export const RestaurantRecords = () => {
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
         <div className="text-6xl mb-4">🍽️</div>
         <h2 className="text-xl font-bold mb-2">飲食店記録がありません</h2>
-        <p className="text-gray-600 mb-4">
+        <p className="text-gray-700 mb-4">
           飲食店でお酒を飲んだ記録を残してみましょう
         </p>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-600">
           「飲食店」タブでメニューを登録し、<br />
           実際に飲んだ記録を追加できます
         </p>
@@ -96,27 +96,27 @@ export const RestaurantRecords = () => {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{totalRecords}</div>
-            <div className="text-sm text-gray-600">総記録数</div>
+            <div className="text-sm text-gray-700">総記録数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-blue-600">{uniqueRestaurants}</div>
-            <div className="text-sm text-gray-600">訪問店舗数</div>
+            <div className="text-sm text-gray-700">訪問店舗数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-purple-600">{uniqueSakes}</div>
-            <div className="text-sm text-gray-600">飲んだ銘柄数</div>
+            <div className="text-sm text-gray-700">飲んだ銘柄数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-yellow-600">
               {averageRating.toFixed(1)}
             </div>
-            <div className="text-sm text-gray-600">平均評価</div>
+            <div className="text-sm text-gray-700">平均評価</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">
               ¥{totalSpent.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-600">総支払額</div>
+            <div className="text-sm text-gray-700">総支払額</div>
           </div>
         </div>
       </div>
@@ -130,7 +130,7 @@ export const RestaurantRecords = () => {
                 <span className="mr-2">📍</span>
                 {restaurant}
               </h3>
-              <span className="text-sm text-gray-500">
+              <span className="text-sm text-gray-600">
                 {restaurantRecords.length}件の記録
               </span>
             </div>
@@ -144,7 +144,7 @@ export const RestaurantRecords = () => {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-gray-600">
                           {record.date}
                         </span>
                         <div className="flex">
@@ -152,7 +152,7 @@ export const RestaurantRecords = () => {
                             <span
                               key={i}
                               className={`text-lg ${
-                                i < record.rating ? 'text-yellow-400' : 'text-gray-300'
+                                i < record.rating ? 'text-yellow-400' : 'text-gray-400'
                               }`}
                             >
                               ★
@@ -169,12 +169,12 @@ export const RestaurantRecords = () => {
                         {record.sake_name || record.sake_id}
                       </h4>
                       {record.sake_brewery && (
-                        <p className="text-sm text-gray-600 mb-2">
+                        <p className="text-sm text-gray-700 mb-2">
                           {record.sake_brewery}
                         </p>
                       )}
                       {record.memo && (
-                        <p className="text-sm text-gray-700 bg-white rounded p-2">
+                        <p className="text-sm text-gray-800 bg-white rounded p-2">
                           💭 {record.memo}
                         </p>
                       )}
