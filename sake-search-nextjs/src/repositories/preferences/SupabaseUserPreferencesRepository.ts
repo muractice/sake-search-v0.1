@@ -1,10 +1,17 @@
 import { supabase, type Database } from '@/lib/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { IUserPreferencesRepository } from './UserPreferencesRepository';
 import { UserPreferences } from '@/types/preferences';
 
 export class SupabaseUserPreferencesRepository implements IUserPreferencesRepository {
+  private readonly client: SupabaseClient<Database>;
+
+  constructor(client?: SupabaseClient<Database>) {
+    this.client = client ?? (supabase as SupabaseClient<Database>);
+  }
+
   async get(userId: string): Promise<UserPreferences | null> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('user_preferences')
       .select('user_id,show_favorites,updated_at')
       .eq('user_id', userId)
@@ -28,7 +35,7 @@ export class SupabaseUserPreferencesRepository implements IUserPreferencesReposi
 
   async updateShowFavorites(userId: string, show: boolean): Promise<UserPreferences> {
     const now = new Date().toISOString();
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('user_preferences')
       .upsert({
         user_id: userId,

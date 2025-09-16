@@ -3,6 +3,8 @@ import { SakeData } from '@/types/sake';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
+import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
+import { addFavoriteAction, removeFavoriteAction, updateShowFavoritesAction } from '@/app/actions/favorites';
 import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 export const useFavorites = () => {
@@ -11,33 +13,34 @@ export const useFavorites = () => {
   const [showFavorites, setShowFavorites] = useState(true);
   const { user, isLoading: authLoading, signInWithEmail, signUpWithEmail, signOut } = useAuthContext();
 
-  const repos = useMemo(() => ({
-    repo: new SupabaseFavoritesRepository(),
-    recCacheRepo: new SupabaseRecommendationCacheRepository(),
-    prefsRepo: new SupabaseUserPreferencesRepository(),
-  }), []);
+  const service = useMemo(() => {
+    const repo = new SupabaseFavoritesRepository();
+    const recCacheRepo = new SupabaseRecommendationCacheRepository();
+    const prefsRepo = new SupabaseUserPreferencesRepository();
+    return new FavoritesAppService(repo, recCacheRepo, prefsRepo);
+  }, []);
   // お気に入りを読み込む
   const loadFavorites = useCallback(async (userId: string) => {
     try {
-      const items = await repos.repo.list(userId);
+      const items = await service.list(userId);
       const sakeDataList = items.map(item => item.sakeData as SakeData);
       setFavorites(sakeDataList);
     } catch (error) {
       console.error('Error loading favorites:', error);
     }
-  }, [repos.repo]);
+  }, [service]);
 
   // ユーザー設定を読み込む
   const loadPreferences = useCallback(async (userId: string) => {
     try {
-      const prefs = await repos.prefsRepo.get(userId);
+      const prefs = await service.getPreferences(userId);
       if (prefs) {
         setShowFavorites(prefs.showFavorites);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
     }
-  }, [repos.prefsRepo]);
+  }, [service]);
 
   // AuthContext の user 変化で favorites/preferences を同期
   useEffect(() => {
@@ -77,12 +80,7 @@ export const useFavorites = () => {
     setFavorites(prev => [sake, ...prev]);
 
     try {
-      await repos.repo.add(user.id, sake);
-      try {
-        await repos.recCacheRepo.clearByUser(user.id);
-      } catch {
-        // ignore cache clear error
-      }
+      await addFavoriteAction(user.id, sake);
     } catch (error) {
       console.error('Error adding favorite:', error);
       
@@ -109,12 +107,7 @@ export const useFavorites = () => {
     setFavorites(prev => prev.filter(sake => sake.id !== sakeId));
 
     try {
-      await repos.repo.remove(user.id, sakeId);
-      try {
-        await repos.recCacheRepo.clearByUser(user.id);
-      } catch {
-        // ignore cache clear error
-      }
+      await removeFavoriteAction(user.id, sakeId);
     } catch (error) {
       console.error('Error removing favorite:', error);
       
@@ -135,7 +128,7 @@ export const useFavorites = () => {
     setShowFavorites(newValue);
     if (user) {
       try {
-        await repos.prefsRepo.updateShowFavorites(user.id, newValue);
+        await updateShowFavoritesAction(user.id, newValue);
       } catch (error) {
         console.error('Error updating preferences:', error);
       }

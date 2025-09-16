@@ -359,3 +359,9 @@ export class FavoriteService {
     throw new FavoriteServiceError(message, error);
   }
 }
+/**
+ * NOTE:
+ * この ApiClient ベースの FavoriteService は単体テストでのみ使用されています。
+ * 本番アプリのUIは repository + Server Actions/FavoritesAppService 経由に移行済みです。
+ * 将来的に不要になった段階で削除可能です。
+ */

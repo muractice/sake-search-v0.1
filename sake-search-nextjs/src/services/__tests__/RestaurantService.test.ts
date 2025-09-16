@@ -191,7 +191,6 @@ class MockRestaurantRepository implements IRestaurantRepository {
 }
 
 describe('RestaurantService', () => {
-  let mockApiClient: MockApiClient;
   let mockRepo: MockRestaurantRepository;
   let restaurantService: RestaurantService;
 
@@ -248,7 +247,6 @@ describe('RestaurantService', () => {
   };
 
   beforeEach(() => {
-    mockApiClient = new MockApiClient();
     mockRepo = new MockRestaurantRepository();
     restaurantService = new RestaurantService(mockRepo as IRestaurantRepository);
   });

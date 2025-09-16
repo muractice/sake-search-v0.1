@@ -4,7 +4,7 @@
  */
 
 import { SakeData } from '@/types/sake';
-import { ApiClient, ApiClientError } from './core/ApiClient';
+import { ApiClient } from './core/ApiClient';
 import { mapToServiceError } from './core/errorMapping';
 
 export interface RecommendationResult {

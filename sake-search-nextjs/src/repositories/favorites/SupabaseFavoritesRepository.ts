@@ -1,11 +1,18 @@
 import { supabase, type Database } from '@/lib/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { FavoriteItem } from '@/types/favorites';
 import { SakeData } from '@/types/sake';
 import { IFavoritesRepository } from './FavoritesRepository';
 
 export class SupabaseFavoritesRepository implements IFavoritesRepository {
+  private readonly client: SupabaseClient<Database>;
+
+  constructor(client?: SupabaseClient<Database>) {
+    this.client = client ?? (supabase as SupabaseClient<Database>);
+  }
+
   async list(userId: string): Promise<FavoriteItem[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('favorites')
       .select('sake_id,sake_data,created_at')
       .eq('user_id', userId)
@@ -23,7 +30,7 @@ export class SupabaseFavoritesRepository implements IFavoritesRepository {
   }
   
   async add(userId: string, sake: SakeData): Promise<void> {
-    const { error } = await supabase
+    const { error } = await this.client
       .from('favorites')
       .insert({
         user_id: userId,
@@ -34,7 +41,7 @@ export class SupabaseFavoritesRepository implements IFavoritesRepository {
   }
 
   async remove(userId: string, sakeId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await this.client
       .from('favorites')
       .delete()
       .eq('user_id', userId)
