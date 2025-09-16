@@ -137,7 +137,7 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
 
   return {
     recordService: new RecordService(apiClient),
-    restaurantService: new RestaurantService(apiClient, new SupabaseRestaurantRepository()),
+    restaurantService: new RestaurantService(new SupabaseRestaurantRepository()),
     comparisonService: new ComparisonService(apiClient),
     recommendationService: new RecommendationService(apiClient),
   };

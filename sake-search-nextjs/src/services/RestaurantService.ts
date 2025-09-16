@@ -13,7 +13,6 @@ import {
   RestaurantCreationResponse
 } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
-import { ApiClient } from './core/ApiClient';
 import { mapToServiceError } from './core/errorMapping';
 import { IRestaurantRepository } from '@/repositories/restaurants/RestaurantRepository';
 
@@ -99,11 +98,9 @@ export class RestaurantServiceError extends Error {
 }
 
 export class RestaurantService {
-  private apiClient: ApiClient;
   private restaurantRepository: IRestaurantRepository;
 
-  constructor(apiClient: ApiClient, restaurantRepository: IRestaurantRepository) {
-    this.apiClient = apiClient;
+  constructor(restaurantRepository: IRestaurantRepository) {
     this.restaurantRepository = restaurantRepository;
   }
 

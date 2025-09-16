@@ -250,7 +250,7 @@ describe('RestaurantService', () => {
   beforeEach(() => {
     mockApiClient = new MockApiClient();
     mockRepo = new MockRestaurantRepository();
-    restaurantService = new RestaurantService(mockApiClient, mockRepo as IRestaurantRepository);
+    restaurantService = new RestaurantService(mockRepo as IRestaurantRepository);
   });
 
   describe('getRestaurants', () => {
