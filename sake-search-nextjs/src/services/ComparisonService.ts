@@ -5,6 +5,7 @@
 
 import { SakeData } from '@/types/sake';
 import { ApiClient, ApiClientError } from './core/ApiClient';
+import { mapToServiceError } from './core/errorMapping';
 
 export interface ComparisonSession {
   id: string;
@@ -282,29 +283,15 @@ export class ComparisonService {
    * プライベートメソッド: エラーハンドリング
    */
   private handleError(message: string, error: unknown): never {
-    if (error instanceof ComparisonServiceError) {
-      throw error;
-    }
-
-    if (error instanceof ApiClientError) {
-      switch (error.statusCode) {
-        case 400:
-          throw new ComparisonServiceError('入力データが無効です');
-        case 401:
-          throw new ComparisonServiceError('ログインが必要です');
-        case 403:
-          throw new ComparisonServiceError('この操作の権限がありません');
-        case 404:
-          throw new ComparisonServiceError('データが見つかりません');
-        case 429:
-          throw new ComparisonServiceError('リクエストが多すぎます。しばらく待ってから再試行してください');
-        case 500:
-          throw new ComparisonServiceError('サーバーエラーが発生しました。時間をおいて再試行してください');
-        default:
-          throw new ComparisonServiceError(`${message} (${error.statusCode})`);
-      }
-    }
-
-    throw new ComparisonServiceError(message, error);
+    const mapped = mapToServiceError(error, ComparisonServiceError, {
+      defaultMessage: message,
+      invalidInputMessage: '入力データが無効です',
+      unauthorizedMessage: 'ログインが必要です',
+      forbiddenMessage: 'この操作の権限がありません',
+      notFoundMessage: 'データが見つかりません',
+      tooManyRequestsMessage: 'リクエストが多すぎます。しばらく待ってから再試行してください',
+      serverErrorMessage: 'サーバーエラーが発生しました。時間をおいて再試行してください',
+    });
+    throw mapped;
   }
 }
