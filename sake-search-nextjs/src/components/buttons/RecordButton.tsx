@@ -55,7 +55,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
   if (showForm) {
     return (
       <div className={`bg-white rounded-lg shadow-md p-4 ${className}`}>
-        <h3 className="font-bold mb-3 flex items-center">
+        <h3 className="font-bold mb-3 flex items-center text-gray-900">
           <span className="mr-2">📝</span>
           飲酒記録を作成
         </h3>
@@ -63,7 +63,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
         <div className="space-y-3">
           {/* 日付選択 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               飲んだ日
             </label>
             <input
@@ -77,7 +77,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
 
           {/* 評価 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               評価
             </label>
             <div className="flex gap-2">
@@ -92,13 +92,13 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
                   ★
                 </button>
               ))}
-              <span className="ml-2 text-gray-600">{rating}点</span>
+              <span className="ml-2 text-gray-800 font-medium">{rating}点</span>
             </div>
           </div>
 
           {/* メモ */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               メモ（任意）
             </label>
             <textarea
@@ -109,7 +109,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
               maxLength={500}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <p className="text-xs text-gray-500 mt-1">{memo.length}/500文字</p>
+            <p className="text-xs text-gray-800 font-medium mt-1">{memo.length}/500文字</p>
           </div>
 
           {/* ボタン */}
@@ -124,7 +124,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
             <button
               onClick={() => setShowForm(false)}
               disabled={isSubmitting}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400"
             >
               キャンセル
             </button>
@@ -134,12 +134,12 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
         {/* 過去の記録がある場合は表示 */}
         {hasRecord && (
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-800 font-medium">
               この日本酒は過去に{existingRecords.length}回記録しています
             </p>
             <div className="mt-2 space-y-1">
               {existingRecords.slice(0, 3).map((record) => (
-                <div key={record.id} className="text-xs text-gray-500">
+                <div key={record.id} className="text-xs text-gray-800 font-medium">
                   {record.date} - ★{record.rating}
                   {record.memo && ` - ${record.memo.substring(0, 20)}...`}
                 </div>

@@ -104,8 +104,8 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
     <div className="relative">
       {/* タイトルと達成度 */}
       <div className="mb-4">
-        <h3 className="text-lg font-bold mb-2">飲んだことのある日本酒マップ</h3>
-        <div className="text-sm text-gray-600">
+        <h3 className="text-lg font-bold mb-2 text-gray-900">飲んだことのある日本酒マップ</h3>
+        <div className="text-sm text-gray-800 font-medium">
           達成度：{conqueredCount} / 47 ({conquestRate}%)
         </div>
       </div>
@@ -157,7 +157,7 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
       <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* 銘柄ごとのランキング */}
         <div>
-          <h4 className="text-sm font-bold mb-2 text-gray-700">都道府県ごとのランキング</h4>
+          <h4 className="text-sm font-bold mb-2 text-gray-900">都道府県ごとのランキング</h4>
           <div className="space-y-1">
             {Object.entries(prefectureStats)
               .filter(([, count]) => count > 0)
@@ -168,7 +168,7 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
                   <span className="w-6 h-6 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs">
                     {index + 1}
                   </span>
-                  <span className="flex-1">{name}</span>
+                  <span className="flex-1 text-gray-800 font-medium">{name}</span>
                   <div className="flex items-center gap-1">
                     <div 
                       className="h-2 bg-green-500 rounded" 
@@ -176,39 +176,39 @@ export const JapanMapJS = ({ prefectureStats }: JapanMapJSProps) => {
                         width: `${Math.max((count / Math.max(...Object.values(prefectureStats))) * 100, 10)}px` 
                       }}
                     />
-                    <span className="text-gray-600 font-medium">{count}銘柄</span>
+                    <span className="text-gray-800 font-medium">{count}銘柄</span>
                   </div>
                 </div>
               ))}
           </div>
           {Object.keys(prefectureStats).filter(p => prefectureStats[p] > 0).length === 0 && (
-            <p className="text-sm text-gray-500">まだ記録がありません</p>
+            <p className="text-sm text-gray-800 font-medium">まだ記録がありません</p>
           )}
         </div>
 
         {/* 凡例 */}
         <div>
-          <h4 className="text-sm font-bold mb-2 text-gray-700">凡例</h4>
-          <div className="space-y-1 text-sm">
+          <h4 className="text-sm font-bold mb-2 text-gray-900">凡例</h4>
+          <div className="space-y-1 text-sm text-gray-800 font-medium">
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#e5e7eb' }}></div>
-              <span>未記録</span>
+              <span className="text-gray-800 font-medium">未記録</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#4ade80' }}></div>
-              <span>1-2銘柄</span>
+              <span className="text-gray-800 font-medium">1-2銘柄</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#22c55e' }}></div>
-              <span>3-4銘柄</span>
+              <span className="text-gray-800 font-medium">3-4銘柄</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#16a34a' }}></div>
-              <span>5-9銘柄</span>
+              <span className="text-gray-800 font-medium">5-9銘柄</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded" style={{ backgroundColor: '#15803d' }}></div>
-              <span>10銘柄以上</span>
+              <span className="text-gray-800 font-medium">10銘柄以上</span>
             </div>
           </div>
         </div>

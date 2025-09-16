@@ -223,7 +223,7 @@ export const MenuManagement = ({
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-bold mb-4">🍽️ メニュー管理</h2>
         <div className="text-center py-8">
-          <p className="text-gray-600 mb-4">メニュー管理機能を利用するにはログインが必要です</p>
+          <p className="text-gray-800 font-medium mb-4">メニュー管理機能を利用するにはログインが必要です</p>
           <button
             onClick={() => window.location.href = '/'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -261,7 +261,7 @@ export const MenuManagement = ({
         {/* 飲食店選択 */}
         {restaurants.length > 0 && (
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
               メニューを選択:
             </label>
             <div className="flex gap-2">
@@ -304,7 +304,7 @@ export const MenuManagement = ({
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
             <h3 className="font-bold mb-3">📝 スキャン結果からメニューに追加</h3>
             <div className="space-y-3">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-800 font-medium">
                 {restaurantMenuSakeData.length}件の日本酒を「{currentRestaurant?.restaurant_name}」のメニューに追加できます
               </div>
               <button
@@ -326,7 +326,7 @@ export const MenuManagement = ({
             </h3>
             
             {Object.keys(groupedMenuItems).length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
+              <p className="text-gray-800 font-medium text-center py-8">
                 メニューに日本酒が登録されていません
               </p>
             ) : (
@@ -343,7 +343,7 @@ export const MenuManagement = ({
             )}
           </div>
         ) : (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-gray-800 font-medium text-center py-8">
             メニューを選択または追加してください
           </p>
         )}
@@ -390,7 +390,7 @@ const RestaurantForm = ({
           required
         />
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-900 mb-1">
             登録日 *
           </label>
           <input
@@ -426,7 +426,7 @@ const RestaurantForm = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+          className="px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400"
         >
           キャンセル
         </button>
@@ -453,16 +453,16 @@ const MenuSakeCard = ({
       item.is_available ? 'bg-white' : 'bg-gray-100'
     } border`}>
       <div className="flex-1">
-        <div className="font-medium">{displayName}</div>
-        <div className="text-sm text-gray-600">{displayBrewery}</div>
+        <div className="font-medium text-gray-900">{displayName}</div>
+        <div className="text-sm text-gray-800 font-medium">{displayBrewery}</div>
         {(item.sweetness !== undefined || item.richness !== undefined) && (
-          <div className="flex gap-2 mt-1 text-xs text-gray-500">
+          <div className="flex gap-2 mt-1 text-xs text-gray-800 font-medium">
             {item.sweetness !== undefined && <span>甘辛: {item.sweetness.toFixed(1)}</span>}
             {item.richness !== undefined && <span>濃淡: {item.richness.toFixed(1)}</span>}
           </div>
         )}
         {item.menu_notes && (
-          <div className="text-sm text-gray-500 mt-1">💭 {item.menu_notes}</div>
+          <div className="text-sm text-gray-800 font-medium mt-1">💭 {item.menu_notes}</div>
         )}
       </div>
       <div className="flex gap-2 items-center">
@@ -473,7 +473,7 @@ const MenuSakeCard = ({
             onChange={(e) => onToggleAvailability(item.menu_sake_id!, e.target.checked)}
             className="rounded"
           />
-          <span className="text-sm">提供中</span>
+          <span className="text-sm text-gray-800 font-medium">提供中</span>
         </label>
         <button
           onClick={() => onRemove(item.menu_sake_id!, displayName)}
