@@ -221,7 +221,7 @@ export const MenuManagement = ({
   if (!user) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-xl font-bold mb-4">🍽️ メニュー管理</h2>
+        <h2 className="text-xl font-bold mb-4 text-gray-900">🍽️ メニュー管理</h2>
         <div className="text-center py-8">
           <p className="text-gray-800 font-medium mb-4">メニュー管理機能を利用するにはログインが必要です</p>
           <button
@@ -240,7 +240,7 @@ export const MenuManagement = ({
       {/* メニュー管理メインセクション */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">🍽️ メニュー管理</h2>
+          <h2 className="text-xl font-bold text-gray-900">🍽️ メニュー管理</h2>
           <button
             onClick={() => setShowAddRestaurantForm(!showAddRestaurantForm)}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -268,9 +268,9 @@ export const MenuManagement = ({
               <select
                 value={selectedRestaurant}
                 onChange={(e) => setSelectedRestaurant(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
-                <option value="">メニューを選択</option>
+                <option value="" className="text-gray-900">メニューを選択</option>
                 {restaurants.map((restaurant) => {
                   const displayInfo: MenuDisplayInfo = {
                     name: restaurant.restaurant_name,
@@ -280,7 +280,7 @@ export const MenuManagement = ({
                     createdAt: restaurant.created_at
                   };
                   return (
-                    <option key={restaurant.id} value={restaurant.id}>
+                    <option key={restaurant.id} value={restaurant.id} className="text-gray-900">
                       {formatMenuOptionLabel(displayInfo)}
                     </option>
                   );
@@ -302,7 +302,7 @@ export const MenuManagement = ({
         {/* スキャン結果からの一括追加 */}
         {restaurantMenuSakeData.length > 0 && selectedRestaurant && (
           <div className="bg-blue-50 rounded-lg p-4 mb-6">
-            <h3 className="font-bold mb-3">📝 スキャン結果からメニューに追加</h3>
+            <h3 className="font-bold mb-3 text-gray-900">📝 スキャン結果からメニューに追加</h3>
             <div className="space-y-3">
               <div className="text-sm text-gray-800 font-medium">
                 {restaurantMenuSakeData.length}件の日本酒を「{currentRestaurant?.restaurant_name}」のメニューに追加できます
@@ -321,7 +321,7 @@ export const MenuManagement = ({
         {/* メニュー一覧 */}
         {selectedRestaurant ? (
           <div>
-            <h3 className="font-bold text-lg mb-4">
+            <h3 className="font-bold text-lg mb-4 text-gray-900">
               📍 {currentRestaurant?.restaurant_name} のメニュー
             </h3>
             

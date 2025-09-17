@@ -71,7 +71,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
               value={date}
               onChange={(e) => setDate(e.target.value)}
               max={new Date().toISOString().split('T')[0]}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             />
           </div>
 
@@ -107,7 +107,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
               placeholder="味の感想、飲んだ場所など..."
               rows={3}
               maxLength={500}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-700"
             />
             <p className="text-xs text-gray-800 font-medium mt-1">{memo.length}/500文字</p>
           </div>
