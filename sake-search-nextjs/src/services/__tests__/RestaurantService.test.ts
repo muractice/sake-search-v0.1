@@ -17,6 +17,7 @@ import {
 // import { SakeData } from '@/types/sake';
 
 // ApiClientのモック（RecordService.test.tsから流用・拡張）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class MockApiClient extends ApiClient {
   private mockResponses: Map<string, unknown> = new Map();
   private shouldThrowError = false;

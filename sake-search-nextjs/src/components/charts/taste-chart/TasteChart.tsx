@@ -145,8 +145,10 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
           // タッチデバイスの場合のみ、2秒後にtooltipを自動的に閉じる
           if (isTouchDevice && chart.tooltip) {
             setTimeout(() => {
-              chart.tooltip.setActiveElements([], { x: 0, y: 0 });
-              chart.update();
+              if (chart.tooltip) {
+                chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                chart.update();
+              }
             }, 2000);
           }
         }
