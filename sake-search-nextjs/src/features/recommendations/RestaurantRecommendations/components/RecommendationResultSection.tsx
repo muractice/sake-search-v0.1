@@ -29,7 +29,7 @@ export const RecommendationResultSection = ({
 
   return (
     <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-      <h3 className="font-semibold mb-3">
+      <h3 className="font-semibold mb-3 text-gray-900">
         {recommendationType === 'similarity' && '🎯 あなたの好みに近い順'}
         {recommendationType === 'pairing' && '🍴 料理とのペアリング'}
       </h3>
@@ -50,7 +50,7 @@ export const RecommendationResultSection = ({
         {isLoadingRecommendations ? (
           <div className="text-center py-4">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="mt-2 text-gray-600">レコメンドを生成中...</p>
+            <p className="mt-2 text-gray-800 font-medium">レコメンドを生成中...</p>
           </div>
         ) : requiresMoreFavorites ? (
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
@@ -71,7 +71,7 @@ export const RecommendationResultSection = ({
             isInComparison={isInComparison}
           />
         ) : (
-          <p className="text-center text-gray-500 py-4">
+          <p className="text-center text-gray-800 font-medium py-4">
             レコメンドを表示するには、上のボタンから選択してください
           </p>
         )}

@@ -20,7 +20,7 @@ export const RecommendationTypeSelector = ({
         className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
           recommendationType === 'similarity' && showRecommendations
             ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
         }`}
       >
         🎯 お気に入りに近い順
@@ -30,7 +30,7 @@ export const RecommendationTypeSelector = ({
         className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
           recommendationType === 'pairing' && showRecommendations
             ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
         }`}
       >
         🍴 料理に合わせる
@@ -40,7 +40,7 @@ export const RecommendationTypeSelector = ({
         className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
           recommendationType === 'random' && showRecommendations
             ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : 'bg-gray-100 text-gray-900 hover:bg-gray-200'
         }`}
       >
         🎲 おすすめガチャ

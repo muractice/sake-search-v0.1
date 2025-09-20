@@ -111,11 +111,17 @@ export const useMenuRegistration = () => {
           !managementState.loadingMenu &&
           isSubscribed) {
         
-        console.log('リロード時の自動メニュー復元:', managementState.selectedSavedMenu);
-        console.log('現在のmenuSakeData:', inputState.menuSakeData);
-        console.log('loadingMenu:', managementState.loadingMenu);
-        // 既存のloadSavedMenuアクションを呼び出して完全復元
-        await actions.loadSavedMenu(managementState.selectedSavedMenu);
+        // 選択されたメニューの情報を取得
+        const selectedMenu = managementState.groupedSavedMenusData[managementState.selectedSavedMenu];
+        
+        // 0件のメニューの場合はロードしない（無限ループ防止）
+        if (selectedMenu && selectedMenu.count > 0) {
+          console.log('リロード時の自動メニュー復元:', managementState.selectedSavedMenu);
+          console.log('現在のmenuSakeData:', inputState.menuSakeData);
+          console.log('loadingMenu:', managementState.loadingMenu);
+          // 既存のloadSavedMenuアクションを呼び出して完全復元
+          await actions.loadSavedMenu(managementState.selectedSavedMenu);
+        }
       }
     };
     
@@ -125,7 +131,7 @@ export const useMenuRegistration = () => {
     return () => {
       isSubscribed = false;
     };
-  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.selectedSavedMenu]);
+  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.selectedSavedMenu, managementState.groupedSavedMenusData]);
 
   return {
     // 状態（分離を維持）

@@ -22,7 +22,7 @@ export const GachaResult = ({
         <div className="text-center">
           <p className="text-2xl font-bold text-yellow-600">{selectedGachaItem.sake.name}</p>
           <p className="text-lg text-gray-800 mt-2">{selectedGachaItem.sake.brewery}</p>
-          <p className="text-sm text-gray-700 mt-3">{selectedGachaItem.reason}</p>
+          <p className="text-sm text-gray-800 font-medium mt-3">{selectedGachaItem.reason}</p>
           <button
             onClick={() => {
               if (!isInComparison(selectedGachaItem.sake.id)) {

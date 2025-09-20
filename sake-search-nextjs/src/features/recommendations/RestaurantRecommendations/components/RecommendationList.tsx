@@ -19,10 +19,10 @@ export const RecommendationList = ({
       {recommendations.map((rec, index) => (
         <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg">
           <div className="flex items-center gap-3">
-            <span className="text-lg font-bold text-gray-700">#{index + 1}</span>
+            <span className="text-lg font-bold text-gray-900">#{index + 1}</span>
             <div>
               <p className="font-semibold text-gray-900">{rec.sake.name}</p>
-              <p className="text-xs text-gray-700">{rec.sake.brewery}</p>
+              <p className="text-xs text-gray-800 font-medium">{rec.sake.brewery}</p>
               <p className="text-sm text-gray-800 mt-1">
                 {rec.reason}
                 {rec.similarityScore && ` (マッチ度: ${Math.round(rec.similarityScore * 100)}%)`}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -44,6 +44,7 @@ interface TasteChartProps {
 
 export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClearSake }: TasteChartProps) {
   const chartRef = useRef<ChartJS<'scatter'>>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // デバッグ: ブラウザのコンソールでwindow.debugSakeDataで確認可能にする
   debugSakeData(sakeData);
@@ -57,6 +58,30 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
       onRemoveSake(sake);
     }
   };
+
+  // チャート外クリックでtooltipを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chartRef.current && containerRef.current) {
+        const canvas = chartRef.current.canvas;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        
+        // クリック位置がチャート内かどうか判定
+        if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+          // チャート外の場合はtooltipを閉じる
+          chartRef.current.tooltip?.setActiveElements([], { x: 0, y: 0 });
+          chartRef.current.update();
+        }
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
 
   const data = {
     datasets: [createChartDataset(validSakeData)],
@@ -77,7 +102,13 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
           size: 14
         },
         padding: 15,
-        cornerRadius: 8
+        cornerRadius: 8,
+        // モバイルでの操作性向上
+        events: ['click', 'touchstart', 'touchmove'],
+        // tooltipを早めに非表示にする
+        animation: {
+          duration: 200
+        }
       },
       datalabels: createDataLabelsConfig()
     },
@@ -94,6 +125,9 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
       },
     },
     onClick: (_event: ChartEvent, elements: ActiveElement[], chart: ChartJS) => {
+      // タッチデバイスかどうかを判定
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      
       if (elements.length > 0) {
         const index = elements[0].index;
         const sake = validSakeData[index];
@@ -107,6 +141,20 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
           }, 150);
           
           onSakeClick(sake);
+          
+          // タッチデバイスの場合のみ、2秒後にtooltipを自動的に閉じる
+          if (isTouchDevice && chart.tooltip) {
+            setTimeout(() => {
+              chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+              chart.update();
+            }, 2000);
+          }
+        }
+      } else {
+        // 背景クリック時（要素以外）はtooltipを即座に閉じる
+        if (chart.tooltip) {
+          chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+          chart.update();
         }
       }
     },
@@ -114,7 +162,7 @@ export default function TasteChart({ sakeData, onSakeClick, onRemoveSake, onClea
 
   return (
     <div className="relative">
-      <div className="h-96 md:h-[500px]">
+      <div ref={containerRef} className="h-96 md:h-[500px]">
         <Scatter 
           ref={chartRef}
           data={data} 

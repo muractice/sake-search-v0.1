@@ -120,7 +120,14 @@ export const MenuManagementSection = ({
       // 既存メニューを選択した場合
       actions.setSelectedSavedMenu(newValue);
       actions.setSelectedRestaurant(newValue);
-      await actions.onLoadSavedMenu(newValue);
+      
+      // 選択したメニューの情報を取得
+      const selectedMenu = state.groupedSavedMenus[newValue];
+      // 0件のメニューの場合はロードしない（無限ループ防止）
+      if (selectedMenu && selectedMenu.count > 0) {
+        await actions.onLoadSavedMenu(newValue);
+      }
+      
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -268,7 +275,10 @@ export const MenuManagementSection = ({
                     const firstMenu = menuValues[0];
                     actions.setSelectedSavedMenu(firstMenu.restaurant_menu_id);
                     actions.setSelectedRestaurant(firstMenu.restaurant_menu_id);
-                    actions.onLoadSavedMenu(firstMenu.restaurant_menu_id);
+                    // 0件のメニューの場合はロードしない
+                    if (firstMenu.count > 0) {
+                      actions.onLoadSavedMenu(firstMenu.restaurant_menu_id);
+                    }
                   }
                   setNewRestaurantName('');
                   setNewRestaurantLocation('');
