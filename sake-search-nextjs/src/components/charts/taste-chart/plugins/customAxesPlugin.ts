@@ -69,19 +69,19 @@ export const customAxesPlugin = {
     const quadrant1Y = chartArea.top + (centerY - chartArea.top) * 0.3;
     ctx.fillStyle = 'rgba(236, 72, 153, 0.6)';
     ctx.fillText('甘・濃醇', quadrant1X, quadrant1Y);
-    
+
     // 第2象限 (左上): 辛口・濃醇
     const quadrant2X = chartArea.left + (centerX - chartArea.left) * 0.5;
     const quadrant2Y = chartArea.top + (centerY - chartArea.top) * 0.3;
     ctx.fillStyle = 'rgba(239, 68, 68, 0.6)';
     ctx.fillText('辛・濃醇', quadrant2X, quadrant2Y);
-    
+
     // 第3象限 (左下): 辛口・淡麗
     const quadrant3X = chartArea.left + (centerX - chartArea.left) * 0.5;
     const quadrant3Y = centerY + (chartArea.bottom - centerY) * 0.7;
     ctx.fillStyle = 'rgba(34, 197, 94, 0.6)';
     ctx.fillText('辛・淡麗', quadrant3X, quadrant3Y);
-    
+
     // 第4象限 (右下): 甘口・淡麗
     const quadrant4X = centerX + (chartArea.right - centerX) * 0.5;
     const quadrant4Y = centerY + (chartArea.bottom - centerY) * 0.7;
@@ -94,8 +94,8 @@ export const customAxesPlugin = {
     
     // 横軸ラベル（チャートの中、横軸の下）
     const horizontalLabelY = centerY + 15;
-    ctx.fillText('甘', chartArea.left + 30, horizontalLabelY);
-    ctx.fillText('辛', chartArea.right - 30, horizontalLabelY);
+    ctx.fillText('辛', chartArea.left + 30, horizontalLabelY);
+    ctx.fillText('甘', chartArea.right - 30, horizontalLabelY);
     
     // 縦軸ラベル
     ctx.fillText('濃醇', centerX, chartArea.top - 20);
