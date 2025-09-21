@@ -117,7 +117,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 bg-blue-800 text-white rounded-lg hover:bg-blue-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-800 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-900 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               {isSubmitting ? '保存中...' : '保存'}
             </button>
@@ -154,7 +154,7 @@ export const RecordButton = ({ sake, className = '' }: RecordButtonProps) => {
   return (
     <button
       onClick={() => setShowForm(true)}
-      className={`px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 ${className}`}
+      className={`px-4 py-2 bg-gradient-to-r from-blue-800 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-900 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 flex items-center justify-center gap-2 ${className}`}
     >
       <span>📝</span>
       飲んだ

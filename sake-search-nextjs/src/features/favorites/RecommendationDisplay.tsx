@@ -7,6 +7,8 @@ import { RecommendOptions } from '@/types/preference';
 import { SakeData } from '@/types/sake';
 
 interface RecommendationDisplayProps {
+  userId?: string;
+  favorites?: SakeData[];
   onSelectSake?: (sake: SakeData) => void;
   onAddToComparison?: (sake: SakeData) => void;
   isInComparison?: (sakeId: string) => boolean;
@@ -33,12 +35,14 @@ const typeColors = {
 };
 
 export const RecommendationDisplay = ({
+  userId,
+  favorites,
   onSelectSake,
   onAddToComparison,
   isInComparison,
   className = ''
 }: RecommendationDisplayProps) => {
-  const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendationsFromFavorite();
+  const { recommendations, loading, error, refresh, getByMood, hasRecommendations } = useRecommendationsFromFavorite({ userId, favorites });
   const [selectedMood, setSelectedMood] = useState<RecommendOptions['mood']>('usual');
   const [isActivated, setIsActivated] = useState(false);
 

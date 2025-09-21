@@ -21,8 +21,15 @@ interface FavoritesContextType {
 
 const FavoritesContext = createContext<FavoritesContextType | undefined>(undefined);
 
-export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
-  const favoritesData = useFavorites();
+type FavoritesProviderProps = {
+  children: ReactNode;
+  initialFavorites?: SakeData[];
+  initialShowFavorites?: boolean;
+  initialUserId?: string;
+};
+
+export const FavoritesProvider = ({ children, initialFavorites, initialShowFavorites, initialUserId }: FavoritesProviderProps) => {
+  const favoritesData = useFavorites({ initialFavorites, initialShowFavorites, initialUserId });
 
   return (
     <FavoritesContext.Provider value={favoritesData}>

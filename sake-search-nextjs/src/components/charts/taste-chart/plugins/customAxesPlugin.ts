@@ -92,8 +92,8 @@ export const customAxesPlugin = {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.font = 'bold 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic", sans-serif';
     
-    // 横軸ラベル（チャートの中、横軸の下）
-    const horizontalLabelY = centerY + 15;
+    // 横軸ラベル（横軸の線上に揃える）
+    const horizontalLabelY = centerY;
     ctx.fillText('辛', chartArea.left + 30, horizontalLabelY);
     ctx.fillText('甘', chartArea.right - 30, horizontalLabelY);
     

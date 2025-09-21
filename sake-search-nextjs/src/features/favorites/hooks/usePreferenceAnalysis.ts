@@ -5,10 +5,17 @@ import { supabase } from '@/lib/supabase';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
 import { UserPreference, TasteType } from '@/types/preference';
+import type { SakeData } from '@/types/sake';
 
-export function usePreferenceAnalysis() {
-  const { user } = useFavoritesContext();
-  const { favorites } = useFavoritesContext();
+type Params = {
+  userId?: string;
+  favorites?: SakeData[];
+};
+
+export function usePreferenceAnalysis(params?: Params) {
+  const ctx = useFavoritesContext();
+  const userId = params?.userId ?? ctx.user?.id ?? null;
+  const favorites = params?.favorites ?? ctx.favorites;
   
   const [preference, setPreference] = useState<UserPreference | null>(null);
   const [loading, setLoading] = useState(false);
@@ -31,7 +38,7 @@ export function usePreferenceAnalysis() {
 
   // 既存データのロード専用（24時間縛りなし）
   const loadExistingPreferences = useCallback(async () => {
-    if (!user) return;
+    if (!userId) return;
 
     setLoading(true);
     setError(null);
@@ -41,7 +48,7 @@ export function usePreferenceAnalysis() {
       const { data: existingPreference } = await supabase
         .from('user_taste_preferences')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .single();
 
       // 既存データがあれば表示（24時間縛りなし）
@@ -78,16 +85,16 @@ export function usePreferenceAnalysis() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   // 初回ロード時のみ実行（手動更新メイン）
   useEffect(() => {
-    if (user && favorites.length > 0) {
+    if (userId && favorites.length > 0) {
       loadExistingPreferences();
-    } else if (user && favorites.length === 0) {
+    } else if (userId && favorites.length === 0) {
       setPreference(null);
     }
-  }, [user, favorites.length, loadExistingPreferences]);
+  }, [userId, favorites.length, loadExistingPreferences]);
 
   // TODO: 将来的に自動再分析で使用する関数（24時間縛り付き）
   // const loadOrAnalyzePreferences = async () => {
@@ -142,7 +149,7 @@ export function usePreferenceAnalysis() {
   // };
 
   const analyzePreferences = async () => {
-    if (!user || favorites.length === 0) return;
+    if (!userId || favorites.length === 0) return;
 
     setLoading(true);
     setError(null);
@@ -195,7 +202,7 @@ export function usePreferenceAnalysis() {
 
       const userPref: UserPreference = {
         id: '', // DBで生成される
-        userId: user.id,
+        userId: userId,
         vector,
         tasteType,
         diversityScore,
@@ -207,12 +214,12 @@ export function usePreferenceAnalysis() {
 
       // Supabaseに保存
       console.log('Saving preference data to Supabase...');
-      console.log('User ID:', user.id);
+      console.log('User ID:', userId);
       console.log('Vector:', vector);
       console.log('Taste type:', tasteType);
       
       const saveData = {
-        user_id: user.id,
+        user_id: userId,
         sweetness_preference: vector.sweetness,
         richness_preference: vector.richness,
         f1_preference: vector.f1_floral,
