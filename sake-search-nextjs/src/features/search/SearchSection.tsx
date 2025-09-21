@@ -61,7 +61,7 @@ export default function SearchSection({
           <button
             type="submit"
             disabled={isLoading || !query.trim()}
-            className="px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-base sm:text-lg transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
+            className="px-6 sm:px-8 py-3 bg-gradient-to-r from-blue-800 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-900 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-base sm:text-lg transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
           >
             <span className="flex items-center justify-center gap-2">
               {isLoading ? (
