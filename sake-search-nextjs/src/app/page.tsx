@@ -94,14 +94,14 @@ export default function Home() {
       <FavoritesProvider>
         <div className="min-h-screen bg-gray-50">
         {/* ヘッダー */}
-        <header className="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-600 shadow-lg">
+        <header className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 shadow-lg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
                   酒サーチ
                 </h1>
-                <p className="text-lg text-slate-200">
+                <p className="text-lg text-blue-100">
                   日本酒の味覚を視覚化
                 </p>
               </div>
@@ -162,7 +162,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <p className="text-center text-gray-600">
               &copy; 2025 酒サーチ. All rights reserved. | データ提供:
-              <a href="https://sakenowa.com" target="_blank" rel="noopener noreferrer" className="text-slate-600 hover:text-slate-800 ml-1">
+              <a href="https://sakenowa.com" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-900 ml-1">
                 さけのわ
               </a>
             </p>
