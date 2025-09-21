@@ -38,12 +38,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
     message: ''
   });
 
-  // 初期描画ではSSRのお気に入りを渡し、マウント後はContextの最新状態に委譲
-  const [ssrFavorites, setSsrFavorites] = useState<SakeData[] | undefined>(initialFavorites);
-  useEffect(() => {
-    // マウント後はSSR値を破棄し、Context管理のライブデータに切り替える
-    setSsrFavorites(undefined);
-  }, []);
+  // FavoritesProvider にSSR初期値を注入し、以降はContextを唯一の真実にする
 
   // 検索タブ用の比較リスト
   const {
@@ -106,7 +101,11 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
   return (
     <AuthProvider>
       <MenuProvider>
-        <FavoritesProvider>
+        <FavoritesProvider
+          initialFavorites={initialFavorites}
+          initialShowFavorites={initialShowFavorites}
+          initialUserId={userId}
+        >
           <div className="min-h-screen bg-gray-50">
             {/* ヘッダー */}
             <header className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-lg">
@@ -152,7 +151,6 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
 
               {activeTab === 'favorites' && (
                 <FavoritesTab
-                  favorites={ssrFavorites}
                   userId={userId}
                   onSelectSake={selectSake}
                   onToggleComparison={handleToggleComparison}

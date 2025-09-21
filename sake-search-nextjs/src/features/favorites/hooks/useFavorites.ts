@@ -7,10 +7,16 @@ import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { addFavoriteAction, removeFavoriteAction, updateShowFavoritesAction } from '@/app/actions/favorites';
 import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
-export const useFavorites = () => {
-  const [favorites, setFavorites] = useState<SakeData[]>([]);
-  const [isLoading, setIsLoading] = useState(true); // loading for favorites/preferences
-  const [showFavorites, setShowFavorites] = useState(true);
+type Options = {
+  initialFavorites?: SakeData[];
+  initialShowFavorites?: boolean;
+  initialUserId?: string;
+};
+
+export const useFavorites = (opts: Options = {}) => {
+  const [favorites, setFavorites] = useState<SakeData[]>(opts.initialFavorites ?? []);
+  const [isLoading, setIsLoading] = useState(true); // favorites/preferencesのロード状態
+  const [showFavorites, setShowFavorites] = useState(opts.initialShowFavorites ?? true);
   const { user, isLoading: authLoading, signInWithEmail, signUpWithEmail, signOut } = useAuthContext();
 
   const service = useMemo(() => {
@@ -48,12 +54,16 @@ export const useFavorites = () => {
     const run = async () => {
       setIsLoading(true);
       try {
+        // 認証状態の解決前はSSR初期値を保持し、何もしない
+        if (authLoading) return;
+
         if (user?.id) {
           await Promise.all([
             loadFavorites(user.id),
             loadPreferences(user.id),
           ]);
         } else {
+          // 未ログイン確定時のみクリア
           setFavorites([]);
         }
       } finally {
@@ -62,7 +72,7 @@ export const useFavorites = () => {
     };
     run();
     return () => { cancelled = true; };
-  }, [user?.id, loadFavorites, loadPreferences]);
+  }, [user?.id, authLoading, loadFavorites, loadPreferences]);
 
   // お気に入りに追加
   const addFavorite = async (sake: SakeData) => {
