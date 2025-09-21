@@ -6,10 +6,18 @@ import { usePreferenceAnalysis } from '@/features/favorites/hooks/usePreferenceA
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { RecommendationEngine, SakeRecommendation } from '@/services/recommendationEngine';
 import { RecommendOptions } from '@/types/preference';
+import type { SakeData } from '@/types/sake';
 
-export function useRecommendationsFromFavorite(options?: RecommendOptions) {
-  const { preference, hasEnoughData } = usePreferenceAnalysis();
-  const { user } = useFavoritesContext();
+type Params = {
+  userId?: string;
+  favorites?: SakeData[];
+  options?: RecommendOptions;
+};
+
+export function useRecommendationsFromFavorite(params?: Params) {
+  const ctx = useFavoritesContext();
+  const userId = params?.userId ?? ctx.user?.id;
+  const { preference, hasEnoughData } = usePreferenceAnalysis({ userId, favorites: params?.favorites });
   
   const [recommendations, setRecommendations] = useState<SakeRecommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -21,7 +29,7 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
     includeSimilar: true,
     includeExplore: true,
     includeTrending: true,
-    ...options
+    ...(params?.options || {})
   };
 
   // 自動読み込みを無効化（手動起動のみ）
@@ -33,12 +41,12 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
 
 
   const refreshRecommendations = async () => {
-    if (!preference || !user) return;
+    if (!preference || !userId) return;
 
     setLoading(true);
     try {
       // キャッシュをクリア
-      await clearCachedRecommendations(user.id);
+      await clearCachedRecommendations(userId);
       
       // 新規生成
       const engine = new RecommendationEngine();
@@ -47,7 +55,7 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
         defaultOptions
       );
       
-      await cacheRecommendations(user.id, recs);
+      await cacheRecommendations(userId, recs);
       setRecommendations(recs);
     } catch (err) {
       console.error('Error refreshing recommendations:', err);
@@ -58,7 +66,7 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
   };
 
   const getRecommendationsByMood = async (mood: RecommendOptions['mood']) => {
-    if (!preference || !user) return;
+    if (!preference || !userId) return;
 
     setLoading(true);
     try {
@@ -83,7 +91,7 @@ export function useRecommendationsFromFavorite(options?: RecommendOptions) {
     error,
     refresh: refreshRecommendations,
     getByMood: getRecommendationsByMood,
-    hasRecommendations: !!preference && !!user && hasEnoughData,
+    hasRecommendations: !!preference && !!userId && hasEnoughData,
   };
 }
 
@@ -127,4 +135,3 @@ async function clearCachedRecommendations(userId: string): Promise<void> {
     console.error('Error clearing cached recommendations:', err);
   }
 }
-

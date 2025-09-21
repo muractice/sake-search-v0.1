@@ -8,26 +8,23 @@ import { TasteChartCard } from '@/components/charts/TasteChartCard';
 import { RadarChartCard } from '@/components/charts/RadarChartCard';
 
 interface FavoritesTabProps {
+  favorites?: SakeData[];
+  userId?: string;
   onSelectSake: (sake: SakeData) => void;
   onToggleComparison: (sake: SakeData) => void;
   isInComparison: (sakeId: string) => boolean;
 }
 
 export const FavoritesTab = ({
+  favorites: injectedFavorites,
+  userId,
   onSelectSake,
   onToggleComparison,
   isInComparison,
 }: FavoritesTabProps) => {
-  const { favorites, user } = useFavoritesContext();
-  
-  // ログイン状態確認のログ出力
-  console.log('🌟 FavoritesTab状態:', {
-    isLoggedIn: !!user,
-    userId: user?.id,
-    userEmail: user?.email,
-    favoritesCount: favorites.length,
-    favoritesItems: favorites.map(f => f.name)
-  });
+  const ctx = useFavoritesContext();
+  const favorites = injectedFavorites ?? ctx.favorites;
+  const effectiveUserId = userId ?? ctx.user?.id ?? '';
 
   return (
     <div className="space-y-6">
@@ -50,10 +47,12 @@ export const FavoritesTab = ({
       )}
 
       {/* 好み分析 */}
-      <PreferenceMap />
+      <PreferenceMap userId={effectiveUserId} favorites={favorites} />
 
       {/* レコメンド */}
       <RecommendationDisplay 
+        userId={effectiveUserId}
+        favorites={favorites}
         onSelectSake={onSelectSake}
         onAddToComparison={onToggleComparison}
         isInComparison={isInComparison}

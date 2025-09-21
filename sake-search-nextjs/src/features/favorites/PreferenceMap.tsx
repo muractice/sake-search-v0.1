@@ -17,10 +17,12 @@ import { SakeData } from '@/types/sake';
 
 interface PreferenceMapProps {
   className?: string;
+  userId?: string;
+  favorites?: SakeData[];
 }
 
-export const PreferenceMap = ({ className = '' }: PreferenceMapProps) => {
-  const { preference, loading, error, hasEnoughData, refresh } = usePreferenceAnalysis();
+export const PreferenceMap = ({ className = '', userId, favorites }: PreferenceMapProps) => {
+  const { preference, loading, error, hasEnoughData, refresh } = usePreferenceAnalysis({ userId, favorites });
 
   // PreferenceデータからSakeDataオブジェクトを作成（レーダーチャート用）
   const createSakeDataFromPreference = (): SakeData | null => {
