@@ -85,7 +85,7 @@ export function usePreferenceAnalysis(params?: Params) {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   // 初回ロード時のみ実行（手動更新メイン）
   useEffect(() => {

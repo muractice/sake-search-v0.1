@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { TabNavigation } from '@/components/navigation/TabNavigation';
 import { SearchTab } from '@/features/search/SearchTab';
