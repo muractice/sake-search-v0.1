@@ -1,6 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { SakeData } from '@/types/sake';
 
+// Server ActionsをモックしてESM依存（jose等）の取り込みを回避
+jest.mock('@/app/actions/favorites', () => ({
+  addFavoriteAction: jest.fn().mockResolvedValue(undefined),
+  removeFavoriteAction: jest.fn().mockResolvedValue(undefined),
+  updateShowFavoritesAction: jest.fn().mockResolvedValue(undefined),
+}));
+
 // シンプルなSupabaseモック
 jest.mock('@/lib/supabase', () => ({
   supabase: {

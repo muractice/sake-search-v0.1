@@ -1,6 +1,13 @@
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { SakeData } from '@/types/sake';
 
+// Server ActionsをモックしてESM依存（jose等）の取り込みを回避
+jest.mock('@/app/actions/favorites', () => ({
+  addFavoriteAction: jest.fn().mockResolvedValue(undefined),
+  removeFavoriteAction: jest.fn().mockResolvedValue(undefined),
+  updateShowFavoritesAction: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Supabaseクライアントをモック
 jest.mock('@/lib/supabase', () => ({
   supabase: {
@@ -291,12 +298,18 @@ describe('useFavorites', () => {
 
   describe('エラーハンドリング', () => {
     it('データベースエラー時にUIがロールバックされる', async () => {
-      // エラーを返すモック
-      mockSupabase.from.mockReturnValue({
-        insert: jest.fn().mockResolvedValue({ 
-          error: { message: 'Database error' } 
-        }),
-      });
+      // Server Action 側でエラーを発生させ、楽観的更新のロールバックを検証
+      const actions = await import('@/app/actions/favorites');
+      (actions.addFavoriteAction as unknown as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+
+      // from() チェーンは list/preferences の初期ロードで参照されるため、最低限のメソッドを提供
+      const chain = {
+        select: jest.fn().mockReturnThis(),
+        eq: jest.fn().mockReturnThis(),
+        order: jest.fn().mockResolvedValue({ data: [], error: null }),
+        single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
+      };
+      mockSupabase.from.mockReturnValue(chain as any);
 
       mockSupabase.auth.getSession.mockResolvedValue({
         data: { 
