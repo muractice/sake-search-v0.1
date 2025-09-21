@@ -22,7 +22,7 @@ export default function Home() {
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [dialogState, setDialogState] = useState({
     isOpen: false,
-    title: '酒サーチ',
+    title: '酒えらび',
     message: ''
   });
   
@@ -61,7 +61,7 @@ export default function Home() {
       if (!searchResult) {
         setDialogState({
           isOpen: true,
-          title: '酒サーチ',
+          title: '酒えらび',
           message: '該当する日本酒が見つかりませんでした'
         });
       }
@@ -69,7 +69,7 @@ export default function Home() {
     } catch {
       setDialogState({
         isOpen: true,
-        title: '酒サーチ',
+        title: '酒えらび',
         message: '検索中にエラーが発生しました'
       });
     }
@@ -80,7 +80,7 @@ export default function Home() {
     if (comparisonList.length >= 10 && !isInComparison(sake.id)) {
       setDialogState({
         isOpen: true,
-        title: '酒サーチ',
+        title: '酒えらび',
         message: '比較リストは10件までです。他のアイテムを削除してから追加してください。'
       });
       return;
@@ -99,7 +99,7 @@ export default function Home() {
             <div className="flex justify-between items-start">
               <div>
                 <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">
-                  酒サーチ
+                  酒えらび
                 </h1>
                 <p className="text-lg text-blue-100">
                   日本酒の味覚を視覚化
@@ -161,7 +161,7 @@ export default function Home() {
         <footer className="bg-white border-t border-gray-200 mt-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <p className="text-center text-gray-600">
-              &copy; 2025 酒サーチ. All rights reserved. | データ提供:
+              &copy; 2025 酒えらび. All rights reserved. | データ提供:
               <a href="https://sakenowa.com" target="_blank" rel="noopener noreferrer" className="text-blue-700 hover:text-blue-900 ml-1">
                 さけのわ
               </a>

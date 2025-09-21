@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sake Search - 日本酒検索アプリ",
-  description: "日本酒の検索・記録・レコメンド機能を提供するWebアプリケーション",
+  title: "酒えらび - 日本酒選びをサポート",
+  description: "日本酒の味わいを視覚化し、お気に入りの一本を見つけるお手伝いをするアプリケーション",
 };
 
 export default function RootLayout({

@@ -9,7 +9,7 @@ interface CustomDialogProps {
   onClose: () => void;
 }
 
-export default function CustomDialog({ isOpen, title = '酒サーチ', message, onClose }: CustomDialogProps) {
+export default function CustomDialog({ isOpen, title = '酒えらび', message, onClose }: CustomDialogProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
