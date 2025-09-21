@@ -34,7 +34,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [dialogState, setDialogState] = useState({
     isOpen: false,
-    title: '酒サーチ',
+    title: '酒えらび',
     message: ''
   });
 
@@ -73,14 +73,14 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
       if (!searchResult) {
         setDialogState({
           isOpen: true,
-          title: '酒サーチ',
+          title: '酒えらび',
           message: '該当する日本酒が見つかりませんでした'
         });
       }
     } catch {
       setDialogState({
         isOpen: true,
-        title: '酒サーチ',
+        title: '酒えらび',
         message: '検索中にエラーが発生しました'
       });
     }
@@ -108,11 +108,11 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
         >
           <div className="min-h-screen bg-gray-50">
             {/* ヘッダー */}
-            <header className="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 shadow-lg">
+            <header className="bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 shadow-lg">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">酒サーチ</h1>
+                    <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">酒えらび</h1>
                     <p className="text-lg text-blue-100">日本酒の味覚を視覚化</p>
                   </div>
                   <UserProfile onShowAuth={() => setShowAuthForm(true)} />
@@ -167,7 +167,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
             <footer className="bg-white border-t border-gray-200 mt-12">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <p className="text-center text-gray-600">
-                  &copy; 2025 酒サーチ. All rights reserved. | データ提供:
+                  &copy; 2025 酒えらび. All rights reserved. | データ提供:
                   <a href="https://sakenowa.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 ml-1">さけのわ</a>
                 </p>
               </div>
