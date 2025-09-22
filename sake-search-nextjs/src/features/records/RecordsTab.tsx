@@ -4,13 +4,18 @@ import { useState } from 'react';
 import { useRecords } from '@/features/records/hooks/useRecords';
 import { DrinkingRecord } from '@/types/record';
 import { PrefectureMap } from '@/features/records/PrefectureMap';
-import { MenuManagement } from '@/features/restaurant/MenuManagement';
 import { RestaurantRecords } from '@/features/records/RestaurantRecords';
+import { RestaurantMenuManagementPanel } from '@/features/records/RestaurantMenuManagementPanel';
+import type { RestaurantMenu } from '@/types/restaurant';
 
 type RecordType = 'sake' | 'restaurant';
 type ViewMode = 'timeline' | 'map' | 'management';
 
-export const RecordsTab = () => {
+interface RecordsTabProps {
+  initialRestaurantMenus?: RestaurantMenu[];
+}
+
+export const RecordsTab = ({ initialRestaurantMenus }: RecordsTabProps) => {
   const { records, isLoading, error, deleteRecord } = useRecords();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('sake');
@@ -291,9 +296,8 @@ export const RecordsTab = () => {
         <RestaurantRecords />
       ) : recordType === 'restaurant' && viewMode === 'management' ? (
         /* 飲食店メニュー管理 */
-        <MenuManagement 
-          restaurantMenuSakeData={[]}
-          onMenuUpdate={() => {}}
+        <RestaurantMenuManagementPanel
+          initialRestaurantMenus={initialRestaurantMenus}
         />
       ) : null}
     </div>

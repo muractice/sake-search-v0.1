@@ -166,7 +166,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   ): Promise<RestaurantMenuSake[]> {
     // まず削除対象があれば削除
     if (options?.toDelete && options.toDelete.length > 0) {
-      const { error: deleteError } = await supabase
+      const { error: deleteError } = await this.client
         .from('restaurant_menu_sakes')
         .delete()
         .eq('restaurant_menu_id', menuId)
@@ -230,7 +230,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
     menuSakeId: string,
     input: Partial<RestaurantMenuSakeFormData>
   ): Promise<RestaurantMenuSake> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menu_sakes')
       .update({
         brand_id: input.brand_id ?? null,
