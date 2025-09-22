@@ -105,14 +105,21 @@ export class RestaurantService {
   }
 
   /**
-   * 飲食店一覧を取得（既存の /api/restaurant/menus エンドポイントを使用）
+   * 飲食店メニュー一覧を取得（ユーザーごと）
    */
-  async getRestaurants(): Promise<RestaurantMenu[]> {
+  async getRestaurantMenus(): Promise<RestaurantMenu[]> {
     try {
       return await this.restaurantRepository.listForCurrentUser();
     } catch (error) {
       this.handleError('飲食店の取得に失敗しました', error);
     }
+  }
+
+  /**
+   * @deprecated getRestaurantMenus を使用してください
+   */
+  async getRestaurants(): Promise<RestaurantMenu[]> {
+    return this.getRestaurantMenus();
   }
 
   /**

@@ -1,4 +1,5 @@
 import { supabase, type Database } from '@/lib/supabase';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   RestaurantMenu,
   RestaurantMenuFormData,
@@ -17,6 +18,12 @@ type RestaurantMenuWithSakesViewRow = Database['public']['Views']['restaurant_me
 type RecordsDetailViewRow = Database['public']['Views']['restaurant_drinking_records_detail']['Row'];
 
 export class SupabaseRestaurantRepository implements IRestaurantRepository {
+  private readonly client: SupabaseClient<Database>;
+
+  constructor(client?: SupabaseClient<Database>) {
+    // 既存のクライアント（client component/client key）をデフォルトに、Server Actions/Server Componentsからは注入可能
+    this.client = (client as SupabaseClient<Database>) ?? (supabase as SupabaseClient<Database>);
+  }
   // DB Row 型（Database 型に未定義のためローカルで厳密化）
   private mapMenu = (row: RestaurantMenusRow, sakeCount?: number): RestaurantMenu => ({
     id: row.id,
@@ -31,7 +38,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   });
 
   async listForCurrentUser(): Promise<RestaurantMenu[]> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
@@ -39,7 +46,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
     // N+1 改善: 関連テーブルの集計を同時取得（1往復）
     // restaurant_menu_sakes(count) は FK 関係が定義されている前提
     type WithCountRow = RestaurantMenusRow & { restaurant_menu_sakes?: { count: number }[] };
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menus')
       .select(
         'id,user_id,restaurant_name,registration_date,location,notes,created_at,updated_at,restaurant_menu_sakes(count)'
@@ -56,12 +63,12 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async createForCurrentUser(input: RestaurantMenuFormData): Promise<RestaurantCreationResponse> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menus')
       .insert({
         user_id: auth.user.id,
@@ -94,12 +101,12 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async delete(menuId: string): Promise<void> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
 
-    const { error } = await supabase
+    const { error } = await this.client
       .from('restaurant_menus')
       .delete()
       .eq('id', menuId)
@@ -109,7 +116,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async addSakeToMenu(menuId: string, input: RestaurantMenuSakeFormData): Promise<RestaurantMenuSake> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
@@ -122,7 +129,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       menu_notes: input.menu_notes ?? null,
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menu_sakes')
       .upsert(toUpsert, { onConflict: 'restaurant_menu_id,sake_id' })
       .select()
@@ -143,7 +150,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async getMenuSakeIds(menuId: string): Promise<string[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menu_sakes')
       .select('sake_id')
       .eq('restaurant_menu_id', menuId);
@@ -180,7 +187,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
     }));
 
     const upsert = options?.upsert !== false;
-    const query = supabase.from('restaurant_menu_sakes');
+    const query = this.client.from('restaurant_menu_sakes');
     const { data, error } = upsert
       ? await query.upsert(rows, { onConflict: 'restaurant_menu_id,sake_id' }).select()
       : await query.insert(rows).select();
@@ -211,7 +218,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
       menu_notes: s.menu_notes ?? null,
     }));
 
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menu_sakes')
       .insert(rows)
       .select();
@@ -248,7 +255,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async removeSakeFromMenu(menuSakeId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await this.client
       .from('restaurant_menu_sakes')
       .delete()
       .eq('id', menuSakeId);
@@ -256,7 +263,7 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async getRestaurantWithSakes(menuId: string): Promise<RestaurantMenuWithSakes[]> {
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_menu_with_sakes')
       .select('*')
       .eq('restaurant_menu_id', menuId);
@@ -285,12 +292,12 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async getRecentRecords(limit: number): Promise<RestaurantDrinkingRecordDetail[]> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await this.client
       .from('restaurant_drinking_records_detail')
       .select('*')
       .eq('user_id', auth.user.id)
@@ -322,12 +329,12 @@ export class SupabaseRestaurantRepository implements IRestaurantRepository {
   }
 
   async deleteRecord(recordId: string): Promise<void> {
-    const { data: auth, error: authError } = await supabase.auth.getUser();
+    const { data: auth, error: authError } = await this.client.auth.getUser();
     if (!auth?.user || authError) {
       throw new Error('Authentication required');
     }
 
-    const { error } = await supabase
+    const { error } = await this.client
       .from('restaurant_drinking_records')
       .delete()
       .eq('id', recordId)

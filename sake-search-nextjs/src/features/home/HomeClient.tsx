@@ -17,6 +17,7 @@ import { MenuProvider } from '@/features/menu/contexts/MenuContext';
 import { useComparison } from '@/features/comparison/hooks/useComparison';
 import { useSelection } from '@/features/search/hooks/useSelection';
 import type { SakeData } from '@/types/sake';
+import type { RestaurantMenu } from '@/types/restaurant';
 
 // 初期バンドルを軽量化するため、RestaurantTab を遅延ロード
 const RestaurantTab = dynamic(() => import('@/features/restaurant/RestaurantTab').then(m => m.RestaurantTab), {
@@ -30,9 +31,10 @@ type Props = {
   initialShowFavorites: boolean;
   initialQuery?: string;
   initialSearchResults?: SakeData[];
+  initialRestaurantMenus?: RestaurantMenu[];
 };
 
-export function HomeClient({ userId, initialFavorites, initialShowFavorites, initialSearchResults = [] }: Props) {
+export function HomeClient({ userId, initialFavorites, initialShowFavorites, initialSearchResults = [], initialRestaurantMenus = [] }: Props) {
   const [activeTab, setActiveTab] = useState('search');
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [dialogState, setDialogState] = useState({
@@ -143,6 +145,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
 
               {activeTab === 'restaurant' && (
                 <RestaurantTab
+                  initialRestaurantMenus={initialRestaurantMenus}
                   comparisonList={restaurantComparisonList}
                   onToggleComparison={toggleRestaurantComparison}
                   isInComparison={isInRestaurantComparison}

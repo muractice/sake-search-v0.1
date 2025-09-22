@@ -3,12 +3,28 @@ import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { RestaurantMenu, isConflictResponse, isRestaurantMenu } from '@/types/restaurant';
 import { SakeData } from '@/types/sake';
-import { useRestaurantService } from '@/providers/ServiceProvider';
+import {
+  loadRestaurantMenusAction,
+  createRestaurantAction,
+  getMenuSakesAction,
+  addMultipleSakesToMenuAction,
+  updateMenuSakesAction,
+  getRestaurantWithSakesAction,
+} from '@/app/actions/restaurant';
 
-export const useMenuManagement = () => {
+type InitialGrouped = Record<string, {
+  restaurant_menu_id: string;
+  restaurant_name: string;
+  location?: string;
+  registration_date: string;
+  restaurant_created_at: string;
+  count: number;
+}>;
+
+export const useMenuManagement = (opts?: { initialRestaurantMenus?: import('@/types/restaurant').RestaurantMenu[] }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
-  const [restaurants, setRestaurants] = useState<RestaurantMenu[]>([]);
+  const [restaurants, setRestaurants] = useState<RestaurantMenu[]>(opts?.initialRestaurantMenus ?? []);
   // 初期表示判定用フラグ
   const [hasUserSelected, setHasUserSelected] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
@@ -40,16 +56,23 @@ export const useMenuManagement = () => {
   console.log('lastSavedSakes:', lastSavedSakes);
   console.log('selectedSavedMenu:', selectedSavedMenu);
   console.log('lastSavedSakes.length:', lastSavedSakes.length);
-  const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<Record<string, {
-    restaurant_menu_id: string;
-    restaurant_name: string;
-    location?: string;
-    registration_date: string;
-    restaurant_created_at: string;
-    count: number;
-  }>>({});
+  const [groupedSavedMenusData, setGroupedSavedMenusData] = useState<InitialGrouped>(() => {
+    if (!opts?.initialRestaurantMenus) return {} as InitialGrouped;
+    const grouped: InitialGrouped = {} as InitialGrouped;
+    for (const r of opts.initialRestaurantMenus) {
+      grouped[r.id] = {
+        restaurant_menu_id: r.id,
+        restaurant_name: r.restaurant_name,
+        location: r.location,
+        registration_date: r.registration_date,
+        restaurant_created_at: r.created_at,
+        count: r.sake_count || 0,
+      };
+    }
+    return grouped;
+  });
 
-  const restaurantService = useRestaurantService();
+  // I/OはServer Actions経由
 
   // カスタムセッター関数（ユーザーの選択を記録）
   const updateSelectedSavedMenu = useCallback((menuId: string) => {
@@ -86,7 +109,7 @@ export const useMenuManagement = () => {
   // メニュー一覧を取得
   const fetchRestaurants = useCallback(async () => {
     try {
-      const data = await restaurantService.getRestaurants();
+      const data = await loadRestaurantMenusAction();
       setRestaurants(data || []);
       
       // ユーザーが明示的に選択した場合のみ、選択状態を検証
@@ -102,12 +125,12 @@ export const useMenuManagement = () => {
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
-  }, [restaurantService, selectedRestaurant, hasUserSelected]);
+  }, [selectedRestaurant, hasUserSelected]);
 
   // 保存済みメニュー一覧を取得
   const fetchSavedMenus = useCallback(async () => {
     try {
-      const data = await restaurantService.getRestaurants();
+      const data = await loadRestaurantMenusAction();
       if (!data) return;
 
       const groupedData = data.reduce((acc, restaurant) => {
@@ -126,7 +149,7 @@ export const useMenuManagement = () => {
     } catch (error) {
       console.error('Error fetching saved menus:', error);
     }
-  }, [restaurantService]);
+  }, []);
 
   // 選択状態をSessionStorageに保存
   useEffect(() => {
@@ -144,10 +167,13 @@ export const useMenuManagement = () => {
   // ユーザーがログインしている場合のみ飲食店データを取得
   useEffect(() => {
     if (user) {
-      fetchRestaurants();
-      fetchSavedMenus();
+      // 初期値がないときのみ取得
+      if ((opts?.initialRestaurantMenus?.length ?? 0) === 0) {
+        fetchRestaurants();
+        fetchSavedMenus();
+      }
     }
-  }, [user, fetchRestaurants, fetchSavedMenus]);
+  }, [user, fetchRestaurants, fetchSavedMenus, opts?.initialRestaurantMenus?.length]);
   
   // selectedSavedMenuが存在し、lastSavedSakesが空の場合、DBから現在の状態を取得
   useEffect(() => {
@@ -155,7 +181,7 @@ export const useMenuManagement = () => {
       if (selectedSavedMenu && lastSavedSakes.length === 0 && !loadingMenu) {
         console.log('[useMenuManagement] lastSavedSakesが空なので、DBから取得:', selectedSavedMenu);
         try {
-          const currentSakeIds = await restaurantService.getMenuSakes(selectedSavedMenu);
+          const currentSakeIds = await getMenuSakesAction(selectedSavedMenu);
           console.log('[useMenuManagement] DBから取得したsakeIds:', currentSakeIds);
           setLastSavedSakes(currentSakeIds);
         } catch (error) {
@@ -165,7 +191,7 @@ export const useMenuManagement = () => {
     };
     
     loadSavedState();
-  }, [selectedSavedMenu, lastSavedSakes.length, loadingMenu, restaurantService]);
+  }, [selectedSavedMenu, lastSavedSakes.length, loadingMenu]);
   
 
   // 新しいメニューを追加
@@ -182,7 +208,7 @@ export const useMenuManagement = () => {
         location: newRestaurantLocation.trim() || undefined
       };
       
-      const data = await restaurantService.createRestaurant(restaurantData);
+      const data = await createRestaurantAction(restaurantData);
       
       // conflict（重複）の場合の処理
       if (isConflictResponse(data)) {
@@ -221,7 +247,7 @@ export const useMenuManagement = () => {
               menu_notes: null
             }));
 
-            await restaurantService.addMultipleSakesToMenu(data.id, sakes);
+            await addMultipleSakesToMenuAction(data.id, sakes);
             await fetchSavedMenus();
             // 保存成功後、最後に保存した状態を記録
             setLastSavedSakes(menuSakeData.map(s => s.id));
@@ -245,7 +271,7 @@ export const useMenuManagement = () => {
       }
       return null;
     }
-  }, [restaurantService, restaurants, fetchRestaurants, fetchSavedMenus, updateSelectedSavedMenu]);
+  }, [restaurants, fetchRestaurants, fetchSavedMenus, updateSelectedSavedMenu]);
 
   // 日本酒をメニューに保存/更新
   const handleSaveToRestaurant = useCallback(async (menuSakeData: SakeData[]) => {
@@ -264,7 +290,7 @@ export const useMenuManagement = () => {
       }));
 
       // updateMenuSakes（UPSERT）を使用して重複エラーを回避
-      await restaurantService.updateMenuSakes(selectedRestaurant, sakes);
+      await updateMenuSakesAction(selectedRestaurant, sakes);
       
       // 保存成功後、最後に保存した状態を記録
       setLastSavedSakes(menuSakeData.map(s => s.id));
@@ -277,7 +303,7 @@ export const useMenuManagement = () => {
     } finally {
       setSavingToMenu(false);
     }
-  }, [selectedRestaurant, restaurantService, fetchSavedMenus]);
+  }, [selectedRestaurant, fetchSavedMenus]);
 
   // 保存済みメニューをロード
   const handleLoadSavedMenu = useCallback(async (restaurantMenuId: string, onMenuDataUpdate: (items: string[]) => Promise<void>) => {
@@ -286,7 +312,7 @@ export const useMenuManagement = () => {
     setLoadingMenu(true);
     try {
       // 完全なデータを取得
-      const menuWithSakes = await restaurantService.getRestaurantWithSakes(restaurantMenuId);
+      const menuWithSakes = await getRestaurantWithSakesAction(restaurantMenuId);
       
       // 日本酒名のリストを作成
       const sakeNames: string[] = [];
@@ -303,7 +329,7 @@ export const useMenuManagement = () => {
       updateSelectedSavedMenu(restaurantMenuId);  // カスタムセッターを使用
       
       // 現在のDB状態を記録
-      const currentSakeIds = await restaurantService.getMenuSakes(restaurantMenuId);
+      const currentSakeIds = await getMenuSakesAction(restaurantMenuId);
       setLastSavedSakes(currentSakeIds);
     } catch (error) {
       console.error('Error loading saved menu:', error);
@@ -311,7 +337,7 @@ export const useMenuManagement = () => {
     } finally {
       setLoadingMenu(false);
     }
-  }, [restaurantService, updateSelectedSavedMenu]);
+  }, [updateSelectedSavedMenu]);
 
   // 変更があるかチェック
   const hasChanges = useCallback((currentSakes: SakeData[]): boolean => {

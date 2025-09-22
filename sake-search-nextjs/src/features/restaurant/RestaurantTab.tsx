@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { MenuRegistrationSection } from '@/features/restaurant/MenuRegistrationSection';
 import { RestaurantRecommendations } from '@/features/recommendations/RestaurantRecommendations';
 import { useMenuRegistration } from '@/features/menu/hooks/useMenuRegistration';
+import type { RestaurantMenu } from '@/types/restaurant';
 import { useSelection } from '@/features/search/hooks/useSelection';
 import { SakeData } from '@/types/sake';
 
 interface RestaurantTabProps {
+  initialRestaurantMenus?: RestaurantMenu[];
   comparisonList: SakeData[];
   onToggleComparison: (sake: SakeData) => void;
   isInComparison: (sakeId: string) => boolean;
@@ -18,6 +20,7 @@ interface RestaurantTabProps {
 type SegmentType = 'menu' | 'recommendations';
 
 export const RestaurantTab = ({
+  initialRestaurantMenus,
   comparisonList,
   onToggleComparison,
   isInComparison,
@@ -31,7 +34,7 @@ export const RestaurantTab = ({
     handleChartClick,
   } = useSelection();
   
-  const menuRegistration = useMenuRegistration();
+  const menuRegistration = useMenuRegistration({ initialRestaurantMenus });
 
   return (
     <div className="space-y-6">

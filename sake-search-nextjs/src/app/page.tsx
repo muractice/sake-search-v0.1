@@ -8,6 +8,8 @@ import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/Su
 import { HomeClient } from '@/features/home/HomeClient';
 import { SakeServiceV2 } from '@/services/SakeServiceV2';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
+import { RestaurantService } from '@/services/RestaurantService';
+import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const sb = createServerComponentClient<Database>({ cookies });
@@ -28,6 +30,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   const sp = (await searchParams) ?? {};
   const q = typeof sp.q === 'string' ? sp.q : Array.isArray(sp.q) ? sp.q[0] : '';
   let initialSearchResults: import('@/types/sake').SakeData[] = [];
+  let initialRestaurantMenus: import('@/types/restaurant').RestaurantMenu[] = [];
   if (q && q.trim().length > 0) {
     try {
       const searchService = new SakeServiceV2(new SakenowaSakeRepository());
@@ -38,6 +41,16 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
     }
   }
 
+  // レストランメニュー一覧をRSCで取得（ログイン時）
+  if (userId) {
+    try {
+      const restaurantService = new RestaurantService(new SupabaseRestaurantRepository(sb));
+      initialRestaurantMenus = await restaurantService.getRestaurantMenus();
+    } catch {
+      initialRestaurantMenus = [];
+    }
+  }
+
   return (
     <HomeClient
       userId={userId}
@@ -45,6 +58,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
       initialShowFavorites={prefs?.showFavorites ?? true}
       initialQuery={q}
       initialSearchResults={initialSearchResults}
+      initialRestaurantMenus={initialRestaurantMenus}
     />
   );
 }

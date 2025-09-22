@@ -8,9 +8,9 @@ import { useMenuManagement } from './useMenuManagement';
  * メニュー登録機能の統合フック
  * MenuContextとuseMenuManagementを統合し、相互依存を解決
  */
-export const useMenuRegistration = () => {
+export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/types/restaurant').RestaurantMenu[] }) => {
   const menuContext = useMenuContext();
-  const menuManagement = useMenuManagement();
+  const menuManagement = useMenuManagement({ initialRestaurantMenus: opts?.initialRestaurantMenus });
 
   // 各アクションを安定化
   const addRestaurant = useCallback(
