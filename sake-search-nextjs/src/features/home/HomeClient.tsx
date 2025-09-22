@@ -164,9 +164,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
               )}
 
               {activeTab === 'records' && (
-                <RecordsTab
-                  initialRestaurantMenus={initialRestaurantMenus}
-                />
+                <RecordsTab />
               )}
             </main>
 

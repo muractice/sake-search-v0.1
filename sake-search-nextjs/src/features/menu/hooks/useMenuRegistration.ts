@@ -51,12 +51,18 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
     );
   }, [menuManagement, menuContext.menuSakeData]);
 
+  const deleteRestaurant = useCallback(async (menuId: string): Promise<void> => {
+    await menuManagement.handleDeleteRestaurant(menuId);
+    menuContext.clearMenuData();
+  }, [menuManagement, menuContext]);
+
   // 統合アクション（hook間でデータの受け渡しが必要な部分）をメモ化
   const actions = useMemo(() => ({
     addRestaurant,
     loadSavedMenu,
     saveToRestaurant,
-  }), [addRestaurant, loadSavedMenu, saveToRestaurant]);
+    deleteRestaurant,
+  }), [addRestaurant, loadSavedMenu, saveToRestaurant, deleteRestaurant]);
 
   // メニュー入力関連の状態とアクション（MenuContextから取得）
   const inputState = {
@@ -98,6 +104,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
   const managementActions = {
     setSelectedSavedMenu: menuManagement.setSelectedSavedMenu,
     setSelectedRestaurant: menuManagement.setSelectedRestaurant,
+    onDeleteRestaurant: actions.deleteRestaurant,
   };
 
   // リロード時の初期化処理

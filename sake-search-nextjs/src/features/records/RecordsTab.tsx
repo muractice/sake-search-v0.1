@@ -5,17 +5,11 @@ import { useRecords } from '@/features/records/hooks/useRecords';
 import { DrinkingRecord } from '@/types/record';
 import { PrefectureMap } from '@/features/records/PrefectureMap';
 import { RestaurantRecords } from '@/features/records/RestaurantRecords';
-import { RestaurantMenuManagementPanel } from '@/features/records/RestaurantMenuManagementPanel';
-import type { RestaurantMenu } from '@/types/restaurant';
 
 type RecordType = 'sake' | 'restaurant';
-type ViewMode = 'timeline' | 'map' | 'management';
+type ViewMode = 'timeline' | 'map';
 
-interface RecordsTabProps {
-  initialRestaurantMenus?: RestaurantMenu[];
-}
-
-export const RecordsTab = ({ initialRestaurantMenus }: RecordsTabProps) => {
+export const RecordsTab = () => {
   const { records, isLoading, error, deleteRecord } = useRecords();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [recordType, setRecordType] = useState<RecordType>('sake');
@@ -28,7 +22,7 @@ export const RecordsTab = ({ initialRestaurantMenus }: RecordsTabProps) => {
     if (newRecordType === 'sake') {
       setViewMode('map'); // 日本酒記録は「マップ」がデフォルト
     } else {
-      setViewMode('management'); // 飲食店管理は「メニュー管理」がデフォルト
+      setViewMode('timeline'); // 飲食店記録は一覧表示がデフォルト
     }
   };
 
@@ -155,32 +149,13 @@ export const RecordsTab = ({ initialRestaurantMenus }: RecordsTabProps) => {
             )}
             
             {recordType === 'restaurant' && (
-              <div className="flex rounded-lg bg-gray-100 p-1">
-                <button
-                  onClick={() => setViewMode('management')}
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    viewMode === 'management' 
-                      ? 'bg-green-600 text-white' 
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
-                >
-                  🍽️ 飲食店管理
-                </button>
-                <button
-                  onClick={() => setViewMode('timeline')}
-                  className={`px-4 py-2 rounded-md transition-colors ${
-                    viewMode === 'timeline' 
-                      ? 'bg-green-600 text-white' 
-                      : 'text-gray-700 hover:text-gray-900'
-                  }`}
-                >
-                  📝 記録一覧
-                </button>
+              <div className="px-4 py-2 text-sm text-gray-600 font-medium bg-gray-100 rounded-md">
+                🍽️ 飲食店記録は一覧表示のみ利用できます
               </div>
             )}
           </div>
         </div>
-        
+
         {/* 統計サマリー（日本酒記録の場合のみ） */}
         {recordType === 'sake' && (
           <div>
@@ -291,14 +266,9 @@ export const RecordsTab = ({ initialRestaurantMenus }: RecordsTabProps) => {
       ) : recordType === 'sake' && viewMode === 'map' ? (
         /* 日本酒記録マップ表示 */
         <PrefectureMap />
-      ) : recordType === 'restaurant' && viewMode === 'timeline' ? (
+      ) : recordType === 'restaurant' ? (
         /* 飲食店記録一覧表示 */
         <RestaurantRecords />
-      ) : recordType === 'restaurant' && viewMode === 'management' ? (
-        /* 飲食店メニュー管理 */
-        <RestaurantMenuManagementPanel
-          initialRestaurantMenus={initialRestaurantMenus}
-        />
       ) : null}
     </div>
   );

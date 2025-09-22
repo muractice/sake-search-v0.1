@@ -64,6 +64,7 @@ export const MenuRegistrationSection = ({
           onSaveToRestaurant: menuRegistration.actions.saveToRestaurant,
           onAddRestaurant: menuRegistration.actions.addRestaurant,
           onLoadSavedMenu: menuRegistration.actions.loadSavedMenu,
+          onDeleteRestaurant: menuRegistration.managementActions.onDeleteRestaurant,
           onMenuItemsChange: menuRegistration.inputActions.handleMenuItemsChange,
         }}
       />

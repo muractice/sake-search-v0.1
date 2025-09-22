@@ -38,6 +38,7 @@ interface MenuManagementActions {
   onAddRestaurant: (name: string, location: string, registrationDate: string) => Promise<void>;
   onLoadSavedMenu: (menuId: string) => Promise<void>;
   onMenuItemsChange: (items: string[]) => void;
+  onDeleteRestaurant?: (menuId: string) => Promise<void>;
 }
 
 interface MenuManagementSectionProps {
@@ -59,6 +60,7 @@ export const MenuManagementSection = ({
     const today = new Date();
     return today.toISOString().split('T')[0];
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleAddRestaurant = async () => {
     if (!newRestaurantName.trim()) {
@@ -74,6 +76,31 @@ export const MenuManagementSection = ({
       setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error adding restaurant:', error);
+    }
+  };
+
+  const handleDeleteSelectedMenu = async () => {
+    if (!state.selectedSavedMenu || !actions.onDeleteRestaurant) return;
+
+    const selectedMenu = state.groupedSavedMenus[state.selectedSavedMenu];
+    const label = selectedMenu?.restaurant_name ?? '選択中のメニュー';
+
+    const confirmed = confirm(`「${label}」のメニューを削除しますか？\n\nこの操作は取り消せません。`);
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await actions.onDeleteRestaurant(state.selectedSavedMenu);
+      setNewRestaurantName('');
+      setNewRestaurantLocation('');
+      const today = new Date();
+      setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
+      alert('メニューを削除しました');
+    } catch (error) {
+      console.error('Error deleting restaurant:', error);
+      alert('メニューの削除に失敗しました');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -229,8 +256,20 @@ export const MenuManagementSection = ({
               メニューを読み込み中...
             </div>
           )}
+          {state.selectedSavedMenu && actions.onDeleteRestaurant && (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleDeleteSelectedMenu}
+                disabled={isDeleting || state.loadingMenu || state.savingToMenu}
+                className="px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? '削除中...' : '🗑 メニューを削除'}
+              </button>
+            </div>
+          )}
         </div>
-        
+
         {/* 新しいメニューが選択されている時にフォームを表示 */}
         {!state.selectedSavedMenu && (
           <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">

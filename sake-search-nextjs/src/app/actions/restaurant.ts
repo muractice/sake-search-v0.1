@@ -64,3 +64,8 @@ export async function getRestaurantWithSakesAction(
   const restaurantService = createRestaurantService();
   return restaurantService.getRestaurantWithSakes(menuId);
 }
+
+export async function deleteRestaurantAction(menuId: string): Promise<void> {
+  const restaurantService = createRestaurantService();
+  return restaurantService.deleteRestaurant(menuId);
+}

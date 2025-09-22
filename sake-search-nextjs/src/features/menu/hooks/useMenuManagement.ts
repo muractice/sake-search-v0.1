@@ -10,6 +10,7 @@ import {
   addMultipleSakesToMenuAction,
   updateMenuSakesAction,
   getRestaurantWithSakesAction,
+  deleteRestaurantAction,
 } from '@/app/actions/restaurant';
 
 type InitialGrouped = Record<string, {
@@ -339,6 +340,31 @@ export const useMenuManagement = (opts?: { initialRestaurantMenus?: import('@/ty
     }
   }, [updateSelectedSavedMenu]);
 
+  const clearSelectionState = useCallback(() => {
+    setSelectedRestaurant('');
+    setSelectedSavedMenu('');
+    setHasUserSelected(false);
+    setLastSavedSakes([]);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('selectedRestaurant');
+      sessionStorage.removeItem('selectedSavedMenu');
+      sessionStorage.removeItem('hasUserSelected');
+    }
+  }, []);
+
+  const handleDeleteRestaurant = useCallback(async (restaurantMenuId: string) => {
+    if (!restaurantMenuId) return;
+    try {
+      await deleteRestaurantAction(restaurantMenuId);
+      clearSelectionState();
+      await fetchRestaurants();
+      await fetchSavedMenus();
+    } catch (error) {
+      console.error('Error deleting restaurant:', error);
+      throw error;
+    }
+  }, [clearSelectionState, fetchRestaurants, fetchSavedMenus]);
+
   // 変更があるかチェック
   const hasChanges = useCallback((currentSakes: SakeData[]): boolean => {
     console.log('=== hasChanges デバッグ ===');
@@ -388,6 +414,7 @@ export const useMenuManagement = (opts?: { initialRestaurantMenus?: import('@/ty
     handleAddRestaurant,
     handleSaveToRestaurant,
     handleLoadSavedMenu,
+    handleDeleteRestaurant,
     hasChanges
   };
 };
