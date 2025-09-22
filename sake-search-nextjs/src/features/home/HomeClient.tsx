@@ -15,7 +15,6 @@ import { FavoritesProvider } from '@/features/favorites/contexts/FavoritesContex
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { MenuProvider } from '@/features/menu/contexts/MenuContext';
 import { useComparison } from '@/features/comparison/hooks/useComparison';
-import { useSearch } from '@/features/search/hooks/useSearch';
 import { useSelection } from '@/features/search/hooks/useSelection';
 import type { SakeData } from '@/types/sake';
 

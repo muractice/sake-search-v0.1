@@ -13,7 +13,7 @@ jest.mock('@/app/actions/favorites', () => ({
 // Mock Server Action
 const mockSearch = jest.fn();
 jest.mock('@/app/actions/search', () => ({
-  searchSakesAction: (...args: any[]) => mockSearch(...args),
+  searchSakesAction: (...args: unknown[]) => mockSearch(...args),
 }));
 
 // Mock next/navigation router
