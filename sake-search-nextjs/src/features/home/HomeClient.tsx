@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { searchSakesAction } from '@/app/actions/search';
 import dynamic from 'next/dynamic';
 import { TabNavigation } from '@/components/navigation/TabNavigation';
 import { SearchTab } from '@/features/search/SearchTab';
@@ -40,6 +41,8 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
     title: '酒えらび',
     message: ''
   });
+  const [searchResults, setSearchResults] = useState<SakeData[]>(initialSearchResults);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   // FavoritesProvider にSSR初期値を注入し、以降はContextを唯一の真実にする
 
@@ -59,7 +62,7 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
     clearComparison: clearRestaurantComparison,
   } = useComparison();
 
-  const { currentSakeData } = useSearch();
+  // 既存のuseSearchは使用せず、Server Actionを直接呼び出す
 
   const {
     selectSake,
@@ -70,7 +73,20 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
   const handleSearch = async (query: string) => {
     const q = (query || '').trim();
     if (!q) return;
-    router.push(`/?q=${encodeURIComponent(q)}`);
+    setSearchLoading(true);
+    try {
+      const res = await searchSakesAction({ query: q, limit: 20, offset: 0 });
+      setSearchResults(res.sakes);
+      if (res.sakes.length === 0) {
+        setDialogState({ isOpen: true, title: '酒えらび', message: '該当する日本酒が見つかりませんでした' });
+      }
+      // URLも同期（履歴を汚さない）
+      router.replace(`/?q=${encodeURIComponent(q)}`);
+    } catch {
+      setDialogState({ isOpen: true, title: '酒えらび', message: '検索中にエラーが発生しました' });
+    } finally {
+      setSearchLoading(false);
+    }
   };
 
   const handleToggleComparison = (sake: SakeData) => {
@@ -113,10 +129,10 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites, ini
             {/* メイン */}
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
               {activeTab === 'search' && (
-              <SearchTab
-                onSearch={handleSearch}
-                  isLoading={false}
-                  searchResults={initialSearchResults.length > 0 ? initialSearchResults : currentSakeData}
+                <SearchTab
+                  onSearch={handleSearch}
+                  isLoading={searchLoading}
+                  searchResults={searchResults}
                   comparisonList={comparisonList}
                   onToggleComparison={handleToggleComparison}
                   onClearComparison={clearComparison}
