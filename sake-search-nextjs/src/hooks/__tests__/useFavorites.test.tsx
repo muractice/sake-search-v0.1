@@ -299,8 +299,8 @@ describe('useFavorites', () => {
   describe('エラーハンドリング', () => {
     it('データベースエラー時にUIがロールバックされる', async () => {
       // Server Action 側でエラーを発生させ、楽観的更新のロールバックを検証
-      const actions = await import('@/app/actions/favorites');
-      (actions.addFavoriteAction as unknown as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+      const mod: { addFavoriteAction: jest.Mock } = await import('@/app/actions/favorites') as unknown as { addFavoriteAction: jest.Mock };
+      mod.addFavoriteAction.mockRejectedValueOnce(new Error('Database error'));
 
       // from() チェーンは list/preferences の初期ロードで参照されるため、最低限のメソッドを提供
       const chain = {
@@ -309,7 +309,7 @@ describe('useFavorites', () => {
         order: jest.fn().mockResolvedValue({ data: [], error: null }),
         single: jest.fn().mockResolvedValue({ data: null, error: { code: 'PGRST116' } }),
       };
-      mockSupabase.from.mockReturnValue(chain as any);
+      mockSupabase.from.mockReturnValue(chain as unknown as Record<string, unknown>);
 
       mockSupabase.auth.getSession.mockResolvedValue({
         data: { 

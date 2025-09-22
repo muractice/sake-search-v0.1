@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { searchSakesAction } from '@/app/actions/search';
 import dynamic from 'next/dynamic';
 import { TabNavigation } from '@/components/navigation/TabNavigation';
 import { SearchTab } from '@/features/search/SearchTab';
@@ -13,7 +15,6 @@ import { FavoritesProvider } from '@/features/favorites/contexts/FavoritesContex
 import { AuthProvider } from '@/features/auth/contexts/AuthContext';
 import { MenuProvider } from '@/features/menu/contexts/MenuContext';
 import { useComparison } from '@/features/comparison/hooks/useComparison';
-import { useSearch } from '@/features/search/hooks/useSearch';
 import { useSelection } from '@/features/search/hooks/useSelection';
 import type { SakeData } from '@/types/sake';
 
@@ -27,9 +28,11 @@ type Props = {
   userId: string;
   initialFavorites: SakeData[];
   initialShowFavorites: boolean;
+  initialQuery?: string;
+  initialSearchResults?: SakeData[];
 };
 
-export function HomeClient({ userId, initialFavorites, initialShowFavorites }: Props) {
+export function HomeClient({ userId, initialFavorites, initialShowFavorites, initialSearchResults = [] }: Props) {
   const [activeTab, setActiveTab] = useState('search');
   const [showAuthForm, setShowAuthForm] = useState(false);
   const [dialogState, setDialogState] = useState({
@@ -37,6 +40,8 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
     title: '酒えらび',
     message: ''
   });
+  const [searchResults, setSearchResults] = useState<SakeData[]>(initialSearchResults);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   // FavoritesProvider にSSR初期値を注入し、以降はContextを唯一の真実にする
 
@@ -56,33 +61,30 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
     clearComparison: clearRestaurantComparison,
   } = useComparison();
 
-  const {
-    isLoading,
-    search,
-    currentSakeData,
-  } = useSearch();
+  // 既存のuseSearchは使用せず、Server Actionを直接呼び出す
 
   const {
     selectSake,
     handleChartClick,
   } = useSelection();
 
+  const router = useRouter();
   const handleSearch = async (query: string) => {
+    const q = (query || '').trim();
+    if (!q) return;
+    setSearchLoading(true);
     try {
-      const searchResult = await search(query);
-      if (!searchResult) {
-        setDialogState({
-          isOpen: true,
-          title: '酒えらび',
-          message: '該当する日本酒が見つかりませんでした'
-        });
+      const res = await searchSakesAction({ query: q, limit: 20, offset: 0 });
+      setSearchResults(res.sakes);
+      if (res.sakes.length === 0) {
+        setDialogState({ isOpen: true, title: '酒えらび', message: '該当する日本酒が見つかりませんでした' });
       }
+      // URLも同期（履歴を汚さない）
+      router.replace(`/?q=${encodeURIComponent(q)}`);
     } catch {
-      setDialogState({
-        isOpen: true,
-        title: '酒えらび',
-        message: '検索中にエラーが発生しました'
-      });
+      setDialogState({ isOpen: true, title: '酒えらび', message: '検索中にエラーが発生しました' });
+    } finally {
+      setSearchLoading(false);
     }
   };
 
@@ -128,8 +130,8 @@ export function HomeClient({ userId, initialFavorites, initialShowFavorites }: P
               {activeTab === 'search' && (
                 <SearchTab
                   onSearch={handleSearch}
-                  isLoading={isLoading}
-                  searchResults={currentSakeData}
+                  isLoading={searchLoading}
+                  searchResults={searchResults}
                   comparisonList={comparisonList}
                   onToggleComparison={handleToggleComparison}
                   onClearComparison={clearComparison}
