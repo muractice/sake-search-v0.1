@@ -9,7 +9,7 @@ import { HomeClient } from '@/features/home/HomeClient';
 import { SakeServiceV2 } from '@/services/SakeServiceV2';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 
-export default async function Home({ searchParams }: { searchParams?: { [key: string]: string | string[] | undefined } }) {
+export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const sb = createServerComponentClient<Database>({ cookies });
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
@@ -25,7 +25,8 @@ export default async function Home({ searchParams }: { searchParams?: { [key: st
     : [[], null];
 
   // RSCで検索結果を取得（qがある場合）
-  const q = typeof searchParams?.q === 'string' ? searchParams!.q : Array.isArray(searchParams?.q) ? searchParams!.q[0] : '';
+  const sp = (await searchParams) ?? {};
+  const q = typeof sp.q === 'string' ? sp.q : Array.isArray(sp.q) ? sp.q[0] : '';
   let initialSearchResults: import('@/types/sake').SakeData[] = [];
   if (q && q.trim().length > 0) {
     try {
