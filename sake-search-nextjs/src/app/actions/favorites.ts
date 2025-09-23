@@ -22,7 +22,10 @@ function createFavoritesService() {
 
 export async function addFavoriteAction(userId: string, sake: SakeData): Promise<void> {
   // 認証状態を確認
-  const supabase = createServerActionClient<Database>({ cookies });
+  const cookieStore = await cookies();
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
+  });
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
@@ -35,7 +38,10 @@ export async function addFavoriteAction(userId: string, sake: SakeData): Promise
 
 export async function removeFavoriteAction(userId: string, sakeId: string): Promise<void> {
   // 認証状態を確認
-  const supabase = createServerActionClient<Database>({ cookies });
+  const cookieStore = await cookies();
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
+  });
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
@@ -48,7 +54,10 @@ export async function removeFavoriteAction(userId: string, sakeId: string): Prom
 
 export async function updateShowFavoritesAction(userId: string, show: boolean): Promise<void> {
   // 認証状態を確認
-  const supabase = createServerActionClient<Database>({ cookies });
+  const cookieStore = await cookies();
+  const supabase = createServerActionClient<Database>({
+    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
+  });
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
@@ -58,4 +67,3 @@ export async function updateShowFavoritesAction(userId: string, show: boolean): 
   const service = createFavoritesService();
   await service.updateShowFavorites(userId, show);
 }
-
