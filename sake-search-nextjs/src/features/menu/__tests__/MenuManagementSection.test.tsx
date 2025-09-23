@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import type { User } from '@supabase/supabase-js';
 import { MenuManagementSection } from '@/features/menu/MenuManagementSection';
 
 describe('MenuManagementSection', () => {
@@ -52,10 +53,11 @@ describe('MenuManagementSection', () => {
   test('calls onMenuContextReset when switching to another menu', async () => {
     const actions = { ...baseActions };
     window.confirm = jest.fn(() => true);
+    const mockUser = { id: 'user-1' } as User;
 
     render(
       <MenuManagementSection
-        auth={{ user: { id: 'user-1' } as any, isAuthLoading: false }}
+        auth={{ user: mockUser, isAuthLoading: false }}
         menuData={{ items: ['A'], sakeData: [] }}
         state={baseState}
         actions={actions}

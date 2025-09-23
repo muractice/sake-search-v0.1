@@ -12,7 +12,10 @@ import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const sb = createServerComponentClient<Database>({ cookies });
+  const cookieStore = cookies();
+  const sb = createServerComponentClient<Database>({
+    cookies: () => cookieStore,
+  });
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 
