@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { SakeData } from '@/types/sake';
 import { formatMenuOptionLabel, MenuDisplayInfo } from './utils';
+import type { MenuNotification } from '@/features/menu/hooks/useMenuPersistence';
 
 interface AuthState {
   user: User | null;
@@ -16,8 +17,8 @@ interface MenuData {
 }
 
 interface MenuManagementState {
-  selectedSavedMenu: string;
-  selectedRestaurant: string;
+  loadedMenuId: string;
+  targetMenuId: string;
   groupedSavedMenus: Record<string, {
     restaurant_menu_id: string;
     restaurant_name: string;
@@ -29,16 +30,20 @@ interface MenuManagementState {
   loadingMenu: boolean;
   savingToMenu: boolean;
   hasChanges?: boolean;
+  notification?: MenuNotification | null;
 }
 
 interface MenuManagementActions {
-  setSelectedSavedMenu: (id: string) => void;
-  setSelectedRestaurant: (id: string) => void;
+  setLoadedMenuId: (id: string) => void;
+  setTargetMenuId: (id: string) => void;
   onSaveToRestaurant: () => Promise<void>;
   onAddRestaurant: (name: string, location: string, registrationDate: string) => Promise<void>;
   onLoadSavedMenu: (menuId: string) => Promise<void>;
   onMenuItemsChange: (items: string[]) => void;
   onDeleteRestaurant?: (menuId: string) => Promise<void>;
+  notify?: (notification: MenuNotification) => void;
+  clearNotification?: () => void;
+  onMenuContextReset?: () => void;
 }
 
 interface MenuManagementSectionProps {
@@ -54,6 +59,11 @@ export const MenuManagementSection = ({
   state,
   actions
 }: MenuManagementSectionProps) => {
+  const notificationStyles: Record<MenuNotification['type'], string> = {
+    success: 'border-green-200 bg-green-50 text-green-800',
+    error: 'border-red-200 bg-red-50 text-red-800',
+    info: 'border-blue-200 bg-blue-50 text-blue-800',
+  };
   const [newRestaurantName, setNewRestaurantName] = useState('');
   const [newRestaurantLocation, setNewRestaurantLocation] = useState('');
   const [newRestaurantRegistrationDate, setNewRestaurantRegistrationDate] = useState(() => {
@@ -64,11 +74,12 @@ export const MenuManagementSection = ({
 
   const handleAddRestaurant = async () => {
     if (!newRestaurantName.trim()) {
-      alert('飲食店名を入力してください');
+      actions.notify?.({ type: 'error', message: '飲食店名を入力してください' });
       return;
     }
 
     try {
+      actions.clearNotification?.();
       await actions.onAddRestaurant(newRestaurantName.trim(), newRestaurantLocation.trim(), newRestaurantRegistrationDate);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
@@ -76,13 +87,14 @@ export const MenuManagementSection = ({
       setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     } catch (error) {
       console.error('Error adding restaurant:', error);
+      actions.notify?.({ type: 'error', message: 'メニューの追加に失敗しました' });
     }
   };
 
   const handleDeleteSelectedMenu = async () => {
-    if (!state.selectedSavedMenu || !actions.onDeleteRestaurant) return;
+    if (!state.loadedMenuId || !actions.onDeleteRestaurant) return;
 
-    const selectedMenu = state.groupedSavedMenus[state.selectedSavedMenu];
+    const selectedMenu = state.groupedSavedMenus[state.loadedMenuId];
     const label = selectedMenu?.restaurant_name ?? '選択中のメニュー';
 
     const confirmed = confirm(`「${label}」のメニューを削除しますか？\n\nこの操作は取り消せません。`);
@@ -90,15 +102,15 @@ export const MenuManagementSection = ({
 
     setIsDeleting(true);
     try {
-      await actions.onDeleteRestaurant(state.selectedSavedMenu);
+      actions.clearNotification?.();
+      await actions.onDeleteRestaurant(state.loadedMenuId);
       setNewRestaurantName('');
       setNewRestaurantLocation('');
       const today = new Date();
       setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
-      alert('メニューを削除しました');
     } catch (error) {
       console.error('Error deleting restaurant:', error);
-      alert('メニューの削除に失敗しました');
+      actions.notify?.({ type: 'error', message: 'メニューの削除に失敗しました' });
     } finally {
       setIsDeleting(false);
     }
@@ -109,24 +121,25 @@ export const MenuManagementSection = ({
     const newValue = e.target.value;
     
     // 既存メニューから別のメニューへの切り替え
-    if (newValue && state.selectedSavedMenu && newValue !== state.selectedSavedMenu) {
+    if (newValue && state.loadedMenuId && newValue !== state.loadedMenuId) {
       const shouldProceed = confirm(
         '現在表示中のメニューをクリアして、選択したメニューを読み込みます。\n\n' +
         '続行しますか？'
       );
-      
+
       if (!shouldProceed) {
         // キャンセルされた場合は元に戻す
-        e.target.value = state.selectedSavedMenu;
+        e.target.value = state.loadedMenuId;
         return;
       }
-      
+
       // 現在のメニューをクリア
       actions.onMenuItemsChange([]);
+      actions.onMenuContextReset?.();
     }
-    
+
     // 新しいメニューから既存メニューへの切り替え
-    if (!state.selectedSavedMenu && menuData.items.length > 0 && newValue) {
+    if (!state.loadedMenuId && menuData.items.length > 0 && newValue) {
       const shouldProceed = confirm(
         '現在の新しいメニューは保存されていません。\n' +
         '切り替えると入力した内容が失われます。\n\n' +
@@ -135,18 +148,19 @@ export const MenuManagementSection = ({
       
       if (!shouldProceed) {
         // キャンセルされた場合は元に戻す
-        e.target.value = state.selectedSavedMenu;
+        e.target.value = state.loadedMenuId;
         return;
       }
-      
+
       // 現在のメニューをクリア
       actions.onMenuItemsChange([]);
+      actions.onMenuContextReset?.();
     }
-    
+
     if (newValue) {
       // 既存メニューを選択した場合
-      actions.setSelectedSavedMenu(newValue);
-      actions.setSelectedRestaurant(newValue);
+      actions.setLoadedMenuId(newValue);
+      actions.setTargetMenuId(newValue);
       
       // 選択したメニューの情報を取得
       const selectedMenu = state.groupedSavedMenus[newValue];
@@ -162,7 +176,7 @@ export const MenuManagementSection = ({
       setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
     } else {
       // 「新しいメニュー」を選択した場合
-      if (state.selectedSavedMenu && menuData.items.length > 0) {
+      if (state.loadedMenuId && menuData.items.length > 0) {
         const shouldClear = confirm(
           '現在のメニューをクリアしますか？\n\n' +
           '「OK」: クリアする\n' +
@@ -174,13 +188,14 @@ export const MenuManagementSection = ({
         }
       }
       
-      actions.setSelectedSavedMenu('');
-      actions.setSelectedRestaurant('');
+      actions.setLoadedMenuId('');
+      actions.setTargetMenuId('');
       // フォームをクリア
       setNewRestaurantName('');
       setNewRestaurantLocation('');
       const today = new Date();
       setNewRestaurantRegistrationDate(today.toISOString().split('T')[0]);
+      actions.onMenuContextReset?.();
     }
   };
 
@@ -216,6 +231,28 @@ export const MenuManagementSection = ({
         メニュー管理
       </h2>
 
+      {state.notification && (
+        <div
+          className={`mb-4 rounded-md border px-4 py-3 text-sm ${
+            notificationStyles[state.notification.type]
+          }`}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-medium leading-6">{state.notification.message}</p>
+            {actions.clearNotification && (
+              <button
+                type="button"
+                onClick={actions.clearNotification}
+                className="text-current/80 hover:text-current"
+                aria-label="通知を閉じる"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* メニュー選択セクション */}
       <div className="mb-6 p-4 bg-gray-50 rounded-lg">
         <div className="mb-3">
@@ -228,7 +265,7 @@ export const MenuManagementSection = ({
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row gap-2">
             <select
-              value={state.selectedSavedMenu}
+            value={state.loadedMenuId}
               onChange={handleMenuSelectionChange}
               disabled={state.loadingMenu}
               className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
@@ -256,7 +293,7 @@ export const MenuManagementSection = ({
               メニューを読み込み中...
             </div>
           )}
-          {state.selectedSavedMenu && actions.onDeleteRestaurant && (
+          {state.loadedMenuId && actions.onDeleteRestaurant && (
             <div className="flex justify-end">
               <button
                 type="button"
@@ -271,7 +308,7 @@ export const MenuManagementSection = ({
         </div>
 
         {/* 新しいメニューが選択されている時にフォームを表示 */}
-        {!state.selectedSavedMenu && (
+        {!state.loadedMenuId && (
           <div className="space-y-2 mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
             <input
               type="text"
@@ -312,8 +349,8 @@ export const MenuManagementSection = ({
                   const menuValues = Object.values(state.groupedSavedMenus);
                   if (menuValues && menuValues.length > 0) {
                     const firstMenu = menuValues[0];
-                    actions.setSelectedSavedMenu(firstMenu.restaurant_menu_id);
-                    actions.setSelectedRestaurant(firstMenu.restaurant_menu_id);
+                    actions.setLoadedMenuId(firstMenu.restaurant_menu_id);
+                    actions.setTargetMenuId(firstMenu.restaurant_menu_id);
                     // 0件のメニューの場合はロードしない
                     if (firstMenu.count > 0) {
                       actions.onLoadSavedMenu(firstMenu.restaurant_menu_id);
@@ -332,17 +369,8 @@ export const MenuManagementSection = ({
       </div>
 
       {/* 保存ボタン */}
-      {state.selectedSavedMenu && menuData.sakeData.length > 0 && (
+      {state.loadedMenuId && menuData.sakeData.length > 0 && (
         <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-          {(() => {
-            console.log('=== MenuManagementSection デバッグ ===');
-            console.log('state.hasChanges:', state.hasChanges);
-            console.log('state.savingToMenu:', state.savingToMenu);
-            console.log('ボタン disabled:', state.savingToMenu || !state.hasChanges);
-            console.log('menuData.sakeData.length:', menuData.sakeData.length);
-            console.log('=== MenuManagementSection デバッグ終了 ===');
-            return null;
-          })()}
           {state.hasChanges && (
             <div className="text-sm text-orange-600 mb-3 flex items-center gap-2">
               <span>⚠️</span>

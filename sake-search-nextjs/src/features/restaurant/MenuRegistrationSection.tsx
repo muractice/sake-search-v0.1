@@ -51,21 +51,27 @@ export const MenuRegistrationSection = ({
           sakeData: menuRegistration.inputState.menuSakeData,
         }}
         state={{
-          selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
-          selectedRestaurant: menuRegistration.managementState.selectedRestaurant,
+          loadedMenuId: menuRegistration.managementState.loadedMenuId,
+          targetMenuId: menuRegistration.managementState.targetMenuId,
           groupedSavedMenus: menuRegistration.managementState.groupedSavedMenusData,
           loadingMenu: menuRegistration.managementState.loadingMenu,
           savingToMenu: menuRegistration.managementState.savingToMenu,
           hasChanges: menuRegistration.managementState.hasChanges,
+          notification: menuRegistration.managementState.notification,
         }}
         actions={{
-          setSelectedSavedMenu: menuRegistration.managementActions.setSelectedSavedMenu,
-          setSelectedRestaurant: menuRegistration.managementActions.setSelectedRestaurant,
+          setLoadedMenuId: menuRegistration.managementActions.setLoadedMenuId,
+          setTargetMenuId: menuRegistration.managementActions.setTargetMenuId,
           onSaveToRestaurant: menuRegistration.actions.saveToRestaurant,
           onAddRestaurant: menuRegistration.actions.addRestaurant,
           onLoadSavedMenu: menuRegistration.actions.loadSavedMenu,
           onDeleteRestaurant: menuRegistration.managementActions.onDeleteRestaurant,
           onMenuItemsChange: menuRegistration.inputActions.handleMenuItemsChange,
+          notify: menuRegistration.managementActions.notify,
+          clearNotification: menuRegistration.managementActions.clearNotification,
+          onMenuContextReset: () => {
+            comparison.onClear();
+          },
         }}
       />
 
@@ -83,7 +89,7 @@ export const MenuRegistrationSection = ({
             menuData={{
               menuSakeData: menuRegistration.inputState.menuSakeData,
               notFoundItems: menuRegistration.inputState.notFoundItems,
-              selectedSavedMenu: menuRegistration.managementState.selectedSavedMenu,
+              selectedSavedMenu: menuRegistration.managementState.loadedMenuId,
               onRemoveItem: (item: string) => {
                 menuRegistration.inputActions.removeItemByName(item);
               },

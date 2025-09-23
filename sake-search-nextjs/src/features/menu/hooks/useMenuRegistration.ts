@@ -1,5 +1,7 @@
 'use client';
 
+// useMenuRegistration は MenuContext と管理ロジックを結合し、UI から扱いやすい形に整える
+
 import { useCallback, useEffect, useMemo } from 'react';
 import { useMenuContext } from '../contexts/MenuContext';
 import { useMenuManagement } from './useMenuManagement';
@@ -84,50 +86,49 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
 
   // メニュー管理関連の状態とアクション
   const hasChangesResult = menuManagement.hasChanges(menuContext.menuSakeData);
-  console.log('=== useMenuRegistration デバッグ ===');
-  console.log('menuManagement.hasChanges:', menuManagement.hasChanges);
-  console.log('menuContext.menuSakeData:', menuContext.menuSakeData?.map(s => s.id));
-  console.log('hasChangesResult:', hasChangesResult);
-  console.log('=== useMenuRegistration デバッグ終了 ===');
-  
+
   const managementState = {
     user: menuManagement.user,
     isAuthLoading: menuManagement.isAuthLoading,
-    selectedSavedMenu: menuManagement.selectedSavedMenu,
-    selectedRestaurant: menuManagement.selectedRestaurant,
+    loadedMenuId: menuManagement.loadedMenuId,
+    targetMenuId: menuManagement.targetMenuId,
     groupedSavedMenusData: menuManagement.groupedSavedMenusData,
     loadingMenu: menuManagement.loadingMenu,
     savingToMenu: menuManagement.savingToMenu,
     hasChanges: hasChangesResult,
+    notification: menuManagement.notification,
   };
 
   const managementActions = {
-    setSelectedSavedMenu: menuManagement.setSelectedSavedMenu,
-    setSelectedRestaurant: menuManagement.setSelectedRestaurant,
+    setLoadedMenuId: menuManagement.setLoadedMenuId,
+    setTargetMenuId: menuManagement.setTargetMenuId,
     onDeleteRestaurant: actions.deleteRestaurant,
+    notify: menuManagement.notify,
+    clearNotification: menuManagement.clearNotification,
   };
 
   // リロード時の初期化処理
+  // リロード時、カタログの準備が整ったら前回選択したメニューを復元する
   useEffect(() => {
     let isSubscribed = true;
     
     const initializeMenu = async () => {
-      // selectedSavedMenuが存在し、かつメニューデータが空で、ローディング中でない場合
-      if (managementState.selectedSavedMenu && 
+      // loadedMenuIdが存在し、かつメニューデータが空で、ローディング中でない場合
+      if (managementState.loadedMenuId && 
           inputState.menuSakeData.length === 0 && 
           !managementState.loadingMenu &&
           isSubscribed) {
-        
+
         // 選択されたメニューの情報を取得
-        const selectedMenu = managementState.groupedSavedMenusData[managementState.selectedSavedMenu];
-        
+        const selectedMenu = managementState.groupedSavedMenusData[managementState.loadedMenuId];
+
         // 0件のメニューの場合はロードしない（無限ループ防止）
         if (selectedMenu && selectedMenu.count > 0) {
-          console.log('リロード時の自動メニュー復元:', managementState.selectedSavedMenu);
+          console.log('リロード時の自動メニュー復元:', managementState.loadedMenuId);
           console.log('現在のmenuSakeData:', inputState.menuSakeData);
           console.log('loadingMenu:', managementState.loadingMenu);
           // 既存のloadSavedMenuアクションを呼び出して完全復元
-          await actions.loadSavedMenu(managementState.selectedSavedMenu);
+          await actions.loadSavedMenu(managementState.loadedMenuId);
         }
       }
     };
@@ -138,7 +139,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
     return () => {
       isSubscribed = false;
     };
-  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.selectedSavedMenu, managementState.groupedSavedMenusData]);
+  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.loadedMenuId, managementState.groupedSavedMenusData]);
 
   return {
     // 状態（分離を維持）
