@@ -10,7 +10,7 @@ import { SupabaseRestaurantRepository } from '@/repositories/restaurants/Supabas
 import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const sb = await getServerComponentClient();
+  const sb = getServerComponentClient();
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 

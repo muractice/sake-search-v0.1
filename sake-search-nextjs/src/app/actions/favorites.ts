@@ -17,7 +17,7 @@ function createFavoritesService(supabase: SupabaseClient<Database>) {
 }
 
 export async function addFavoriteAction(userId: string, sake: SakeData): Promise<void> {
-  const supabase = await getServerActionClient();
+  const supabase = getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
@@ -29,7 +29,7 @@ export async function addFavoriteAction(userId: string, sake: SakeData): Promise
 }
 
 export async function removeFavoriteAction(userId: string, sakeId: string): Promise<void> {
-  const supabase = await getServerActionClient();
+  const supabase = getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
@@ -41,7 +41,7 @@ export async function removeFavoriteAction(userId: string, sakeId: string): Prom
 }
 
 export async function updateShowFavoritesAction(userId: string, show: boolean): Promise<void> {
-  const supabase = await getServerActionClient();
+  const supabase = getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
