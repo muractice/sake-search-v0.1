@@ -1,19 +1,15 @@
 'use server';
 
-import { cookies } from 'next/headers';
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import type { SakeData } from '@/types/sake';
+import { getServerActionClient } from '@/lib/supabaseServerHelpers';
 
-function createFavoritesService() {
-  // Server Action用の認証付きクライアントを作成
-  const supabase = createServerActionClient<Database>({ cookies });
-  
-  // 認証付きクライアントをRepositoryに渡す
+function createFavoritesService(supabase: SupabaseClient<Database>) {
   const repo = new SupabaseFavoritesRepository(supabase);
   const recCacheRepo = new SupabaseRecommendationCacheRepository(supabase);
   const prefsRepo = new SupabaseUserPreferencesRepository(supabase);
@@ -21,49 +17,37 @@ function createFavoritesService() {
 }
 
 export async function addFavoriteAction(userId: string, sake: SakeData): Promise<void> {
-  // 認証状態を確認
-  const cookieStore = await cookies();
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
-  });
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
     throw new Error('Unauthorized: User authentication failed');
   }
   
-  const service = createFavoritesService();
+  const service = createFavoritesService(supabase);
   await service.add(userId, sake);
 }
 
 export async function removeFavoriteAction(userId: string, sakeId: string): Promise<void> {
-  // 認証状態を確認
-  const cookieStore = await cookies();
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
-  });
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
     throw new Error('Unauthorized: User authentication failed');
   }
   
-  const service = createFavoritesService();
+  const service = createFavoritesService(supabase);
   await service.remove(userId, sakeId);
 }
 
 export async function updateShowFavoritesAction(userId: string, show: boolean): Promise<void> {
-  // 認証状態を確認
-  const cookieStore = await cookies();
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
-  });
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
   
   if (!user || user.id !== userId) {
     throw new Error('Unauthorized: User authentication failed');
   }
   
-  const service = createFavoritesService();
+  const service = createFavoritesService(supabase);
   await service.updateShowFavorites(userId, show);
 }

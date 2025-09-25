@@ -1,14 +1,12 @@
-import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '@/lib/supabase';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 import { FavoritesPanel } from '@/features/favorites/components/FavoritesPanel';
+import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 
 export default async function FavoritesPage() {
-  const sb = createServerComponentClient<Database>({ cookies });
+  const sb = await getServerComponentClient();
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 
@@ -33,4 +31,3 @@ export default async function FavoritesPage() {
     </div>
   );
 }
-

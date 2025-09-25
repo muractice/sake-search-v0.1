@@ -1,6 +1,3 @@
-import { cookies } from 'next/headers';
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import type { Database } from '@/lib/supabase';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
@@ -10,12 +7,10 @@ import { SakeServiceV2 } from '@/services/SakeServiceV2';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
+import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const cookieStore = await cookies();
-  const sb = createServerComponentClient<Database>({
-    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
-  });
+  const sb = await getServerComponentClient();
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 

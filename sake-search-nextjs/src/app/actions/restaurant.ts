@@ -1,7 +1,5 @@
 "use server";
 
-import { cookies } from 'next/headers';
-import { createServerActionClient } from '@supabase/auth-helpers-nextjs';
 import type {
   RestaurantMenu,
   RestaurantMenuFormData,
@@ -11,7 +9,7 @@ import type {
 } from '@/types/restaurant';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
-import type { Database } from '@/lib/supabase';
+import { getServerActionClient } from '@/lib/supabaseServerHelpers';
 
 interface MenuSakeInput {
   sake_id: string;
@@ -21,10 +19,7 @@ interface MenuSakeInput {
 }
 
 const createRestaurantService = async () => {
-  const cookieStore = await cookies();
-  const supabase = createServerActionClient<Database>({
-    cookies: () => cookieStore as unknown as ReturnType<typeof cookies>,
-  });
+  const supabase = await getServerActionClient();
   return new RestaurantService(new SupabaseRestaurantRepository(supabase));
 };
 
