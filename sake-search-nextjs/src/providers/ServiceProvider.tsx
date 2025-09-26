@@ -12,6 +12,7 @@ import { RestaurantService } from '@/services/RestaurantService';
 import { ComparisonService } from '@/services/ComparisonService';
 import { RecommendationService } from '@/services/RecommendationService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
+import { SupabaseRecordRepository } from '@/repositories/records/SupabaseRecordRepository';
 
 interface ServiceContainer {
   recordService: RecordService;
@@ -136,7 +137,7 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
   });
 
   return {
-    recordService: new RecordService(apiClient),
+    recordService: new RecordService(new SupabaseRecordRepository()),
     restaurantService: new RestaurantService(new SupabaseRestaurantRepository()),
     comparisonService: new ComparisonService(apiClient),
     recommendationService: new RecommendationService(apiClient),

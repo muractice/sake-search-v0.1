@@ -4,50 +4,14 @@
  */
 
 import { DrinkingRecord, CreateRecordInput, UpdateRecordInput } from '@/types/record';
-import { ApiClient, ApiClientError } from './core/ApiClient';
 import { mapToServiceError } from './core/errorMapping';
-
-export interface RecordFilters {
-  sakeId?: string;
-  dateFrom?: string; // YYYY-MM-DD
-  dateTo?: string;   // YYYY-MM-DD
-  ratingMin?: number;
-  ratingMax?: number;
-  prefecture?: string;
-  brewery?: string;
-  hasmemo?: boolean;
-}
-
-export interface RecordSearchOptions {
-  filters?: RecordFilters;
-  limit?: number;
-  offset?: number;
-  sortBy?: 'date' | 'rating' | 'created_at' | 'sake_name';
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface RecordSearchResult {
-  records: DrinkingRecord[];
-  total: number;
-  hasMore: boolean;
-  filters?: RecordFilters;
-  timestamp: string;
-}
-
-export interface RecordStatistics {
-  totalRecords: number;
-  uniqueSakes: number;
-  averageRating: number;
-  mostRatedPrefecture?: string;
-  recentActivity: {
-    thisWeek: number;
-    thisMonth: number;
-  };
-  ratingDistribution: {
-    rating: number;
-    count: number;
-  }[];
-}
+import type { IRecordRepository } from '@/repositories/records/RecordRepository';
+import type {
+  RecordFilters,
+  RecordSearchOptions,
+  RecordSearchResult,
+  RecordStatistics,
+} from './records/types';
 
 export class RecordServiceError extends Error {
   constructor(message: string, public originalError?: unknown) {
@@ -57,10 +21,10 @@ export class RecordServiceError extends Error {
 }
 
 export class RecordService {
-  private apiClient: ApiClient;
+  private repository: IRecordRepository;
 
-  constructor(apiClient: ApiClient) {
-    this.apiClient = apiClient;
+  constructor(repository: IRecordRepository) {
+    this.repository = repository;
   }
 
   /**
@@ -68,15 +32,13 @@ export class RecordService {
    */
   async getRecords(options: RecordSearchOptions = {}): Promise<RecordSearchResult> {
     try {
-      const response = await this.apiClient.post<RecordSearchResult>('/api/v1/records/search', {
-        ...options,
+      return await this.repository.searchForCurrentUser({
         limit: options.limit || 50,
         offset: options.offset || 0,
         sortBy: options.sortBy || 'date',
         sortOrder: options.sortOrder || 'desc',
+        filters: options.filters,
       });
-
-      return response.data;
     } catch (error) {
       this.handleError('飲酒記録の取得に失敗しました', error);
     }
@@ -87,15 +49,11 @@ export class RecordService {
    */
   async createRecord(input: CreateRecordInput): Promise<DrinkingRecord> {
     try {
-      // バリデーション
       this.validateCreateInput(input);
-
-      const response = await this.apiClient.post<DrinkingRecord>('/api/v1/records', {
+      return await this.repository.createForCurrentUser({
         ...input,
-        date: input.date || new Date().toISOString().split('T')[0], // デフォルトは今日
+        date: input.date || new Date().toISOString().split('T')[0],
       });
-
-      return response.data;
     } catch (error) {
       this.handleError('飲酒記録の作成に失敗しました', error);
     }
@@ -111,9 +69,7 @@ export class RecordService {
       }
 
       this.validateUpdateInput(input);
-
-      const response = await this.apiClient.put<DrinkingRecord>(`/api/v1/records/${recordId}`, input);
-      return response.data;
+      return await this.repository.updateForCurrentUser(recordId, input);
     } catch (error) {
       this.handleError('飲酒記録の更新に失敗しました', error);
     }
@@ -128,12 +84,8 @@ export class RecordService {
         throw new RecordServiceError('記録IDが指定されていません');
       }
 
-      await this.apiClient.delete(`/api/v1/records/${recordId}`);
+      await this.repository.delete(recordId);
     } catch (error) {
-      if (error instanceof ApiClientError && error.statusCode === 404) {
-        // 既に削除済みの場合は成功として扱う
-        return;
-      }
       this.handleError('飲酒記録の削除に失敗しました', error);
     }
   }
@@ -147,9 +99,9 @@ export class RecordService {
         throw new RecordServiceError('日本酒IDが指定されていません');
       }
 
-      const result = await this.getRecords({
+      const result = await this.repository.searchForCurrentUser({
         filters: { sakeId },
-        limit: 100, // 同じ日本酒の記録は通常多くない
+        limit: 100,
       });
 
       return result.records;
@@ -166,7 +118,6 @@ export class RecordService {
       const records = await this.getRecordsForSake(sakeId);
       return records.length > 0;
     } catch (error) {
-      // エラーの場合はfalseを返す（記録なしと同等）
       console.warn('記録チェック中にエラー:', error);
       return false;
     }
@@ -177,8 +128,29 @@ export class RecordService {
    */
   async getStatistics(): Promise<RecordStatistics> {
     try {
-      const response = await this.apiClient.get<RecordStatistics>('/api/v1/records/statistics');
-      return response.data;
+      const records = await this.fetchAllRecords();
+      const totalRecords = records.length;
+      const uniqueSakes = new Set(records.map((r) => r.sakeId)).size;
+      const averageRating = totalRecords === 0
+        ? 0
+        : records.reduce((sum, r) => sum + r.rating, 0) / totalRecords;
+
+      const ratingDistribution = [1, 2, 3, 4, 5].map((rating) => ({
+        rating,
+        count: records.filter((r) => r.rating === rating).length,
+      }));
+
+      const recentActivity = this.calculateRecentActivity(records);
+      const mostRatedPrefecture = this.findMostRatedPrefecture(records);
+
+      return {
+        totalRecords,
+        uniqueSakes,
+        averageRating,
+        mostRatedPrefecture,
+        recentActivity,
+        ratingDistribution,
+      };
     } catch (error) {
       this.handleError('記録統計の取得に失敗しました', error);
     }
@@ -196,16 +168,15 @@ export class RecordService {
         throw new RecordServiceError('無効な月が指定されました');
       }
 
-      // 月の範囲を計算
       const startDate = `${year}-${month.toString().padStart(2, '0')}-01`;
-      const endDate = new Date(year, month, 0).toISOString().split('T')[0]; // 月末日
+      const endDate = new Date(Date.UTC(year, month, 0)).toISOString().split('T')[0];
 
-      const result = await this.getRecords({
+      const result = await this.repository.searchForCurrentUser({
         filters: {
           dateFrom: startDate,
           dateTo: endDate,
         },
-        limit: 1000, // 1ヶ月分なので多めに設定
+        limit: 1000,
         sortBy: 'date',
         sortOrder: 'desc',
       });
@@ -221,7 +192,7 @@ export class RecordService {
    */
   async getRecentRecords(limit: number = 10): Promise<DrinkingRecord[]> {
     try {
-      const result = await this.getRecords({
+      const result = await this.repository.searchForCurrentUser({
         limit,
         sortBy: 'created_at',
         sortOrder: 'desc',
@@ -242,7 +213,7 @@ export class RecordService {
         throw new RecordServiceError('評価は1-5の範囲で指定してください');
       }
 
-      const result = await this.getRecords({
+      const result = await this.repository.searchForCurrentUser({
         filters: { ratingMin: minRating },
         limit,
         sortBy: 'rating',
@@ -253,6 +224,65 @@ export class RecordService {
     } catch (error) {
       this.handleError('高評価記録の取得に失敗しました', error);
     }
+  }
+
+  private async fetchAllRecords(filters?: RecordFilters): Promise<DrinkingRecord[]> {
+    const pageSize = 200;
+    let offset = 0;
+    const allRecords: DrinkingRecord[] = [];
+    let hasMore = true;
+
+    while (hasMore) {
+      const result = await this.repository.searchForCurrentUser({
+        filters,
+        limit: pageSize,
+        offset,
+        sortBy: 'date',
+        sortOrder: 'desc',
+      });
+
+      allRecords.push(...result.records);
+      hasMore = result.hasMore;
+      offset += pageSize;
+
+      if (!hasMore && result.records.length === 0) {
+        break;
+      }
+    }
+
+    return allRecords;
+  }
+
+  private calculateRecentActivity(records: DrinkingRecord[]) {
+    const now = new Date();
+    const weekAgo = new Date(now);
+    weekAgo.setDate(now.getDate() - 7);
+    const monthAgo = new Date(now);
+    monthAgo.setMonth(now.getMonth() - 1);
+
+    const thisWeek = records.filter((record) => new Date(record.date) >= weekAgo).length;
+    const thisMonth = records.filter((record) => new Date(record.date) >= monthAgo).length;
+
+    return { thisWeek, thisMonth };
+  }
+
+  private findMostRatedPrefecture(records: DrinkingRecord[]) {
+    const counts = new Map<string, number>();
+    records.forEach((record) => {
+      if (!record.sakePrefecture) return;
+      counts.set(record.sakePrefecture, (counts.get(record.sakePrefecture) ?? 0) + 1);
+    });
+
+    let maxPrefecture: string | undefined;
+    let maxCount = 0;
+    counts.forEach((count, prefecture) => {
+      if (count > maxCount) {
+        maxCount = count;
+        maxPrefecture = prefecture;
+      }
+    });
+
+    return maxPrefecture;
   }
 
   /**
@@ -325,7 +355,6 @@ export class RecordService {
       forbiddenMessage: 'この操作の権限がありません',
       notFoundMessage: '指定された記録が見つかりません',
       tooManyRequestsMessage: 'リクエストが多すぎます。しばらく待ってから再試行してください',
-      serverErrorMessage: 'サーバーエラーが発生しました。時間をおいて再試行してください',
     });
     throw mapped;
   }

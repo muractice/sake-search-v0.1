@@ -1,5 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+type GeminiGenerateContentResponse = {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{ text?: string }>;
+    };
+    finishReason?: string;
+    safetyRatings?: unknown;
+  }>;
+};
+
 export async function POST(request: NextRequest) {
   try {
     if (process.env.NODE_ENV !== 'test') {
@@ -75,9 +85,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Gemini Vision APIを呼び出し（Vercel Pro Plan制限対応: 15秒タイムアウト）
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // Vercel Pro Plan考慮で15秒
-    
     console.log('DEBUG: Starting Gemini API call (timeout: 15000ms)');
     const requestStart = Date.now();
     
@@ -150,40 +157,91 @@ JSONのみを返し、他の説明文は含めないでください。`
     const requestSizeKB = Math.round(JSON.stringify(requestBody).length / 1024);
     console.log(`DEBUG: Request body size: ${requestSizeKB}KB`);
     
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
-      {
+    const configuredModel = process.env.GEMINI_MODEL_ID?.trim();
+    const fallbackModelsEnv = process.env.GEMINI_MODEL_FALLBACKS
+      ?.split(',')
+      .map(model => model.trim())
+      .filter(Boolean) ?? [];
+
+    const defaultModelSequence = [
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-001',
+      'gemini-pro-vision',
+    ];
+
+    const modelCandidates = Array.from(
+      new Set([
+        configuredModel || 'gemini-1.5-flash-latest',
+        ...fallbackModelsEnv,
+        ...defaultModelSequence,
+      ].filter(Boolean)),
+    );
+
+    console.log('DEBUG: Gemini model candidates:', modelCandidates);
+
+    let geminiResult: unknown = null;
+    let selectedModel: string | null = null;
+    let lastErrorDetails = '';
+
+    for (const modelId of modelCandidates) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+      console.log(`DEBUG: Attempting Gemini model: ${modelId}`);
+
+      const attemptStart = Date.now();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         signal: controller.signal,
-        body: JSON.stringify(requestBody)
-      }
-    ).finally(() => clearTimeout(timeoutId));
-    
-    const requestEnd = Date.now();
-    console.log(`DEBUG: Gemini API call completed in ${requestEnd - requestStart}ms`);
+        body: JSON.stringify(requestBody),
+      }).finally(() => clearTimeout(timeoutId));
+      const attemptDuration = Date.now() - attemptStart;
+      console.log(`DEBUG: Gemini model ${modelId} responded in ${attemptDuration}ms (status ${response.status})`);
 
-    if (!geminiResponse.ok) {
-      const errorData = await geminiResponse.text();
-      console.error('ERROR: Gemini API failed:', geminiResponse.status, errorData);
-      
-      // APIキーエラーの詳細な判定
-      if (geminiResponse.status === 400 && errorData.includes('API_KEY')) {
+      if (response.ok) {
+        selectedModel = modelId;
+        geminiResult = await response.json();
+        break;
+      }
+
+      const errorData = await response.text();
+      console.error(`ERROR: Gemini API failed for model ${modelId}:`, response.status, errorData);
+
+      if (response.status === 400 && errorData.includes('API_KEY')) {
         throw new Error('Invalid Gemini API key. Please check your API key configuration.');
-      } else if (geminiResponse.status === 403) {
+      }
+      if (response.status === 403) {
         throw new Error('Gemini API key is not authorized. Please check API key permissions.');
-      } else if (geminiResponse.status === 429) {
+      }
+      if (response.status === 429) {
         throw new Error('Gemini API rate limit exceeded. Please try again later.');
       }
-      
-      throw new Error(`Gemini API error: ${geminiResponse.status} - ${errorData.substring(0, 200)}`);
+
+      if (response.status !== 404) {
+        throw new Error(`Gemini API error [model=${modelId}]: ${response.status} - ${errorData.substring(0, 200)}`);
+      }
+
+      lastErrorDetails = `model=${modelId}, status=${response.status}, body=${errorData.substring(0, 200)}`;
+      console.warn(`WARN: Gemini model not accessible (${lastErrorDetails}). Trying fallback...`);
     }
 
-    const geminiResult = await geminiResponse.json();
+    if (!geminiResult || !selectedModel) {
+      throw new Error(
+        `Gemini API error: no accessible model found. Tried: ${modelCandidates.join(', ')}. ${
+          lastErrorDetails ? `Last error: ${lastErrorDetails}` : ''
+        }Configure GEMINI_MODEL_ID (and optionally GEMINI_MODEL_FALLBACKS) with a valid model that your API key can access.`
+      );
+    }
+
+    const requestEnd = Date.now();
+    console.log(`DEBUG: Gemini API call completed in ${requestEnd - requestStart}ms using model ${selectedModel}`);
     console.log('DEBUG: Gemini API response received');
-    console.log('DEBUG: Full Gemini response structure:', JSON.stringify(geminiResult, null, 2));
+    const geminiData = geminiResult as GeminiGenerateContentResponse;
+    console.log('DEBUG: Full Gemini response structure:', JSON.stringify(geminiData, null, 2));
     
     // レスポンスからテキストを抽出
     let extractedText = '';
@@ -191,16 +249,16 @@ JSONのみを返し、他の説明文は含めないでください。`
     
     // Geminiレスポンスの詳細な構造をチェック
     console.log('DEBUG: Response structure check:');
-    console.log('- candidates exists:', !!geminiResult.candidates);
-    console.log('- candidates length:', geminiResult.candidates?.length || 0);
-    console.log('- first candidate:', geminiResult.candidates?.[0]);
-    console.log('- content exists:', !!geminiResult.candidates?.[0]?.content);
-    console.log('- parts exists:', !!geminiResult.candidates?.[0]?.content?.parts);
-    console.log('- parts length:', geminiResult.candidates?.[0]?.content?.parts?.length || 0);
-    console.log('- text exists:', !!geminiResult.candidates?.[0]?.content?.parts?.[0]?.text);
+    console.log('- candidates exists:', !!geminiData.candidates);
+    console.log('- candidates length:', geminiData.candidates?.length || 0);
+    console.log('- first candidate:', geminiData.candidates?.[0]);
+    console.log('- content exists:', !!geminiData.candidates?.[0]?.content);
+    console.log('- parts exists:', !!geminiData.candidates?.[0]?.content?.parts);
+    console.log('- parts length:', geminiData.candidates?.[0]?.content?.parts?.length || 0);
+    console.log('- text exists:', !!geminiData.candidates?.[0]?.content?.parts?.[0]?.text);
     
-    if (geminiResult.candidates?.[0]?.content?.parts?.[0]?.text) {
-      extractedText = geminiResult.candidates[0].content.parts[0].text;
+    if (geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+      extractedText = geminiData.candidates[0].content.parts[0].text;
       console.log('DEBUG: Text extracted, length:', extractedText.length);
       
       // JSONレスポンスをパース
@@ -254,13 +312,13 @@ JSONのみを返し、他の説明文は含めないでください。`
       console.error('ERROR: This might be due to safety filters or content policy violations');
       
       // Safety filtersをチェック
-      if (geminiResult.candidates?.[0]?.finishReason) {
-        console.error('ERROR: Finish reason:', geminiResult.candidates[0].finishReason);
+      if (geminiData.candidates?.[0]?.finishReason) {
+        console.error('ERROR: Finish reason:', geminiData.candidates[0].finishReason);
       }
       
       // Safety ratingsをチェック
-      if (geminiResult.candidates?.[0]?.safetyRatings) {
-        console.error('ERROR: Safety ratings:', geminiResult.candidates[0].safetyRatings);
+      if (geminiData.candidates?.[0]?.safetyRatings) {
+        console.error('ERROR: Safety ratings:', geminiData.candidates[0].safetyRatings);
       }
       
       parsedResult = {
@@ -268,9 +326,9 @@ JSONのみを返し、他の説明文は含めないでください。`
         confidence: 0,
         notes: 'Gemini APIからのテキスト抽出に失敗しました。画像の内容がフィルタリングされた可能性があります。',
         debug_info: {
-          finishReason: geminiResult.candidates?.[0]?.finishReason,
-          safetyRatings: geminiResult.candidates?.[0]?.safetyRatings,
-          hasResponse: !!geminiResult.candidates?.[0]
+          finishReason: geminiData.candidates?.[0]?.finishReason,
+          safetyRatings: geminiData.candidates?.[0]?.safetyRatings,
+          hasResponse: !!geminiData.candidates?.[0]
         }
       };
     }
@@ -278,7 +336,7 @@ JSONのみを返し、他の説明文は含めないでください。`
     const responseData = {
       sake_names: parsedResult?.sake_names || [],
       confidence: parsedResult?.confidence || 0,
-      provider: 'gemini-1.5-flash',
+      provider: selectedModel,
       text: extractedText || '',
       notes: parsedResult?.notes,
       vercel_debug: {

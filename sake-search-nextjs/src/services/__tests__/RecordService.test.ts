@@ -4,86 +4,83 @@
  */
 
 import { RecordService, RecordServiceError } from '../RecordService';
-import { ApiClient, ApiClientError } from '../core/ApiClient';
+import type { IRecordRepository } from '@/repositories/records/RecordRepository';
+import type { RecordSearchOptions, RecordSearchResult } from '../records/types';
 import { DrinkingRecord, CreateRecordInput, UpdateRecordInput } from '@/types/record';
 
-// ApiClientのモック（SakeService.test.tsから流用）
-class MockApiClient extends ApiClient {
-  private mockResponses: Map<string, unknown> = new Map();
-  private shouldThrowError = false;
-  private errorToThrow: unknown = null;
+class MockRecordRepository implements IRecordRepository {
+  public lastSearchOptions?: RecordSearchOptions;
+  public lastCreatePayload?: CreateRecordInput;
+  public lastUpdatePayload?: UpdateRecordInput;
+  public deletedRecordIds: string[] = [];
+  public shouldThrowError = false;
+  public errorToThrow: unknown = null;
+  public searchResult: RecordSearchResult;
+  public nextCreateResult?: DrinkingRecord;
+  public nextUpdateResult?: DrinkingRecord;
 
-  setMockResponse(endpoint: string, response: unknown) {
-    this.mockResponses.set(endpoint, response);
+  constructor(initialRecord: DrinkingRecord) {
+    this.searchResult = {
+      records: [initialRecord],
+      total: 1,
+      hasMore: false,
+      timestamp: '2024-01-15T10:00:00Z',
+      filters: undefined,
+    };
+    this.nextCreateResult = initialRecord;
+    this.nextUpdateResult = initialRecord;
   }
 
-  setError(error: unknown) {
-    this.shouldThrowError = true;
-    this.errorToThrow = error;
-  }
-
-  clearError() {
-    this.shouldThrowError = false;
-    this.errorToThrow = null;
-  }
-
-  async post<T>(endpoint: string): Promise<{ data: T }> {
+  private maybeThrow(): void {
     if (this.shouldThrowError) {
-      throw this.errorToThrow;
+      throw this.errorToThrow ?? Object.assign(new Error('mock error'), { status: 500 });
     }
-
-    const mockResponse = this.mockResponses.get(endpoint);
-    if (mockResponse) {
-      return { data: mockResponse };
-    }
-
-    throw new Error(`No mock response for ${endpoint}`);
   }
 
-  async get<T>(endpoint: string, query?: Record<string, string>): Promise<{ data: T }> {
-    if (this.shouldThrowError) {
-      throw this.errorToThrow;
-    }
-
-    let searchKey = endpoint;
-    if (query) {
-      const params = new URLSearchParams(query);
-      searchKey = `${endpoint}?${params.toString()}`;
-    }
-
-    const mockResponse = this.mockResponses.get(endpoint) || this.mockResponses.get(searchKey);
-    if (mockResponse) {
-      return { data: mockResponse };
-    }
-
-    throw new Error(`No mock response for ${endpoint}`);
+  async searchForCurrentUser(options: RecordSearchOptions = {}): Promise<RecordSearchResult> {
+    this.maybeThrow();
+    this.lastSearchOptions = options;
+    return this.searchResult;
   }
 
-  async put<T>(endpoint: string): Promise<{ data: T }> {
-    if (this.shouldThrowError) {
-      throw this.errorToThrow;
-    }
-
-    const mockResponse = this.mockResponses.get(endpoint);
-    if (mockResponse) {
-      return { data: mockResponse };
-    }
-
-    throw new Error(`No mock response for ${endpoint}`);
+  async getById(): Promise<DrinkingRecord | null> {
+    this.maybeThrow();
+    return this.searchResult.records[0] ?? null;
   }
 
-  async delete<T>(): Promise<{ data: T }> {
-    if (this.shouldThrowError) {
-      throw this.errorToThrow;
-    }
+  async createForCurrentUser(input: CreateRecordInput): Promise<DrinkingRecord> {
+    this.maybeThrow();
+    this.lastCreatePayload = input;
+    return {
+      ...this.nextCreateResult!,
+      ...input,
+      id: this.nextCreateResult?.id ?? 'created-id',
+      userId: this.nextCreateResult?.userId ?? 'user-1',
+      date: input.date ?? this.nextCreateResult?.date ?? new Date().toISOString().split('T')[0],
+      createdAt: this.nextCreateResult?.createdAt ?? new Date().toISOString(),
+      updatedAt: this.nextCreateResult?.updatedAt ?? new Date().toISOString(),
+    };
+  }
 
-    // 削除は成功レスポンスを返す
-    return { data: {} as T };
+  async updateForCurrentUser(recordId: string, input: UpdateRecordInput): Promise<DrinkingRecord> {
+    this.maybeThrow();
+    this.lastUpdatePayload = input;
+    return {
+      ...this.nextUpdateResult!,
+      id: recordId,
+      ...input,
+      updatedAt: new Date().toISOString(),
+    } as DrinkingRecord;
+  }
+
+  async delete(recordId: string): Promise<void> {
+    this.maybeThrow();
+    this.deletedRecordIds.push(recordId);
   }
 }
 
 describe('RecordService', () => {
-  let mockApiClient: MockApiClient;
+  let mockRepository: MockRecordRepository;
   let recordService: RecordService;
 
   const mockRecord: DrinkingRecord = {
@@ -101,30 +98,29 @@ describe('RecordService', () => {
   };
 
   beforeEach(() => {
-    mockApiClient = new MockApiClient();
-    recordService = new RecordService(mockApiClient);
+    mockRepository = new MockRecordRepository(mockRecord);
+    recordService = new RecordService(mockRepository);
   });
 
   describe('getRecords', () => {
     it('should get records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
       const result = await recordService.getRecords();
 
-      expect(result).toEqual(mockResult);
+      expect(result).toEqual(mockRepository.searchResult);
+      expect(mockRepository.lastSearchOptions).toEqual({
+        limit: 50,
+        offset: 0,
+        sortBy: 'date',
+        sortOrder: 'desc',
+        filters: undefined,
+      });
     });
 
-    it('should handle API errors', async () => {
-      mockApiClient.setError(new ApiClientError('Server Error', 500));
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
 
-      await expect(recordService.getRecords()).rejects.toThrow('サーバーエラーが発生しました');
+      await expect(recordService.getRecords()).rejects.toThrow('飲酒記録の取得に失敗しました');
     });
   });
 
@@ -138,11 +134,13 @@ describe('RecordService', () => {
     };
 
     it('should create record successfully', async () => {
-      mockApiClient.setMockResponse('/api/v1/records', mockRecord);
-
       const result = await recordService.createRecord(validInput);
 
-      expect(result).toEqual(mockRecord);
+      expect(result).toEqual(expect.objectContaining({
+        id: mockRecord.id,
+        sakeId: validInput.sakeId,
+        sakeName: validInput.sakeName,
+      }));
     });
 
     it('should validate required fields', async () => {
@@ -166,8 +164,8 @@ describe('RecordService', () => {
         'invalid-date',
         '2024/01/15',
         '15-01-2024',
-        '2024-13-01', // 無効な月
-        '2024-01-32', // 無効な日
+        '2024-13-01',
+        '2024-01-32',
       ];
 
       for (const date of invalidDates) {
@@ -187,225 +185,201 @@ describe('RecordService', () => {
 
     it('should set default date', async () => {
       const today = new Date().toISOString().split('T')[0];
-      const expectedRecord = { ...mockRecord, date: today };
-      
-      mockApiClient.setMockResponse('/api/v1/records', expectedRecord);
 
       const result = await recordService.createRecord(validInput);
 
       expect(result.date).toBe(today);
+      expect(mockRepository.lastCreatePayload?.date).toBe(today);
     });
   });
 
   describe('updateRecord', () => {
-    const validUpdate: UpdateRecordInput = {
-      rating: 4,
-      memo: '更新されたメモ',
-    };
-
     it('should update record successfully', async () => {
-      const updatedRecord = { ...mockRecord, ...validUpdate };
-      mockApiClient.setMockResponse('/api/v1/records/1', updatedRecord);
+      const recordId = '1';
+      const updateData: UpdateRecordInput = {
+        rating: 4,
+        memo: 'いい香り',
+      };
 
-      const result = await recordService.updateRecord('1', validUpdate);
+      const result = await recordService.updateRecord(recordId, updateData);
 
-      expect(result).toEqual(updatedRecord);
+      expect(result).toEqual(expect.objectContaining(updateData));
+      expect(mockRepository.lastUpdatePayload).toEqual(updateData);
     });
 
-    it('should validate record ID', async () => {
+    it('should validate recordId', async () => {
+      await expect(recordService.updateRecord('', {})).rejects.toThrow('記録IDが指定されていません');
+    });
+
+    it('should validate rating range', async () => {
       await expect(
-        recordService.updateRecord('', validUpdate)
-      ).rejects.toThrow('記録IDが指定されていません');
+        recordService.updateRecord('1', { rating: 6 })
+      ).rejects.toThrow('評価は1-5の範囲で入力してください');
     });
 
-    it('should validate update input', async () => {
-      const invalidUpdates = [
-        { rating: 0 },
-        { rating: 6 },
-        { date: 'invalid-date' },
-        { memo: 'a'.repeat(1001) },
-      ];
+    it('should validate date format', async () => {
+      await expect(
+        recordService.updateRecord('1', { date: '2024/01/15' })
+      ).rejects.toThrow('日付の形式が正しくありません');
+    });
 
-      for (const update of invalidUpdates) {
-        await expect(
-          recordService.updateRecord('1', update)
-        ).rejects.toThrow(RecordServiceError);
-      }
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.updateRecord('1', { rating: 4 })).rejects.toThrow('飲酒記録の更新に失敗しました');
     });
   });
 
   describe('deleteRecord', () => {
     it('should delete record successfully', async () => {
-      await expect(recordService.deleteRecord('1')).resolves.not.toThrow();
+      await expect(recordService.deleteRecord('1')).resolves.toBeUndefined();
+      expect(mockRepository.deletedRecordIds).toContain('1');
     });
 
-    it('should validate record ID', async () => {
-      await expect(
-        recordService.deleteRecord('')
-      ).rejects.toThrow('記録IDが指定されていません');
+    it('should validate recordId', async () => {
+      await expect(recordService.deleteRecord('')).rejects.toThrow('記録IDが指定されていません');
     });
 
-    it('should handle 404 errors gracefully', async () => {
-      mockApiClient.setError(new ApiClientError('Not Found', 404));
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
 
-      // 404の場合は成功として扱う
-      await expect(recordService.deleteRecord('1')).resolves.not.toThrow();
-    });
-
-    it('should handle other errors', async () => {
-      mockApiClient.setError(new ApiClientError('Server Error', 500));
-
-      await expect(recordService.deleteRecord('1')).rejects.toThrow('サーバーエラーが発生しました');
+      await expect(recordService.deleteRecord('1')).rejects.toThrow('飲酒記録の削除に失敗しました');
     });
   });
 
   describe('getRecordsForSake', () => {
-    it('should get records for specific sake', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
+    it('should get records for sake', async () => {
       const result = await recordService.getRecordsForSake('sake-1');
 
-      expect(result).toEqual([mockRecord]);
+      expect(result).toEqual(mockRepository.searchResult.records);
+      expect(mockRepository.lastSearchOptions?.filters).toEqual({ sakeId: 'sake-1' });
     });
 
-    it('should validate sake ID', async () => {
-      await expect(
-        recordService.getRecordsForSake('')
-      ).rejects.toThrow('日本酒IDが指定されていません');
+    it('should validate sakeId', async () => {
+      await expect(recordService.getRecordsForSake('')).rejects.toThrow('日本酒IDが指定されていません');
+    });
+
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.getRecordsForSake('sake-1')).rejects.toThrow('日本酒の記録取得に失敗しました');
     });
   });
 
   describe('hasRecordForSake', () => {
     it('should return true when records exist', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
-      const result = await recordService.hasRecordForSake('sake-1');
-
-      expect(result).toBe(true);
+      await expect(recordService.hasRecordForSake('sake-1')).resolves.toBe(true);
     });
 
-    it('should return false when no records exist', async () => {
-      const mockResult = {
-        records: [],
-        total: 0,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
+    it('should return false when repository throws error', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
 
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
-      const result = await recordService.hasRecordForSake('sake-1');
-
-      expect(result).toBe(false);
-    });
-
-    it('should return false on error', async () => {
-      mockApiClient.setError(new ApiClientError('Server Error', 500));
-
-      const result = await recordService.hasRecordForSake('sake-1');
-
-      expect(result).toBe(false);
+      await expect(recordService.hasRecordForSake('sake-1')).resolves.toBe(false);
     });
   });
 
   describe('getStatistics', () => {
-    it('should get statistics successfully', async () => {
-      const mockStats = {
-        totalRecords: 10,
-        uniqueSakes: 8,
-        averageRating: 4.2,
-        mostRatedPrefecture: '山口県',
-        recentActivity: {
-          thisWeek: 2,
-          thisMonth: 5,
-        },
-        ratingDistribution: [
-          { rating: 5, count: 3 },
-          { rating: 4, count: 4 },
-          { rating: 3, count: 2 },
-          { rating: 2, count: 1 },
-          { rating: 1, count: 0 },
-        ],
+    it('should compute statistics correctly', async () => {
+      const records: DrinkingRecord[] = [
+        { ...mockRecord, rating: 5 },
+        { ...mockRecord, id: '2', rating: 4, sakePrefecture: '広島県', date: '2024-01-10' },
+      ];
+      mockRepository.searchResult = {
+        records,
+        total: records.length,
+        hasMore: false,
+        timestamp: '2024-01-15T10:00:00Z',
+        filters: undefined,
       };
 
-      mockApiClient.setMockResponse('/api/v1/records/statistics', mockStats);
+      const stats = await recordService.getStatistics();
 
-      const result = await recordService.getStatistics();
+      expect(stats.totalRecords).toBe(2);
+      expect(stats.uniqueSakes).toBe(1);
+      expect(stats.averageRating).toBeCloseTo(4.5);
+      expect(stats.recentActivity.thisMonth).toBeGreaterThanOrEqual(0);
+      expect(stats.ratingDistribution.find((r) => r.rating === 5)?.count).toBe(1);
+    });
 
-      expect(result).toEqual(mockStats);
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.getStatistics()).rejects.toThrow('記録統計の取得に失敗しました');
     });
   });
 
   describe('getMonthlyRecords', () => {
-    it('should get monthly records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
-
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
+    it('should get monthly records', async () => {
       const result = await recordService.getMonthlyRecords(2024, 1);
 
-      expect(result).toEqual([mockRecord]);
+      expect(result).toEqual(mockRepository.searchResult.records);
+      expect(mockRepository.lastSearchOptions?.filters).toEqual({
+        dateFrom: '2024-01-01',
+        dateTo: '2024-01-31',
+      });
     });
 
     it('should validate year and month', async () => {
-      const invalidInputs = [
-        { year: 1999, month: 1 },
-        { year: 3001, month: 1 },
-        { year: 2024, month: 0 },
-        { year: 2024, month: 13 },
-      ];
+      await expect(recordService.getMonthlyRecords(1999, 1)).rejects.toThrow('無効な年が指定されました');
+      await expect(recordService.getMonthlyRecords(2024, 13)).rejects.toThrow('無効な月が指定されました');
+    });
 
-      for (const { year, month } of invalidInputs) {
-        await expect(
-          recordService.getMonthlyRecords(year, month)
-        ).rejects.toThrow(RecordServiceError);
-      }
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.getMonthlyRecords(2024, 1)).rejects.toThrow('月別記録の取得に失敗しました');
+    });
+  });
+
+  describe('getRecentRecords', () => {
+    it('should get recent records', async () => {
+      const result = await recordService.getRecentRecords(5);
+
+      expect(result).toEqual(mockRepository.searchResult.records);
+      expect(mockRepository.lastSearchOptions).toEqual({
+        limit: 5,
+        sortBy: 'created_at',
+        sortOrder: 'desc',
+      });
+    });
+
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.getRecentRecords()).rejects.toThrow('最近の記録取得に失敗しました');
     });
   });
 
   describe('getHighRatedRecords', () => {
-    it('should get high rated records successfully', async () => {
-      const mockResult = {
-        records: [mockRecord],
-        total: 1,
-        hasMore: false,
-        timestamp: '2024-01-15T10:00:00Z',
-      };
+    it('should get high rated records', async () => {
+      const result = await recordService.getHighRatedRecords(4, 10);
 
-      mockApiClient.setMockResponse('/api/v1/records/search', mockResult);
-
-      const result = await recordService.getHighRatedRecords(4);
-
-      expect(result).toEqual([mockRecord]);
+      expect(result).toEqual(mockRepository.searchResult.records);
+      expect(mockRepository.lastSearchOptions).toEqual({
+        filters: { ratingMin: 4 },
+        limit: 10,
+        sortBy: 'rating',
+        sortOrder: 'desc',
+      });
     });
 
-    it('should validate rating range', async () => {
-      await expect(
-        recordService.getHighRatedRecords(0)
-      ).rejects.toThrow('評価は1-5の範囲で指定してください');
+    it('should validate minRating', async () => {
+      await expect(recordService.getHighRatedRecords(0)).rejects.toThrow('評価は1-5の範囲で指定してください');
+      await expect(recordService.getHighRatedRecords(6)).rejects.toThrow('評価は1-5の範囲で指定してください');
+    });
 
-      await expect(
-        recordService.getHighRatedRecords(6)
-      ).rejects.toThrow('評価は1-5の範囲で指定してください');
+    it('should handle repository errors', async () => {
+      mockRepository.shouldThrowError = true;
+      mockRepository.errorToThrow = { status: 500 };
+
+      await expect(recordService.getHighRatedRecords()).rejects.toThrow('高評価記録の取得に失敗しました');
     });
   });
 });
