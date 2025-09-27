@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Gemini Vision APIを呼び出し（Vercel Pro Plan制限対応: 15秒タイムアウト）
-    console.log('DEBUG: Starting Gemini API call (timeout: 15000ms)');
+    // Gemini Vision APIを呼び出し（Vercel Pro Plan制限対応: 30秒タイムアウト）
+    console.log('DEBUG: Starting Gemini API call (timeout: 30000ms)');
     const requestStart = Date.now();
     
     const requestBody = {
@@ -190,7 +190,7 @@ JSONのみを返し、他の説明文は含めないでください。`
 
       const attemptStart = Date.now();
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -358,13 +358,13 @@ JSONのみを返し、他の説明文は含めないでください。`
     
     // タイムアウトエラーの場合
     if (error instanceof Error && error.name === 'AbortError') {
-      console.log('ERROR: Request timeout (15 seconds)');
-      return NextResponse.json({ 
-        error: 'Request timeout (15s) - image too complex or server busy',
+      console.log('ERROR: Request timeout (30 seconds)');
+      return NextResponse.json({
+        error: 'Request timeout (30s) - image too complex or server busy',
         timeout: true,
         vercel_info: {
           region: process.env.VERCEL_REGION || 'unknown',
-          timeout: '15s'
+          timeout: '30s'
         }
       }, { status: 408 });
     }
