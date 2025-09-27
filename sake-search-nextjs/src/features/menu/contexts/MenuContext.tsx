@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { SakeData } from '@/types/sake';
-import ScanService from '@/services/ScanService';
 import { addMenuItemsAction } from '@/app/actions/menu';
+import { scanSakeMenu } from '@/app/actions/scan';
 
 // 旧APIレスポンス型は不要になったため削除
 
@@ -141,16 +141,22 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     setNotFoundItems(prev => prev.filter(item => items.includes(item)));
   }, []);
 
-  // 画像処理（ScanService を利用）
+  // 画像処理（Server Action経由）
   const handleProcessImage = useCallback(async (file: File) => {
     if (!file) return;
 
     setIsProcessing(true);
     setProcessingStatus(''); // 新しい処理開始時に前のメッセージをクリア
-    
+
     try {
-      const result = await ScanService.processImage(file, setProcessingStatus);
-      
+      // 画像をBase64に変換
+      setProcessingStatus('画像を準備中...');
+      const imageData = await fileToBase64(file);
+
+      // Server Action経由でスキャン実行
+      setProcessingStatus('画像を解析中...');
+      const result = await scanSakeMenu(imageData);
+
       if (result.success && result.sake_names && result.sake_names.length > 0) {
         setProcessingStatus(`${result.sake_names.length}件の日本酒を検出しました`);
         await handleMenuItemsAdd(result.sake_names, true);
@@ -166,6 +172,16 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
       setIsProcessing(false);
     }
   }, [handleMenuItemsAdd]);
+
+  // ファイルをBase64に変換するヘルパー関数
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
 
   // アイテム削除
   const handleRemoveItem = useCallback((index: number) => {
