@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 import { SakeData } from '@/types/sake';
 import { addMenuItemsAction } from '@/app/actions/menu';
 import { scanSakeMenu } from '@/app/actions/scan';
+import { compressImageToBase64 } from '@/utils/imageCompression';
 
 // 旧APIレスポンス型は不要になったため削除
 
@@ -149,13 +150,18 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
     setProcessingStatus(''); // 新しい処理開始時に前のメッセージをクリア
 
     try {
-      // 画像をBase64に変換
+      // 画像を圧縮してBase64に変換（2MB制限対応）
       setProcessingStatus('画像を準備中...');
-      const imageData = await fileToBase64(file);
+      const compressedImageData = await compressImageToBase64(file, {
+        maxWidth: 1024,
+        maxHeight: 1024,
+        quality: 0.8,
+        maxSizeKB: 1500, // 1.5MB（Base64化後約2MB）
+      });
 
       // Server Action経由でスキャン実行
       setProcessingStatus('画像を解析中...');
-      const result = await scanSakeMenu(imageData);
+      const result = await scanSakeMenu(compressedImageData);
 
       if (result.success && result.sake_names && result.sake_names.length > 0) {
         setProcessingStatus(`${result.sake_names.length}件の日本酒を検出しました`);
@@ -167,21 +173,15 @@ export const MenuProvider = ({ children }: MenuProviderProps) => {
       }
     } catch (error) {
       console.error('画像処理エラー:', error);
-      setProcessingStatus('画像の処理に失敗しました');
+      if (error instanceof Error && error.message.includes('画像圧縮')) {
+        setProcessingStatus('画像の圧縮に失敗しました。別の画像をお試しください');
+      } else {
+        setProcessingStatus('画像の処理に失敗しました');
+      }
     } finally {
       setIsProcessing(false);
     }
   }, [handleMenuItemsAdd]);
-
-  // ファイルをBase64に変換するヘルパー関数
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
 
   // アイテム削除
   const handleRemoveItem = useCallback((index: number) => {
