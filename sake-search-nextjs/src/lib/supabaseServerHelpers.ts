@@ -3,15 +3,15 @@ import { createServerActionClient, createServerComponentClient } from '@supabase
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 
-export function getServerComponentClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
+export async function getServerComponentClient(): Promise<SupabaseClient<Database>> {
+  const cookieStore = await cookies();
   return createServerComponentClient<Database>({
     cookies: () => cookieStore,
   });
 }
 
-export function getServerActionClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
+export async function getServerActionClient(): Promise<SupabaseClient<Database>> {
+  const cookieStore = await cookies();
   return createServerActionClient<Database>({
     cookies: () => cookieStore,
   });

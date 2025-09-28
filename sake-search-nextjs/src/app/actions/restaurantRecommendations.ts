@@ -9,7 +9,7 @@ import type { RestaurantRecommendationsResult } from '@/types/recommendations';
 export async function fetchRestaurantRecommendationsAction(
   input: Omit<RestaurantRecommendationsRequest, 'userId'>,
 ): Promise<RestaurantRecommendationsResult> {
-  const supabase = getServerActionClient();
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const repository = new SupabaseRestaurantRecommendationsRepository(supabase);

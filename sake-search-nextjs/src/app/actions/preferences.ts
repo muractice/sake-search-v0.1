@@ -16,7 +16,7 @@ function createUserPreferenceService(supabase: SupabaseClient<Database>) {
  * ユーザー設定を取得
  */
 export async function getPreferencesAction(userId: string): Promise<UserPreferences | null> {
-  const supabase = getServerActionClient();
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user || user.id !== userId) {
@@ -31,7 +31,7 @@ export async function getPreferencesAction(userId: string): Promise<UserPreferen
  * お気に入り表示設定を更新
  */
 export async function updateShowFavoritesAction(userId: string, show: boolean): Promise<UserPreferences | null> {
-  const supabase = getServerActionClient();
+  const supabase = await getServerActionClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user || user.id !== userId) {

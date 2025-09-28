@@ -6,7 +6,7 @@ import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 import { getPreferencesAction } from '@/app/actions/preferences';
 
 export default async function FavoritesPage() {
-  const sb = getServerComponentClient();
+  const sb = await getServerComponentClient();
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 
