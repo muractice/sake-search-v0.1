@@ -6,13 +6,13 @@ import { SakeServiceV2 } from '@/services/SakeServiceV2';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
-import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
+import { getReadOnlyServerComponentClient } from '@/lib/supabaseServerHelpers';
 import { getPreferencesAction } from '@/app/actions/preferences';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  const supabase = await getServerComponentClient();
+  const supabase = await getReadOnlyServerComponentClient();
   const client = supabase as SupabaseClient<Database>;
   const { data: { user } } = await client.auth.getUser();
   const userId = user?.id ?? '';
