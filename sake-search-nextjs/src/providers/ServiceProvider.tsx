@@ -10,7 +10,6 @@ import { ApiClient } from '@/services/core/ApiClient';
 import { RecordService } from '@/services/RecordService';
 import { RestaurantService } from '@/services/RestaurantService';
 import { ComparisonService } from '@/services/ComparisonService';
-import { RecommendationService } from '@/services/RecommendationService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 import { SupabaseRecordRepository } from '@/repositories/records/SupabaseRecordRepository';
 
@@ -18,7 +17,6 @@ interface ServiceContainer {
   recordService: RecordService;
   restaurantService: RestaurantService;
   comparisonService: ComparisonService;
-  recommendationService: RecommendationService;
 }
 
 interface ServiceProviderProps {
@@ -48,7 +46,6 @@ export const ServiceProvider = ({
         recordService: mockServices.recordService || defaultServices.recordService,
         restaurantService: mockServices.restaurantService || defaultServices.restaurantService,
         comparisonService: mockServices.comparisonService || defaultServices.comparisonService,
-        recommendationService: mockServices.recommendationService || defaultServices.recommendationService,
       };
     }
 
@@ -102,17 +99,6 @@ export const useComparisonService = (): ComparisonService => {
 };
 
 /**
- * RecommendationServiceにアクセスするためのhook
- */
-export const useRecommendationService = (): RecommendationService => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useRecommendationService must be used within ServiceProvider');
-  }
-  return services.recommendationService;
-};
-
-/**
  * 全サービスにアクセスするためのhook（将来的な拡張用）
  */
 export const useServices = (): ServiceContainer => {
@@ -140,7 +126,6 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
     recordService: new RecordService(new SupabaseRecordRepository()),
     restaurantService: new RestaurantService(new SupabaseRestaurantRepository()),
     comparisonService: new ComparisonService(apiClient),
-    recommendationService: new RecommendationService(apiClient),
   };
 }
 

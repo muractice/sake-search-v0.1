@@ -385,7 +385,7 @@ describe('RestaurantService', () => {
 
   // getStatistics は削除済み（RecordService に集約）
 
-  // getRecommendations は削除済み（RecommendationService に集約）
+  // getRecommendations は削除済み（RestaurantRecommendationsService/Server Actionへ移行）
 
   describe('getRecentRecords', () => {
     it('should get recent records successfully', async () => {
