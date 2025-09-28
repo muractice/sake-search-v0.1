@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
@@ -6,7 +7,8 @@ import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 import { getPreferencesAction } from '@/app/actions/preferences';
 
 export default async function FavoritesPage() {
-  const sb = await getServerComponentClient();
+  await cookies();
+  const sb = getServerComponentClient();
   const { data: { user } } = await sb.auth.getUser();
   const userId = user?.id ?? '';
 

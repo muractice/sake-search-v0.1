@@ -7,6 +7,7 @@ import type {
   RestaurantMenuWithSakes,
   RestaurantCreationResponse,
 } from '@/types/restaurant';
+import { cookies } from 'next/headers';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 import { getServerActionClient } from '@/lib/supabaseServerHelpers';
@@ -19,7 +20,8 @@ interface MenuSakeInput {
 }
 
 const createRestaurantService = async () => {
-  const supabase = await getServerActionClient();
+  await cookies();
+  const supabase = getServerActionClient();
   return new RestaurantService(new SupabaseRestaurantRepository(supabase));
 };
 
