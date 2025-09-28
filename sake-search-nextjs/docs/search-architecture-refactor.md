@@ -20,7 +20,7 @@
 
 1. Repository 抽象化を導入（設計のみ）
    - `src/repositories/sakes/SakeRepository.ts` に `ISakeRepository` を定義
-   - メソッド: `search`, `searchSakes`, `getById`, `getTrending`, `getSuggestions`
+  - メソッド: `searchSakes`, `getTrending`
 
 2. HTTP 実装の雛形（設計のみ）
    - `src/repositories/sakes/HttpSakeRepository.ts` を追加（`ApiClient` 利用）
