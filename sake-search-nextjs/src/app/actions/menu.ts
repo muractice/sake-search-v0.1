@@ -1,6 +1,6 @@
 "use server";
 
-import { SakeServiceV2 } from '@/services/SakeServiceV2';
+import { SakeService } from '@/services/SakeService';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 import type { SakeData } from '@/types/sake';
 import { MenuService } from '@/services/MenuService';
@@ -13,7 +13,7 @@ export async function addMenuItemsAction(items: string[]): Promise<{
   notFound: string[];
 }> {
   const menuService = new MenuService();
-  const sakeService = new SakeServiceV2(new SakenowaSakeRepository());
+  const sakeService = new SakeService(new SakenowaSakeRepository());
 
   const normalized = menuService.normalizeItems(items);
 

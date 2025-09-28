@@ -12,7 +12,7 @@
 
 ## 現状
 
-- `useSearch` は Server Actions（`app/actions/search.ts`）を呼び出し、サーバ側で `SakeServiceV2` → repository を実行
+- `useSearch` は Server Actions（`app/actions/search.ts`）を呼び出し、サーバ側で `SakeService` → repository を実行
 - `/api/search` は段階的廃止（メニューなども Server Actions に統一済み）
 - `repositories` は Favorites/Preferences/Recommendations などで Supabase 実装が進行中
 
@@ -27,15 +27,15 @@
    - 実装は未接続のスタブ。ビルドに影響しないよう未使用で配置
 
 3. Service の責務分離（設計のみ）
-   - `src/services/SakeServiceV2.ts` を追加し、`ISakeRepository` に依存する形へ（ロジックは現行 `SakeService` と同等の責務）
-   - 現行 `SakeService` は据え置き。V2はまだ Provider に接続しない
+  - `src/services/SakeService.ts` を repository 依存の形へ（従来ロジックを移植）
+  - 古い ApiClient ベースの `SakeService` は廃止済み
 
 4. Provider への接続（検索では非必須）
    - 検索は Server Actions/RSC を既定とし、Providerによる注入は行わない
    - 将来: BFF導入時に `HttpSakeRepository` を Provider 経由で注入可能
 
 5. Hook の移行（次ステップで実装）
-   - `useSearchV2` を `SakeServiceV2` に付け替え
+  - `useSearchV2` を `SakeService` に付け替え
    - 既存 `useSearch` は段階的に利用箇所を削減 → 廃止
 
 6. Server 側の整理（任意/将来）

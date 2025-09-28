@@ -2,7 +2,7 @@ import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
 import { HomeClient } from '@/features/home/HomeClient';
-import { SakeServiceV2 } from '@/services/SakeServiceV2';
+import { SakeService } from '@/services/SakeService';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
@@ -33,7 +33,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   let initialRestaurantMenus: import('@/types/restaurant').RestaurantMenu[] = [];
   if (q && q.trim().length > 0) {
     try {
-      const searchService = new SakeServiceV2(new SakenowaSakeRepository());
+      const searchService = new SakeService(new SakenowaSakeRepository());
       const res = await searchService.searchSakes({ query: q, limit: 20, offset: 0 });
       initialSearchResults = res.sakes;
     } catch {

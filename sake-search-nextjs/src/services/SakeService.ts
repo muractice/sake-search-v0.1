@@ -11,7 +11,7 @@ import {
  * - 責務: 入力バリデーション/ドメインロジック/エラーマッピング
  * - I/O は ISakeRepository に委譲
  */
-export class SakeServiceV2 {
+export class SakeService {
   constructor(private readonly repo: ISakeRepository) {}
 
   async searchSakes(options: SakeSearchOptions): Promise<SakeSearchResult> {
