@@ -167,54 +167,6 @@ export class SakeDataService {
   }
 
   /**
-   * 特定の条件に基づいて日本酒を検索
-   */
-  async searchSakes(criteria: {
-    sweetness?: { min: number; max: number };
-    richness?: { min: number; max: number };
-    brewery?: string;
-    keywords?: string[];
-  }): Promise<SakeData[]> {
-    let query = supabase
-      .from('sake_master')
-      .select('*');
-
-    // 甘辛度でフィルタ
-    if (criteria.sweetness) {
-      query = query
-        .gte('sweetness', criteria.sweetness.min)
-        .lte('sweetness', criteria.sweetness.max);
-    }
-
-    // 淡濃度でフィルタ
-    if (criteria.richness) {
-      query = query
-        .gte('richness', criteria.richness.min)
-        .lte('richness', criteria.richness.max);
-    }
-
-    // 蔵元でフィルタ
-    if (criteria.brewery) {
-      query = query.ilike('brewery_name', `%${criteria.brewery}%`);
-    }
-
-    // キーワード検索
-    if (criteria.keywords && criteria.keywords.length > 0) {
-      const searchPattern = criteria.keywords.join('|');
-      query = query.or(`brand_name.ilike.%${searchPattern}%,description.ilike.%${searchPattern}%`);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error searching sakes:', error);
-      return [];
-    }
-
-    return (data || []).map(sake => this.formatSakeData(sake));
-  }
-
-  /**
    * カテゴリごとの人気日本酒を取得
    */
   async getPopularByCategory(): Promise<{
