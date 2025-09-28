@@ -1,18 +1,22 @@
 import { cookies } from 'next/headers';
 import { createServerActionClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 
-export function getServerComponentClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
-  return createServerComponentClient<Database>({
-    cookies: () => cookieStore,
-  }) as unknown as SupabaseClient<Database>;
+type ComponentClientOptions = Parameters<typeof createServerComponentClient<Database>>[0];
+type ActionClientOptions = Parameters<typeof createServerActionClient<Database>>[0];
+
+export async function getServerComponentClient() {
+  const cookieStore = await cookies();
+  const options: ComponentClientOptions = {
+    cookies: (() => cookieStore) as unknown as ComponentClientOptions['cookies'],
+  };
+  return createServerComponentClient<Database>(options);
 }
 
-export function getServerActionClient(): SupabaseClient<Database> {
-  const cookieStore = cookies();
-  return createServerActionClient<Database>({
-    cookies: () => cookieStore,
-  }) as unknown as SupabaseClient<Database>;
+export async function getServerActionClient() {
+  const cookieStore = await cookies();
+  const options: ActionClientOptions = {
+    cookies: (() => cookieStore) as unknown as ActionClientOptions['cookies'],
+  };
+  return createServerActionClient<Database>(options);
 }

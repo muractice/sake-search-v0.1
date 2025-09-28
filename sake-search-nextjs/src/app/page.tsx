@@ -1,4 +1,3 @@
-import { cookies } from 'next/headers';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
@@ -9,16 +8,18 @@ import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
 import { getPreferencesAction } from '@/app/actions/preferences';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
-  await cookies();
-  const sb = getServerComponentClient();
-  const { data: { user } } = await sb.auth.getUser();
+  const supabase = await getServerComponentClient();
+  const client = supabase as SupabaseClient<Database>;
+  const { data: { user } } = await client.auth.getUser();
   const userId = user?.id ?? '';
 
   const service = new FavoritesAppService(
-    new SupabaseFavoritesRepository(sb),
-    new SupabaseRecommendationCacheRepository(sb),
+    new SupabaseFavoritesRepository(client),
+    new SupabaseRecommendationCacheRepository(client),
   );
 
   const [items, prefs] = userId
@@ -43,7 +44,7 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   // レストランメニュー一覧をRSCで取得（ログイン時）
   if (userId) {
     try {
-      const restaurantService = new RestaurantService(new SupabaseRestaurantRepository(sb));
+      const restaurantService = new RestaurantService(new SupabaseRestaurantRepository(client));
       initialRestaurantMenus = await restaurantService.getRestaurantMenus();
     } catch {
       initialRestaurantMenus = [];

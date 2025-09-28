@@ -7,9 +7,10 @@ import type {
   RestaurantMenuWithSakes,
   RestaurantCreationResponse,
 } from '@/types/restaurant';
-import { cookies } from 'next/headers';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/lib/supabase';
 import { getServerActionClient } from '@/lib/supabaseServerHelpers';
 
 interface MenuSakeInput {
@@ -20,9 +21,9 @@ interface MenuSakeInput {
 }
 
 const createRestaurantService = async () => {
-  await cookies();
-  const supabase = getServerActionClient();
-  return new RestaurantService(new SupabaseRestaurantRepository(supabase));
+  const supabase = await getServerActionClient();
+  const typedClient = supabase as SupabaseClient<Database>;
+  return new RestaurantService(new SupabaseRestaurantRepository(typedClient));
 };
 
 export async function loadRestaurantMenusAction(): Promise<RestaurantMenu[]> {
