@@ -8,6 +8,10 @@ import { SakeData } from '@/types/sake';
 jest.mock('@/app/actions/favorites', () => ({
   addFavoriteAction: jest.fn().mockResolvedValue(undefined),
   removeFavoriteAction: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/app/actions/preferences', () => ({
+  getPreferencesAction: jest.fn(),
   updateShowFavoritesAction: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -27,7 +31,9 @@ jest.mock('@/lib/supabase', () => ({
 }));
 
 import { supabase } from '@/lib/supabase';
+import { getPreferencesAction } from '@/app/actions/preferences';
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+const mockGetPreferencesAction = getPreferencesAction as jest.Mock;
 
 type TestSession = { user: { id: string; email?: string } } | null;
 const mockUser: { id: string; email: string } = { id: 'u1', email: 'test@example.com' };
@@ -49,6 +55,12 @@ function wrapper({ children }: { children: React.ReactNode }) {
 describe('useFavorites with AuthContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // デフォルトではpreferencesはfalseを返す
+    mockGetPreferencesAction.mockResolvedValue({
+      userId: mockUser.id,
+      showFavorites: false,
+      updatedAt: '2024-01-02',
+    });
 
     // Auth mocks
     mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { user: mockUser } as TestSession } } as unknown as { data: { session: TestSession } });

@@ -5,6 +5,10 @@ import { SakeData } from '@/types/sake';
 jest.mock('@/app/actions/favorites', () => ({
   addFavoriteAction: jest.fn().mockResolvedValue(undefined),
   removeFavoriteAction: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/app/actions/preferences', () => ({
+  getPreferencesAction: jest.fn().mockResolvedValue(null),
   updateShowFavoritesAction: jest.fn().mockResolvedValue(undefined),
 }));
 

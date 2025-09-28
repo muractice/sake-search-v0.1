@@ -7,6 +7,11 @@ import type { SakeData } from '@/types/sake';
 jest.mock('@/app/actions/favorites', () => ({
   addFavoriteAction: jest.fn(),
   removeFavoriteAction: jest.fn(),
+}));
+
+// Mock preferences Server Actions
+jest.mock('@/app/actions/preferences', () => ({
+  getPreferencesAction: jest.fn(),
   updateShowFavoritesAction: jest.fn(),
 }));
 

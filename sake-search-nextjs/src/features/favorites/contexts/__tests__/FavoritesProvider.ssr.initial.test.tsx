@@ -8,6 +8,10 @@ import type { SakeData } from '@/types/sake';
 jest.mock('@/app/actions/favorites', () => ({
   addFavoriteAction: jest.fn().mockResolvedValue(undefined),
   removeFavoriteAction: jest.fn().mockResolvedValue(undefined),
+}));
+
+jest.mock('@/app/actions/preferences', () => ({
+  getPreferencesAction: jest.fn(),
   updateShowFavoritesAction: jest.fn().mockResolvedValue(undefined),
 }));
 
@@ -27,7 +31,9 @@ jest.mock('@/lib/supabase', () => ({
 }));
 
 import { supabase } from '@/lib/supabase';
+import { getPreferencesAction } from '@/app/actions/preferences';
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
+const mockGetPreferencesAction = getPreferencesAction as jest.Mock;
 
 const Consumer = () => {
   const ctx = useFavoritesContext();
@@ -53,6 +59,13 @@ describe('FavoritesProvider SSR initial values', () => {
   });
 
   it('初期favorites/表示を即時に反映し、認証後に同期する（ログイン時）', async () => {
+    // preferencesアクションのモックをfalseに設定
+    mockGetPreferencesAction.mockResolvedValue({
+      userId: 'u1',
+      showFavorites: false,
+      updatedAt: '2024-01-01',
+    });
+
     // Auth: ログイン済みu1を返す
     mockSupabase.auth.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1', email: 't@example.com' } } } } as unknown as { data: { session: { user: { id: string; email: string } } } });
     mockSupabase.auth.refreshSession.mockResolvedValue({ data: { session: { user: { id: 'u1', email: 't@example.com' } } } } as unknown as { data: { session: { user: { id: string; email: string } } } });
