@@ -1,7 +1,6 @@
 import { IRestaurantRecommendationsRepository } from '@/repositories/recommendations/RestaurantRecommendationsRepository';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
 import { RecommendationEngine } from '@/services/recommendationEngine';
-import { SakeDataService } from '@/services/sakeDataService';
 import type { FavoriteItem } from '@/types/favorites';
 import type {
   RecommendationResult,
@@ -22,7 +21,6 @@ export interface RestaurantRecommendationsRequest {
 export class RestaurantRecommendationsService {
   private readonly analyzer = new PreferenceAnalyzer();
   private readonly engine = new RecommendationEngine();
-  private readonly sakeDataService = SakeDataService.getInstance();
 
   constructor(
     private readonly repository: IRestaurantRecommendationsRepository,
@@ -44,11 +42,8 @@ export class RestaurantRecommendationsService {
       throw new Error('Menu items are required');
     }
 
-    const allSakes = await this.sakeDataService.getAllSakes();
     const { menuSakeData, notFound } = this.buildMenuSakeData(
-      menuItems,
       restaurantMenuSakeData,
-      allSakes,
     );
 
     if (menuSakeData.length === 0) {
@@ -73,40 +68,16 @@ export class RestaurantRecommendationsService {
   }
 
   private buildMenuSakeData(
-    menuItems: string[],
     provided: SakeData[] | undefined,
-    allSakes: SakeData[],
   ): { menuSakeData: SakeData[]; notFound: string[] } {
-    if (provided && provided.length > 0) {
-      return {
-        menuSakeData: provided,
-        notFound: [],
-      };
+    if (!provided || provided.length === 0) {
+      throw new Error('Menu sake data is required');
     }
 
-    const menuSakeData: SakeData[] = [];
-    const notFound: string[] = [];
-
-    for (const menuItem of menuItems) {
-      const normalizedMenuItem = this.normalize(menuItem);
-
-      const sake = allSakes.find((candidate) => {
-        const normalizedSakeName = this.normalize(candidate.name);
-        return (
-          normalizedSakeName === normalizedMenuItem ||
-          normalizedSakeName.includes(normalizedMenuItem) ||
-          normalizedMenuItem.includes(normalizedSakeName)
-        );
-      });
-
-      if (sake && !menuSakeData.some((existing) => existing.id === sake.id)) {
-        menuSakeData.push(sake);
-      } else if (!sake) {
-        notFound.push(menuItem);
-      }
-    }
-
-    return { menuSakeData, notFound };
+    return {
+      menuSakeData: provided,
+      notFound: [],
+    };
   }
 
   private async buildSimilarityRecommendations(
@@ -230,10 +201,6 @@ export class RestaurantRecommendationsService {
         } as SakeData & { createdAt?: Date };
       })
       .filter((sake): sake is SakeData & { createdAt?: Date } => Boolean(sake));
-  }
-
-  private normalize(value: string): string {
-    return value.replace(/\s+/g, '').toLowerCase();
   }
 
   private generateSimilarityReason(similarity: number): string {

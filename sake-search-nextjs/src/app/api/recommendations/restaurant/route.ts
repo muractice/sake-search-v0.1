@@ -61,6 +61,8 @@ function mapErrorToStatus(message: string): number {
   switch (message) {
     case 'Menu items are required':
       return 400;
+    case 'Menu sake data is required':
+      return 400;
     case 'No sake data found for menu items':
     case 'メニューに日本酒がありません':
       return 404;
