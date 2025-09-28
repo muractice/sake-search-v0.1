@@ -93,7 +93,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
     loadedMenuId: menuManagement.loadedMenuId,
     targetMenuId: menuManagement.targetMenuId,
     groupedSavedMenusData: menuManagement.groupedSavedMenusData,
-    loadingMenu: menuManagement.loadingMenu,
+    menuOrMenuItemsLoading: menuManagement.menuOrMenuItemsLoading,
     savingToMenu: menuManagement.savingToMenu,
     hasChanges: hasChangesResult,
     notification: menuManagement.notification,
@@ -116,7 +116,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
       // loadedMenuIdが存在し、かつメニューデータが空で、ローディング中でない場合
       if (managementState.loadedMenuId && 
           inputState.menuSakeData.length === 0 && 
-          !managementState.loadingMenu &&
+          !managementState.menuOrMenuItemsLoading &&
           isSubscribed) {
 
         // 選択されたメニューの情報を取得
@@ -126,7 +126,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
         if (selectedMenu && selectedMenu.count > 0) {
           console.log('リロード時の自動メニュー復元:', managementState.loadedMenuId);
           console.log('現在のmenuSakeData:', inputState.menuSakeData);
-          console.log('loadingMenu:', managementState.loadingMenu);
+          console.log('menuOrMenuItemsLoading:', managementState.menuOrMenuItemsLoading);
           // 既存のloadSavedMenuアクションを呼び出して完全復元
           await actions.loadSavedMenu(managementState.loadedMenuId);
         }
@@ -139,7 +139,7 @@ export const useMenuRegistration = (opts?: { initialRestaurantMenus?: import('@/
     return () => {
       isSubscribed = false;
     };
-  }, [actions, inputState.menuSakeData, managementState.loadingMenu, managementState.loadedMenuId, managementState.groupedSavedMenusData]);
+  }, [actions, inputState.menuSakeData, managementState.menuOrMenuItemsLoading, managementState.loadedMenuId, managementState.groupedSavedMenusData]);
 
   return {
     // 状態（分離を維持）

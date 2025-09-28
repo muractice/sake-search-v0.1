@@ -54,7 +54,7 @@ export const MenuRegistrationSection = ({
           loadedMenuId: menuRegistration.managementState.loadedMenuId,
           targetMenuId: menuRegistration.managementState.targetMenuId,
           groupedSavedMenus: menuRegistration.managementState.groupedSavedMenusData,
-          loadingMenu: menuRegistration.managementState.loadingMenu,
+          menuOrMenuItemsLoading: menuRegistration.managementState.menuOrMenuItemsLoading,
           savingToMenu: menuRegistration.managementState.savingToMenu,
           hasChanges: menuRegistration.managementState.hasChanges,
           notification: menuRegistration.managementState.notification,

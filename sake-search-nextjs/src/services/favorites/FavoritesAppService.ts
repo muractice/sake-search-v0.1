@@ -1,9 +1,7 @@
 import { IFavoritesRepository } from '@/repositories/favorites/FavoritesRepository';
 import { IRecommendationCacheRepository } from '@/repositories/recommendations/RecommendationCacheRepository';
-import { IUserPreferencesRepository } from '@/repositories/preferences/UserPreferencesRepository';
 import type { FavoriteItem } from '@/types/favorites';
 import type { SakeData } from '@/types/sake';
-import type { UserPreferences } from '@/types/preferences';
 
 /**
  * Webアプリ用のお気に入りドメインサービス
@@ -14,7 +12,6 @@ export class FavoritesAppService {
   constructor(
     private readonly repo: IFavoritesRepository,
     private readonly recCacheRepo: IRecommendationCacheRepository,
-    private readonly prefsRepo: IUserPreferencesRepository,
   ) {}
 
   async list(userId: string): Promise<FavoriteItem[]> {
@@ -52,14 +49,5 @@ export class FavoritesAppService {
     }
   }
 
-  async getPreferences(userId: string): Promise<UserPreferences | null> {
-    if (!userId) return null;
-    return this.prefsRepo.get(userId);
-  }
-
-  async updateShowFavorites(userId: string, show: boolean): Promise<UserPreferences | null> {
-    if (!userId) return null;
-    return this.prefsRepo.updateShowFavorites(userId, show);
-  }
 }
 

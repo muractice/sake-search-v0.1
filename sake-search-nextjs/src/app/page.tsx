@@ -1,13 +1,13 @@
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
-import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 import { HomeClient } from '@/features/home/HomeClient';
 import { SakeServiceV2 } from '@/services/SakeServiceV2';
 import { SakenowaSakeRepository } from '@/repositories/sakes/SakenowaSakeRepository';
 import { RestaurantService } from '@/services/RestaurantService';
 import { SupabaseRestaurantRepository } from '@/repositories/restaurants/SupabaseRestaurantRepository';
 import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
+import { getPreferencesAction } from '@/app/actions/preferences';
 
 export default async function Home({ searchParams }: { searchParams?: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const sb = getServerComponentClient();
@@ -17,11 +17,10 @@ export default async function Home({ searchParams }: { searchParams?: Promise<{ 
   const service = new FavoritesAppService(
     new SupabaseFavoritesRepository(sb),
     new SupabaseRecommendationCacheRepository(sb),
-    new SupabaseUserPreferencesRepository(sb),
   );
 
   const [items, prefs] = userId
-    ? await Promise.all([service.list(userId), service.getPreferences(userId)])
+    ? await Promise.all([service.list(userId), getPreferencesAction(userId)])
     : [[], null];
 
   // RSCで検索結果を取得（qがある場合）

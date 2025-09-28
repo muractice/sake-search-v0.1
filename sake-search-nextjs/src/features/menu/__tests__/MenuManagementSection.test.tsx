@@ -24,7 +24,7 @@ describe('MenuManagementSection', () => {
         count: 2,
       },
     },
-    loadingMenu: false,
+    menuOrMenuItemsLoading: false,
     savingToMenu: false,
     hasChanges: false,
     notification: null,

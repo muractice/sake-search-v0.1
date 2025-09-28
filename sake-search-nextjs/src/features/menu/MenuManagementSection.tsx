@@ -27,7 +27,7 @@ interface MenuManagementState {
     restaurant_created_at: string;
     count: number;
   }>;
-  loadingMenu: boolean;
+  menuOrMenuItemsLoading: boolean;
   savingToMenu: boolean;
   hasChanges?: boolean;
   notification?: MenuNotification | null;
@@ -267,7 +267,7 @@ export const MenuManagementSection = ({
             <select
             value={state.loadedMenuId}
               onChange={handleMenuSelectionChange}
-              disabled={state.loadingMenu}
+              disabled={state.menuOrMenuItemsLoading}
               className="flex-1 min-w-0 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-gray-900"
             >
               <option value="">新しいメニュー</option>
@@ -287,7 +287,7 @@ export const MenuManagementSection = ({
               })}
             </select>
           </div>
-          {state.loadingMenu && (
+          {state.menuOrMenuItemsLoading && (
             <div className="text-blue-600 text-sm flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
               メニューを読み込み中...
@@ -298,7 +298,7 @@ export const MenuManagementSection = ({
               <button
                 type="button"
                 onClick={handleDeleteSelectedMenu}
-                disabled={isDeleting || state.loadingMenu || state.savingToMenu}
+                disabled={isDeleting || state.menuOrMenuItemsLoading || state.savingToMenu}
                 className="px-3 py-2 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? '削除中...' : '🗑 メニューを削除'}

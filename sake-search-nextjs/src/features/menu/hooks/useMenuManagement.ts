@@ -10,7 +10,7 @@ import { useMenuSelectionState } from './useMenuSelectionState';
 import { useMenuCatalog } from './useMenuCatalog';
 import { useMenuPersistence, type MenuNotification } from './useMenuPersistence';
 import { getMenuSakesAction } from '@/app/actions/restaurant';
-import { useMenuLoader } from './useMenuLoader';
+import { useMenuItemsLoader } from './useMenuItemsLoader';
 
 interface UseMenuManagementOptions {
   initialRestaurantMenus?: RestaurantMenu[];
@@ -37,7 +37,7 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
   const {
     restaurantMenus,
     menuOptionMap,
-    isLoading: catalogLoading,
+    isLoading: menuLoading,
     refresh,
   } = useMenuCatalog({
     user: authState.user,
@@ -60,7 +60,7 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
     notify,
   });
 
-  const { loadingMenu, loadMenu } = useMenuLoader({ setLastSavedSnapshot });
+  const { loadingMenuItems, loadMenuItems } = useMenuItemsLoader({ setLastSavedSnapshot });
 
   // 選択中IDがカタログに存在しない場合は選択状態を初期化する
   useEffect(() => {
@@ -77,12 +77,12 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
 
     if (isDev) {
       console.log('[useMenuManagement] reconcile selection', {
-        catalogLoading,
+        menuLoading,
         restaurantCount: restaurantMenus.length,
         loadedMenuId,
       });
     }
-    if (catalogLoading) {
+    if (menuLoading) {
       return;
     }
 
@@ -103,10 +103,10 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
       clearSelection();
       setLastSavedSnapshot([]);
     }
-  }, [authState.isAuthLoading, authState.user, catalogLoading, restaurantMenus, loadedMenuId, clearSelection, setLastSavedSnapshot]);
+  }, [authState.isAuthLoading, authState.user, menuLoading, restaurantMenus, loadedMenuId, clearSelection, setLastSavedSnapshot]);
 
   useEffect(() => {
-    if (catalogLoading || loadingMenu) return;
+    if (menuLoading || loadingMenuItems) return;
     if (!loadedMenuId) return;
     if (lastSavedSakeIds.length > 0) return;
 
@@ -129,7 +129,7 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
     return () => {
       active = false;
     };
-  }, [catalogLoading, loadingMenu, loadedMenuId, lastSavedSakeIds.length, setLastSavedSnapshot]);
+  }, [menuLoading, loadingMenuItems, loadedMenuId, lastSavedSakeIds.length, setLastSavedSnapshot]);
 
   const fetchMenus = useCallback(async () => {
     return refresh();
@@ -177,9 +177,9 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
       if (process.env.NODE_ENV === 'development') {
         console.log('[useMenuManagement] handleLoadSavedMenu invoked', { menuId });
       }
-      await loadMenu(menuId, onMenuDataUpdate);
+      await loadMenuItems(menuId, onMenuDataUpdate);
     },
-    [clearNotification, loadMenu]
+    [clearNotification, loadMenuItems]
   );
 
   // 指定メニューを削除し、選択状態やスナップショットをリセットする
@@ -193,11 +193,11 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
 
   const hasMenuChanges = useCallback(
     (currentSakes: SakeData[]) => {
-      if (catalogLoading || loadingMenu) {
+      if (menuLoading || loadingMenuItems) {
         if (process.env.NODE_ENV === 'development') {
           console.log('[useMenuManagement] hasMenuChanges guarded', {
-            catalogLoading,
-            loadingMenu,
+            menuLoading,
+            loadingMenuItems,
           });
         }
         return false;
@@ -215,7 +215,7 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
       }
       return result;
     },
-    [catalogLoading, loadingMenu, hasChanges, loadedMenuId]
+    [menuLoading, loadingMenuItems, hasChanges, loadedMenuId]
   );
 
   return {
@@ -227,7 +227,7 @@ export const useMenuManagement = (opts?: UseMenuManagementOptions) => {
     loadedMenuId,
     setLoadedMenuId,
     savingToMenu,
-    loadingMenu: loadingMenu || catalogLoading,
+    menuOrMenuItemsLoading: loadingMenuItems || menuLoading,
     groupedSavedMenusData: menuOptionMap,
     notification,
     notify,

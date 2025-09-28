@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import type { SakeData } from '@/types/sake';
-import { removeFavoriteAction, updateShowFavoritesAction } from '@/app/actions/favorites';
+import { removeFavoriteAction } from '@/app/actions/favorites';
+import { updateShowFavoritesAction } from '@/app/actions/preferences';
 
 type Props = {
   userId: string;

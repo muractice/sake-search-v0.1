@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
-import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
-import { addFavoriteAction, removeFavoriteAction, updateShowFavoritesAction } from '@/app/actions/favorites';
+import { addFavoriteAction, removeFavoriteAction } from '@/app/actions/favorites';
+import { getPreferencesAction, updateShowFavoritesAction } from '@/app/actions/preferences';
 import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 
 type Options = {
@@ -22,8 +22,7 @@ export const useFavorites = (opts: Options = {}) => {
   const service = useMemo(() => {
     const repo = new SupabaseFavoritesRepository();
     const recCacheRepo = new SupabaseRecommendationCacheRepository();
-    const prefsRepo = new SupabaseUserPreferencesRepository();
-    return new FavoritesAppService(repo, recCacheRepo, prefsRepo);
+    return new FavoritesAppService(repo, recCacheRepo);
   }, []);
   // お気に入りを読み込む
   const loadFavorites = useCallback(async (userId: string) => {
@@ -39,14 +38,14 @@ export const useFavorites = (opts: Options = {}) => {
   // ユーザー設定を読み込む
   const loadPreferences = useCallback(async (userId: string) => {
     try {
-      const prefs = await service.getPreferences(userId);
+      const prefs = await getPreferencesAction(userId);
       if (prefs) {
         setShowFavorites(prefs.showFavorites);
       }
     } catch (error) {
       console.error('Error loading preferences:', error);
     }
-  }, [service]);
+  }, []);
 
   // AuthContext の user 変化で favorites/preferences を同期
   useEffect(() => {

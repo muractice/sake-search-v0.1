@@ -1,9 +1,9 @@
 import { FavoritesAppService } from '@/services/favorites/FavoritesAppService';
 import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { SupabaseRecommendationCacheRepository } from '@/repositories/recommendations/SupabaseRecommendationCacheRepository';
-import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
 import { FavoritesPanel } from '@/features/favorites/components/FavoritesPanel';
 import { getServerComponentClient } from '@/lib/supabaseServerHelpers';
+import { getPreferencesAction } from '@/app/actions/preferences';
 
 export default async function FavoritesPage() {
   const sb = getServerComponentClient();
@@ -13,11 +13,10 @@ export default async function FavoritesPage() {
   const service = new FavoritesAppService(
     new SupabaseFavoritesRepository(sb),
     new SupabaseRecommendationCacheRepository(sb),
-    new SupabaseUserPreferencesRepository(sb),
   );
 
   const [items, prefs] = userId
-    ? await Promise.all([service.list(userId), service.getPreferences(userId)])
+    ? await Promise.all([service.list(userId), getPreferencesAction(userId)])
     : [[], null];
 
   return (
