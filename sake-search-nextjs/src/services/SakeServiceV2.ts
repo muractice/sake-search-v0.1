@@ -1,6 +1,10 @@
 import { SakeData } from '@/types/sake';
-import { ISakeRepository, SakeSearchOptions, SakeSearchResult } from '@/repositories/sakes/SakeRepository';
-import { SakeSearchError } from './SakeService';
+import {
+  ISakeRepository,
+  SakeSearchOptions,
+  SakeSearchResult,
+  SakeSearchError,
+} from '@/repositories/sakes/SakeRepository';
 
 /**
  * Repository に依存する新しい Service の骨組み（設計のみ）
