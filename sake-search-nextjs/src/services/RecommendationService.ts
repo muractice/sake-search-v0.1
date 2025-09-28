@@ -16,25 +16,12 @@ export interface RecommendationResult {
   predictedRating: number;
 }
 
-export interface RecommendationOptions {
-  count?: number;
-  mood?: 'usual' | 'adventurous' | 'conservative' | 'trendy';
-  includeSimilar?: boolean;
-  includeExplore?: boolean;
-  includeTrending?: boolean;
-}
-
 export interface RestaurantRecommendationOptions {
   type: 'similarity' | 'pairing' | 'random';
   menuItems: string[];
   restaurantMenuSakeData?: SakeData[];
   dishType?: string;
   count?: number;
-}
-
-export interface TrendingRecommendationOptions {
-  count?: number;
-  period?: 'daily' | 'weekly' | 'monthly';
 }
 
 export interface RecommendationResponse {
@@ -78,146 +65,6 @@ export class RecommendationService {
       return response.data;
     } catch (error) {
       this.handleError('飲食店レコメンドの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 個人向けレコメンドを取得
-   */
-  async getPersonalRecommendations(options: RecommendationOptions = {}): Promise<RecommendationResult[]> {
-    try {
-      const response = await this.apiClient.post<{ recommendations: RecommendationResult[] }>('/api/recommendations', {
-        count: options.count || 20,
-        mood: options.mood || 'usual',
-        includeSimilar: options.includeSimilar !== false,
-        includeExplore: options.includeExplore !== false,
-        includeTrending: options.includeTrending !== false
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('個人レコメンドの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * トレンドレコメンドを取得
-   */
-  async getTrendingRecommendations(options: TrendingRecommendationOptions = {}): Promise<RecommendationResult[]> {
-    try {
-      const response = await this.apiClient.get<{ recommendations: RecommendationResult[] }>('/api/recommendations/trending', {
-        count: (options.count || 10).toString(),
-        period: options.period || 'weekly'
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('トレンドレコメンドの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 類似性ベースレコメンドを取得
-   */
-  async getSimilarityRecommendations(sakeIds: string[], count: number = 10): Promise<RecommendationResult[]> {
-    if (!sakeIds || sakeIds.length === 0) {
-      throw new RecommendationServiceError('比較する日本酒が指定されていません');
-    }
-
-    try {
-      const response = await this.apiClient.post<{ recommendations: RecommendationResult[] }>('/api/recommendations/similarity', {
-        sakeIds,
-        count
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('類似性レコメンドの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 気分別レコメンドを取得
-   */
-  async getMoodRecommendations(mood: RecommendationOptions['mood'], count: number = 10): Promise<RecommendationResult[]> {
-    try {
-      const response = await this.apiClient.post<{ recommendations: RecommendationResult[] }>('/api/recommendations/mood', {
-        mood,
-        count
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('気分別レコメンドの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * ユーザーのお気に入りをクリア
-   */
-  async clearRecommendationCache(): Promise<void> {
-    try {
-      await this.apiClient.delete('/api/recommendations/cache');
-    } catch (error) {
-      this.handleError('レコメンドキャッシュのクリアに失敗しました', error);
-    }
-  }
-
-  /**
-   * レコメンド履歴を取得
-   */
-  async getRecommendationHistory(limit: number = 20): Promise<RecommendationResult[]> {
-    try {
-      const response = await this.apiClient.get<{ recommendations: RecommendationResult[] }>('/api/recommendations/history', {
-        limit: limit.toString()
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('レコメンド履歴の取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * ランダムピック（おすすめガチャ）を取得
-   */
-  async getRandomPick(menuItems?: string[]): Promise<RecommendationResult> {
-    try {
-      const response = await this.apiClient.post<{ recommendation: RecommendationResult }>('/api/recommendations/random', {
-        menuItems
-      });
-
-      return response.data.recommendation;
-    } catch (error) {
-      this.handleError('おすすめガチャの取得に失敗しました', error);
-    }
-  }
-
-  /**
-   * 料理とのペアリングレコメンドを取得
-   */
-  async getPairingRecommendations(
-    dishType: string, 
-    availableSakes: SakeData[], 
-    count: number = 5
-  ): Promise<RecommendationResult[]> {
-    try {
-      const response = await this.apiClient.post<{ recommendations: RecommendationResult[] }>('/api/recommendations/pairing', {
-        dishType,
-        availableSakes: availableSakes.map(sake => ({
-          id: sake.id,
-          name: sake.name,
-          brewery: sake.brewery,
-          sweetness: sake.sweetness,
-          richness: sake.richness,
-          flavorChart: sake.flavorChart
-        })),
-        count
-      });
-
-      return response.data.recommendations;
-    } catch (error) {
-      this.handleError('ペアリングレコメンドの取得に失敗しました', error);
     }
   }
 
