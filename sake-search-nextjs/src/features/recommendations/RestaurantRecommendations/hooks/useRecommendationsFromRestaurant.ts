@@ -2,10 +2,11 @@
 
 import { useState, useCallback } from 'react';
 import { SakeData } from '@/types/sake';
-import { 
-  RestaurantRecommendationType, 
-  RecommendationResult 
+import {
+  RestaurantRecommendationType,
+  RecommendationResult,
 } from '../types';
+import { fetchRestaurantRecommendationsAction } from '@/app/actions/restaurantRecommendations';
 
 interface UseRecommendationsFromRestaurantProps {
   restaurantMenuItems: string[];
@@ -57,56 +58,43 @@ export const useRecommendationsFromRestaurant = ({
     setShowRecommendations(true);
 
     try {
-      const response = await fetch('/api/recommendations/restaurant', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          type,
-          menuItems: restaurantMenuItems,
-          restaurantMenuSakeData: restaurantMenuSakeData,
-          dishType: type === 'pairing' ? dishType : undefined,
-          count: 10
-        }),
+      const result = await fetchRestaurantRecommendationsAction({
+        type,
+        menuItems: restaurantMenuItems,
+        restaurantMenuSakeData,
+        dishType: type === 'pairing' ? dishType : undefined,
+        count: 10,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`API Error ${response.status}: ${response.statusText}`, errorText);
-        throw new Error(`レコメンド取得エラー (${response.status}): ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log(`🔍 RestaurantRecommendations API Response (${type}):`, {
-        requiresMoreFavorites: data.requiresMoreFavorites,
-        favoritesCount: data.favoritesCount,
-        recommendationsCount: data.recommendations?.length || 0,
-        message: data.message,
-        totalFound: data.totalFound,
-        notFoundCount: data.notFound?.length || 0
+      console.log(`🔍 RestaurantRecommendations action result (${type}):`, {
+        requiresMoreFavorites: result.requiresMoreFavorites,
+        favoritesCount: result.favoritesCount,
+        recommendationsCount: result.recommendations?.length || 0,
+        message: result.message,
+        totalFound: result.totalFound,
+        notFoundCount: result.notFound?.length || 0,
       });
-      
+
       // お気に入り不足チェック（ガチャの場合は無視）
-      if (data.requiresMoreFavorites && type !== 'random') {
+      if (result.requiresMoreFavorites && type !== 'random') {
         setRequiresMoreFavorites(true);
-        setFavoritesMessage(data.message || '');
+        setFavoritesMessage(result.message || '');
         setRecommendations([]);
       } else {
         setRequiresMoreFavorites(false);
         setFavoritesMessage('');
         
         // ガチャの場合は親コンポーネントにコールバック
-        if (type === 'random' && data.recommendations.length > 0) {
-          if (onGachaResult) {
-            onGachaResult(data.recommendations[0]);
+        if (type === 'random') {
+          if (result.recommendations.length > 0 && onGachaResult) {
+            onGachaResult(result.recommendations[0]);
           }
         } else {
-          setRecommendations(data.recommendations || []);
+          setRecommendations(result.recommendations || []);
         }
       }
     } catch (error) {
-      console.error('Error fetching recommendations:', error);
+      console.error('Error fetching recommendations via server action:', error);
       setRecommendations([]);
       // エラーを詳細表示
       alert(`レコメンド機能でエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);

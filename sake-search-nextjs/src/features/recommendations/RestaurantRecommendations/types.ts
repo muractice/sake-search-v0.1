@@ -1,15 +1,7 @@
-import { SakeData } from '@/types/sake';
+import type { SakeData } from '@/types/sake';
+import type { RecommendationResult } from '@/types/recommendations';
 
-export type RestaurantRecommendationType = 'similarity' | 'pairing' | 'random';
-
-export interface RecommendationResult {
-  sake: SakeData;
-  score: number;
-  type: string;
-  reason: string;
-  similarityScore: number;
-  predictedRating: number;
-}
+export type { RestaurantRecommendationType, RecommendationResult } from '@/types/recommendations';
 
 export interface GachaAnimationState {
   isSlotAnimating: boolean;
