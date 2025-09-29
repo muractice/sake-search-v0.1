@@ -64,17 +64,6 @@ export const ServiceProvider = ({
 // Removed: SakeService hooks (search flows use Server Actions/RSC by default)
 
 /**
- * RecordServiceにアクセスするためのhook
- */
-export const useRecordService = (): RecordService => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useRecordService must be used within ServiceProvider');
-  }
-  return services.recordService;
-};
-
-/**
  * RestaurantServiceにアクセスするためのhook
  */
 export const useRestaurantService = (): RestaurantService => {
@@ -99,17 +88,6 @@ export const useComparisonService = (): ComparisonService => {
 };
 
 /**
- * 全サービスにアクセスするためのhook（将来的な拡張用）
- */
-export const useServices = (): ServiceContainer => {
-  const services = useContext(ServiceContext);
-  if (!services) {
-    throw new Error('useServices must be used within ServiceProvider');
-  }
-  return services;
-};
-
-/**
  * デフォルトのサービスコンテナを作成
  */
 function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}): ServiceContainer {
@@ -126,19 +104,5 @@ function createDefaultServices(apiConfig: ServiceProviderProps['apiConfig'] = {}
     recordService: new RecordService(new SupabaseRecordRepository()),
     restaurantService: new RestaurantService(new SupabaseRestaurantRepository()),
     comparisonService: new ComparisonService(apiClient),
-  };
-}
-
-
-/**
- * 環境変数から設定を取得するヘルパー
- */
-export function getApiConfig() {
-  return {
-    baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || '',
-    timeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '10000', 10),
-    defaultHeaders: {
-      'X-App-Version': process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
-    },
   };
 }
