@@ -3,7 +3,7 @@
 import type { RestaurantRecommendationsRequest } from '@/services/recommendations/RestaurantRecommendationsService';
 import { RestaurantRecommendationsService } from '@/services/recommendations/RestaurantRecommendationsService';
 import { getServerActionClient } from '@/lib/supabaseServerHelpers';
-import { SupabaseRestaurantRecommendationsRepository } from '@/repositories/recommendations/SupabaseRestaurantRecommendationsRepository';
+import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 import type { RestaurantRecommendationsResult } from '@/types/recommendations';
@@ -15,8 +15,8 @@ export async function fetchRestaurantRecommendationsAction(
   const client = supabase as SupabaseClient<Database>;
   const { data: { user } } = await client.auth.getUser();
 
-  const repository = new SupabaseRestaurantRecommendationsRepository(client);
-  const service = new RestaurantRecommendationsService(repository);
+  const favoritesRepository = new SupabaseFavoritesRepository(client);
+  const service = new RestaurantRecommendationsService(favoritesRepository);
 
   return service.getRecommendations({
     ...input,

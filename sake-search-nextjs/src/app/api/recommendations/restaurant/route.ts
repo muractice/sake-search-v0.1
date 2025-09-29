@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import { SupabaseRestaurantRecommendationsRepository } from '@/repositories/recommendations/SupabaseRestaurantRecommendationsRepository';
+import { SupabaseFavoritesRepository } from '@/repositories/favorites/SupabaseFavoritesRepository';
 import { RestaurantRecommendationsService, RestaurantRecommendationsRequest } from '@/services/recommendations/RestaurantRecommendationsService';
 
 export async function POST(request: NextRequest) {
@@ -32,8 +32,8 @@ export async function POST(request: NextRequest) {
       console.warn('Failed to retrieve user in restaurant recommendations route:', authError);
     }
 
-    const repository = new SupabaseRestaurantRecommendationsRepository(supabase);
-    const service = new RestaurantRecommendationsService(repository);
+    const favoritesRepository = new SupabaseFavoritesRepository(supabase);
+    const service = new RestaurantRecommendationsService(favoritesRepository);
 
     const result = await service.getRecommendations({
       type,

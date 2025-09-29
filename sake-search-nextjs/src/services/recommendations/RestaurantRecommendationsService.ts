@@ -1,4 +1,4 @@
-import { IRestaurantRecommendationsRepository } from '@/repositories/recommendations/RestaurantRecommendationsRepository';
+import { IFavoritesRepository } from '@/repositories/favorites/FavoritesRepository';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
 import { RecommendationEngine } from '@/services/recommendationEngine';
 import type { FavoriteItem } from '@/types/favorites';
@@ -23,7 +23,7 @@ export class RestaurantRecommendationsService {
   private readonly engine = new RecommendationEngine();
 
   constructor(
-    private readonly repository: IRestaurantRecommendationsRepository,
+    private readonly favoritesRepository: IFavoritesRepository,
   ) {}
 
   async getRecommendations(
@@ -96,7 +96,7 @@ export class RestaurantRecommendationsService {
       };
     }
 
-    const favorites = await this.repository.listFavorites(userId);
+    const favorites = await this.favoritesRepository.list(userId);
     if (!favorites || favorites.length < 3) {
       return {
         recommendations: [],
