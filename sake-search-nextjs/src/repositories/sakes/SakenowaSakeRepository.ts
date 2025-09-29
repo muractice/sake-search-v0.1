@@ -32,27 +32,9 @@ export class SakenowaSakeRepository implements ISakeRepository {
     };
   }
 
-  async getById(_id: string): Promise<SakeData | null> {
-    // 現状のユースケースでは未使用。モックからの検索のみ提供。
-    const all = buildMockSakeData();
-    return all.find((s) => s.id === _id) ?? null;
-  }
-
   async getTrending(limit: number = 10): Promise<SakeData[]> {
     // モックから上位N件を返す（将来、実API対応）
     return buildMockSakeData().slice(0, limit);
-  }
-
-  async getSuggestions(query: string, limit: number = 5): Promise<string[]> {
-    const normalized = (query || '').toLowerCase().trim();
-    if (!normalized) return [];
-
-    const names = buildMockSakeData()
-      .map((s) => s.name)
-      .filter((n) => n.toLowerCase().includes(normalized));
-
-    // 重複排除して上位N件
-    return Array.from(new Set(names)).slice(0, limit);
   }
 }
 import 'server-only';

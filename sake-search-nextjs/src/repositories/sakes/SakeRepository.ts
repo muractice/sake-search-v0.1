@@ -11,9 +11,7 @@ import {
  */
 export interface ISakeRepository {
   search(options: SakeSearchOptions): Promise<SakeSearchResult>;
-  getById(id: string): Promise<SakeData | null>;
   getTrending(limit?: number): Promise<SakeData[]>;
-  getSuggestions(query: string, limit?: number): Promise<string[]>;
 }
 
 // 型再利用のためのエクスポート（ServiceV2 でも利用）
