@@ -1,7 +1,7 @@
 'use client';
 
 import { SakeData } from '@/types/sake';
-import SakeRadarChartSection from '@/features/comparison/SakeRadarChartSection';
+import SakeRadarChartSection from '@/components/charts/SakeRadarChartSection';
 
 interface RadarChartCardProps {
   title: string;                    // タイトル
