@@ -183,38 +183,6 @@ export class RecommendationEngine {
   }
 
   /**
-   * ベクトルの内積計算
-   */
-  private dotProduct(vector1: PreferenceVector, vector2: PreferenceVector): number {
-    return (
-      vector1.sweetness * vector2.sweetness +
-      vector1.richness * vector2.richness +
-      vector1.f1_floral * vector2.f1_floral +
-      vector1.f2_mellow * vector2.f2_mellow +
-      vector1.f3_heavy * vector2.f3_heavy +
-      vector1.f4_mild * vector2.f4_mild +
-      vector1.f5_dry * vector2.f5_dry +
-      vector1.f6_light * vector2.f6_light
-    );
-  }
-
-  /**
-   * ベクトルの大きさ計算
-   */
-  private magnitude(vector: PreferenceVector): number {
-    return Math.sqrt(
-      vector.sweetness ** 2 +
-      vector.richness ** 2 +
-      vector.f1_floral ** 2 +
-      vector.f2_mellow ** 2 +
-      vector.f3_heavy ** 2 +
-      vector.f4_mild ** 2 +
-      vector.f5_dry ** 2 +
-      vector.f6_light ** 2
-    );
-  }
-
-  /**
    * 2つのベクトル間の距離計算
    */
   private calculateDistance(vector1: PreferenceVector, vector2: PreferenceVector): number {
