@@ -1,12 +1,12 @@
 import { SakeData } from '@/types/sake';
 import { PreferenceVector, UserPreference, RecommendOptions } from '@/types/preference';
-import { SakeDataService } from './sakeDataService';
+import { SakeMasterService } from './SakeMasterService';
 
 export class RecommendationEngine {
-  private sakeDataService: SakeDataService;
+  private sakeMasterService: SakeMasterService;
 
   constructor() {
-    this.sakeDataService = SakeDataService.getInstance();
+    this.sakeMasterService = SakeMasterService.getInstance();
   }
 
   /**
@@ -19,7 +19,7 @@ export class RecommendationEngine {
     const recommendations: SakeRecommendation[] = [];
 
     // ユーザーが既にお気に入りに登録していない日本酒を取得
-    const availableSakes = await this.sakeDataService.getAvailableSakes(userPreference.userId);
+    const availableSakes = await this.sakeMasterService.getAvailableSakes(userPreference.userId);
 
     const totalCount = options.count;
 
