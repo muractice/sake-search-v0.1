@@ -2,7 +2,7 @@
 
 import { UserPreferenceService } from '@/services/preferences/UserPreferenceService';
 import { SupabaseUserPreferencesRepository } from '@/repositories/preferences/SupabaseUserPreferencesRepository';
-import type { UserPreferences } from '@/types/preferences';
+import type { UserPreferences } from '@/types/userPreferences';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/lib/supabase';
 import { getServerActionClient } from '@/lib/supabaseServerHelpers';

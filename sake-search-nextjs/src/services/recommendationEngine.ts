@@ -1,5 +1,5 @@
 import { SakeData } from '@/types/sake';
-import { PreferenceVector, UserPreference, RecommendOptions } from '@/types/preference';
+import { PreferenceVector, UserTastePreference, RecommendOptions } from '@/types/preference';
 import { SakeMasterService } from './SakeMasterService';
 
 export class RecommendationEngine {
@@ -13,7 +13,7 @@ export class RecommendationEngine {
    * レコメンドの生成
    */
   async generateRecommendations(
-    userPreference: UserPreference,
+    userPreference: UserTastePreference,
     options: RecommendOptions = { count: 20 }
   ): Promise<SakeRecommendation[]> {
     const recommendations: SakeRecommendation[] = [];
@@ -77,7 +77,7 @@ export class RecommendationEngine {
    * 探索的レコメンド（好みと少し異なるものを提案）
    */
   private findExploratorySakes(
-    userPreference: UserPreference,
+    userPreference: UserTastePreference,
     sakes: SakeData[],
     count: number
   ): SakeRecommendation[] {
@@ -171,7 +171,7 @@ export class RecommendationEngine {
   /**
    * 新規性スコアの計算
    */
-  private calculateNoveltyScore(sake: SakeData, userPreference: UserPreference): number {
+  private calculateNoveltyScore(sake: SakeData, userPreference: UserTastePreference): number {
     // 冒険度が高いほど、より離れた味を高く評価
     const distance = this.calculateDistance(
       userPreference.vector,

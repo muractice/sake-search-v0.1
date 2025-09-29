@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useFavoritesContext } from '@/features/favorites/contexts/FavoritesContext';
 import { PreferenceAnalyzer } from '@/services/preferenceAnalyzer';
-import { UserPreference, TasteType } from '@/types/preference';
+import { UserTastePreference, TasteType } from '@/types/preference';
 import type { SakeData } from '@/types/sake';
 
 type Params = {
@@ -17,7 +17,7 @@ export function usePreferenceAnalysis(params?: Params) {
   const userId = params?.userId ?? ctx.user?.id ?? null;
   const favorites = params?.favorites ?? ctx.favorites;
   
-  const [preference, setPreference] = useState<UserPreference | null>(null);
+  const [preference, setPreference] = useState<UserTastePreference | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +53,7 @@ export function usePreferenceAnalysis(params?: Params) {
 
       // 既存データがあれば表示（24時間縛りなし）
       if (existingPreference) {
-        const userPref: UserPreference = {
+        const userPref: UserTastePreference = {
           id: existingPreference.id,
           userId: existingPreference.user_id,
           vector: {
@@ -200,7 +200,7 @@ export function usePreferenceAnalysis(params?: Params) {
       console.log('📈 多様性スコア:', diversityScore, '(既存:', preference?.diversityScore, ')');
       console.log('🚀 冒険度スコア:', adventureScore, '(既存:', preference?.adventureScore, ')');
 
-      const userPref: UserPreference = {
+      const userPref: UserTastePreference = {
         id: '', // DBで生成される
         userId: userId,
         vector,

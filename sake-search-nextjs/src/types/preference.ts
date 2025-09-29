@@ -21,7 +21,7 @@ export type TasteType =
   | 'balanced'   // バランス型
   | 'explorer';  // 冒険家型
 
-export interface UserPreference {
+export interface UserTastePreference {
   id: string;
   userId: string;
   vector: PreferenceVector;

@@ -4,7 +4,7 @@
  */
 
 import type { IUserPreferencesRepository } from '@/repositories/preferences/UserPreferencesRepository';
-import type { UserPreferences } from '@/types/preferences';
+import type { UserPreferences } from '@/types/userPreferences';
 
 export class UserPreferenceService {
   private prefsRepo: IUserPreferencesRepository;

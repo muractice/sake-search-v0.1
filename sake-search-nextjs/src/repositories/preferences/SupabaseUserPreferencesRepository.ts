@@ -1,7 +1,7 @@
 import { supabase, type Database } from '@/lib/supabase';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { IUserPreferencesRepository } from './UserPreferencesRepository';
-import { UserPreferences } from '@/types/preferences';
+import { UserPreferences } from '@/types/userPreferences';
 
 export class SupabaseUserPreferencesRepository implements IUserPreferencesRepository {
   private readonly client: SupabaseClient<Database>;

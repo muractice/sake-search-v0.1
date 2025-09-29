@@ -1,4 +1,4 @@
-import type { UserPreferences } from '@/types/preferences';
+import type { UserPreferences } from '@/types/userPreferences';
 
 export const getPreferencesAction = jest.fn().mockResolvedValue({
   userId: 'test-user-id',

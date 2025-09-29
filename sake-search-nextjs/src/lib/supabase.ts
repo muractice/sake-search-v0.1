@@ -72,6 +72,30 @@ export type Database = {
         }
         Update: Partial<Database['public']['Tables']['restaurant_menu_sakes']['Row']>
       }
+      sake_master: {
+        Row: {
+          id: string
+          brand_id: number | null
+          brand_name: string | null
+          brewery_id: number | null
+          brewery_name: string | null
+          sweetness: number | null
+          richness: number | null
+          description: string | null
+          f1_floral: number | null
+          f2_mellow: number | null
+          f3_heavy: number | null
+          f4_mild: number | null
+          f5_dry: number | null
+          f6_light: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: Partial<Database['public']['Tables']['sake_master']['Row']> & {
+          id: string
+        }
+        Update: Partial<Database['public']['Tables']['sake_master']['Row']>
+      }
       favorites: {
         Row: {
           id: string
