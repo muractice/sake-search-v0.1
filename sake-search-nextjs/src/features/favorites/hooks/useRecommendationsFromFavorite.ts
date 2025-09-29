@@ -28,7 +28,6 @@ export function useRecommendationsFromFavorite(params?: Params) {
     mood: 'usual',
     includeSimilar: true,
     includeExplore: true,
-    includeTrending: true,
     ...(params?.options || {})
   };
 

@@ -34,24 +34,15 @@ export class RecommendationEngine {
       recommendations.push(...similarSakes);
     }
 
-    // 2. 探索的レコメンド（20%）
+    // 2. 探索的レコメンド（30%）
     if (options.includeExplore !== false) {
-      const exploreCount = Math.ceil(totalCount * 0.2);
+      const exploreCount = Math.ceil(totalCount * 0.3);
       const exploreSakes = this.findExploratorySakes(
         userPreference,
         availableSakes,
         exploreCount
       );
       recommendations.push(...exploreSakes);
-    }
-
-    // 3. トレンドベース（10%）
-    if (options.includeTrending !== false) {
-      const trendingCount = Math.ceil(totalCount * 0.1);
-      const trendingSakes = await this.findTrendingSakes(
-        trendingCount
-      );
-      recommendations.push(...trendingSakes);
     }
 
     // 重複除去とランキング
@@ -111,27 +102,6 @@ export class RecommendationEngine {
         predictedRating: this.predictRating(0.6) // 探索的なので中程度の予測
       }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, count);
-  }
-
-  /**
-   * トレンド/人気ベースのレコメンド
-   */
-  private async findTrendingSakes(
-    count: number
-  ): Promise<SakeRecommendation[]> {
-    // データベースから実際のトレンドデータを取得
-    const trendingSakes = await this.sakeDataService.getTrendingSakes(count * 2);
-    
-    return trendingSakes
-      .map(sake => ({
-        sake,
-        score: 0.8 + Math.random() * 0.2, // 0.8-1.0のスコア
-        type: 'trending' as const,
-        reason: this.generateTrendingReason(),
-        similarityScore: 0.5,
-        predictedRating: this.predictRating(0.75)
-      }))
       .slice(0, count);
   }
 
@@ -297,27 +267,13 @@ export class RecommendationEngine {
     return 1.0 + adventureScore * 2.0;
   }
 
-  /**
-   * トレンド理由の生成
-   */
-  private generateTrendingReason(): string {
-    const reasons = [
-      '今月の人気No.1銘柄',
-      '話題の新作',
-      '入手困難な希少銘柄',
-      'SNSで話題の銘柄',
-      '専門家も絶賛の逸品',
-      '季節限定の特別な味わい'
-    ];
-    return reasons[Math.floor(Math.random() * reasons.length)];
-  }
 }
 
 // レコメンド結果の型
 export interface SakeRecommendation {
   sake: SakeData;
   score: number;
-  type: 'similar' | 'explore' | 'trending';
+  type: 'similar' | 'explore';
   reason: string;
   similarityScore: number;
   predictedRating: number;

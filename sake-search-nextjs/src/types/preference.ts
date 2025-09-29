@@ -39,7 +39,7 @@ export interface Recommendation {
   sakeId: string;
   similarityScore: number;
   predictedRating: number;
-  recommendationType: 'similar' | 'explore' | 'trending';
+  recommendationType: 'similar' | 'explore';
   recommendationReason: string;
   createdAt: Date;
   expiresAt: Date;
@@ -50,7 +50,6 @@ export interface RecommendOptions {
   mood?: 'usual' | 'adventure' | 'discovery' | 'special';
   includeSimilar?: boolean;
   includeExplore?: boolean;
-  includeTrending?: boolean;
 }
 
 export interface PreferenceAnalysisOptions {
